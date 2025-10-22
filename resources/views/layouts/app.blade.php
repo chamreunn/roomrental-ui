@@ -9,9 +9,12 @@
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 
+<x-alert />
+
 <body>
     <div class="page">
         @include('partials.sidebar')
+        @include('partials.nav')
 
         <div class="page-wrapper">
             @include('partials.header')

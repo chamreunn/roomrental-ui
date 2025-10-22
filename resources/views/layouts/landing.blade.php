@@ -11,6 +11,8 @@
 <body>
 
     <main class="page">
+        @include('partials.nav_landing')
+
         @yield('content')
     </main>
 
