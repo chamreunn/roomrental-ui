@@ -21,6 +21,7 @@
         "@tabler/core": "^1.4.0",
         "@tabler/icons": "^3.35.0",
         "@tabler/icons-react": "^3.35.0",
-        "aos": "^2.3.4"
+        "aos": "^2.3.4",
+        "litepicker": "^2.0.12"
     }
 }

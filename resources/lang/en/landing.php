@@ -2,6 +2,7 @@
 
 return [
     'title' => 'Find Your Perfect Room with RoomioFlex',
+    'loader' => 'Loading...',
     'nav' => [
         'home' => 'Home',
         'features' => 'Features',

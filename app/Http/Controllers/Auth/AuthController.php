@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enum\AbilitiesStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +50,7 @@ class AuthController extends Controller
             Session::put('user', [
                 'id' => $user['id'],
                 'role' => $user['role'],
+                'role_badge' => AbilitiesStatus::getStatus($role),
                 'name' => $user['name'],
                 'email' => $user['email'],
                 'phone_number' => $user['phone_number'],

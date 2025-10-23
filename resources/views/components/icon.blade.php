@@ -3,12 +3,20 @@
 @php
 $iconsPath = base_path("node_modules/@tabler/icons/icons/outline/{$name}.svg");
 
-// Read the SVG file
-$svg = file_exists($iconsPath) ? file_get_contents($iconsPath) : '';
+$svg = '';
 
-// Inject the class into the <svg> tag
-if ($svg) {
-    $svg = preg_replace('/<svg /', '<svg class="'.$class.'" ', $svg, 1);
+if (file_exists($iconsPath)) {
+    $svg = file_get_contents($iconsPath);
+
+    // If the SVG already has a class, append it, otherwise add it
+    if (preg_match('/<svg[^>]*class="([^"]*)"/', $svg, $matches)) {
+        $existingClass = $matches[1];
+        $newClass = trim($existingClass . ' ' . $class);
+        $svg = preg_replace('/(<svg[^>]*class=")[^"]*"/', '${1}' . $newClass . '"', $svg);
+    } else {
+        // Insert class after <svg
+        $svg = preg_replace('/<svg /', '<svg class="'.$class.'" ', $svg, 1);
+    }
 }
 @endphp
 

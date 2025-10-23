@@ -68,23 +68,34 @@ class ApiService
         }
     }
 
-    public function post(string $endpoint, array $data = [], $token = null, bool $asForm = false, $files = [], $fileField = 'documents[]')
+    public function post(string $endpoint,  array $data = [],  $token = null, bool $asForm = false,  $files = [], $fileField = 'documents[]')
     {
         $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
         $http = $this->getHttpClient($token);
 
+        // Attach files
         $files = is_array($files) ? $files : [$files];
         foreach ($files as $file) {
             if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-                $http = $http->attach($fileField, file_get_contents($file->getRealPath()), $file->getClientOriginalName());
+                $http = $http->attach(
+                    $fileField,
+                    file_get_contents($file->getRealPath()),
+                    $file->getClientOriginalName()
+                );
             }
         }
 
-        $response = $asForm
-            ? $http->asForm()->post($url, $data)
-            : $http->post($url, $data);
+        // Determine if multipart/form-data is needed
+        if (!empty($files) || $asForm) {
+            // Send as multipart/form-data
+            $response = $http->asMultipart()->post($url, $data);
+        } else {
+            // Send as JSON
+            $response = $http->post($url, $data);
+        }
 
+        // Handle 401 with token refresh
         if ($response->status() === 401 && $newToken = $this->refreshApiToken()) {
             return $this->post($endpoint, $data, $newToken, $asForm, $files, $fileField);
         }
@@ -96,6 +107,7 @@ class ApiService
 
         return $this->handleResponse($response);
     }
+
 
     protected function handleResponse($response)
     {

@@ -24,7 +24,7 @@
                                 <x-icon name="mail" />
                             </span>
                             <input type="email" class="form-control" name="email" value="{{ old('email') }}"
-                                placeholder="{{ __('auth.email_required') }}">
+                                placeholder="{{ __('auth.email_required') }}" autofocus autocomplete="off">
                         </div>
                         @error('email')
                             <div class="text-red mt-2">{{ $message }}</div>
@@ -58,6 +58,12 @@
                             <x-icon name="arrow-narrow-right" class="icon icon-2 icon-end" />
                         </button>
                     </div>
+
+                    <div class="hr-text">ឬ</div>
+                    <div class="col-12">
+                        <a href="#" class="btn w-100">ចូលប្រើប្រាស់ជាមួយគណនី Telegram</a>
+                    </div>
+
                 </div>
             </form>
         </div>
