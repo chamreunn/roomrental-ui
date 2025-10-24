@@ -1,15 +1,17 @@
 <?php
 
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomtypeController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\ManagerController;
-use App\Http\Controllers\LocationController;
-use App\Http\Controllers\RoomtypeController;
-use App\Http\Controllers\Auth\AuthController;
+
 
 // 🌐 Landing Page
 Route::get('/', function () {
@@ -56,7 +58,14 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::get('/roomtype/create', [RoomtypeController::class, 'create'])->name('roomtype.create');
     Route::post('/roomtype/store', [RoomtypeController::class, 'store'])->name('roomtype.store');
     Route::get('/roomtype/show/{id}', [RoomtypeController::class, 'show'])->name('roomtype.show');
+    Route::patch('/roomtype/{id}', [RoomtypeController::class, 'update'])->name('roomtype.update');
     Route::delete('/roomtype/destroy/{id}', [RoomtypeController::class, 'destroy'])->name('roomtype.destroy');
+    // for room 
+    Route::get('/choose-location', [RoomController::class, 'index'])->name('room.index');
+    Route::get('/choose-location/{id}/room-list', [RoomController::class, 'rooms'])->name('room.room_list');
+    Route::get('/rooms/create/choose-location', [RoomController::class, 'location'])->name('room.choose_location');
+    Route::get('/rooms/create/choose-location/{id}', [RoomController::class, 'create'])->name('room.create_room');
+    Route::post('/rooms/store/{id}', [RoomController::class, 'store'])->name('room.store');
 });
 
 // 🧩 Admin Routes

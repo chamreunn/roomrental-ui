@@ -205,8 +205,7 @@
 
                 <!-- Dashboard -->
                 <li class="nav-item {{ active_class('dashboard.*', 'active') }}">
-                    <a class="nav-link btn-animate-icon btn-animate-icon-move-start"
-                        href="{{ dashboardRoute() }}">
+                    <a class="nav-link btn-animate-icon btn-animate-icon-move-start" href="{{ dashboardRoute() }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <x-icon name="home" />
                         </span>
@@ -290,22 +289,23 @@
                 </li>
 
                 <!-- Room -->
-                <li class="nav-item dropdown {{ active_class(['rooms.*', 'create-rooms']) }}">
-                    <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['rooms.*', 'create-rooms']) }}"
+                <li class="nav-item dropdown {{ active_class(['room.*']) }}">
+                    <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['room.*']) }}"
                         href="#navbar-room" data-bs-toggle="dropdown" data-bs-auto-close="false">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <x-icon name="door" />
                         </span>
                         <span class="nav-link-title">{{ __('sidebar.room') }}</span>
                     </a>
-                    <div class="dropdown-menu {{ active_class(['rooms.*', 'create-rooms'], '', true) }}">
+                    <div class="dropdown-menu {{ active_class(['room.*'], '', true) }}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
-                                <a class="dropdown-item {{ active_class('create-rooms') }}"
-                                    href="{{ url('create-rooms') }}">
+                                <a class="dropdown-item {{ active_class(['room.choose_location','room.create_room']) }}"
+                                    href="{{ route('room.choose_location') }}">
                                     {{ __('sidebar.create_room') }}
                                 </a>
-                                <a class="dropdown-item {{ active_class('rooms.*') }}" href="{{ url('rooms') }}">
+                                <a class="dropdown-item {{ active_class(['room.index','room.room_list']) }}"
+                                    href="{{ route('room.index') }}">
                                     {{ __('sidebar.room_list') }}
                                 </a>
                             </div>

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Utils\Util;
+use App\Enum\AbilitiesStatus;
+use App\Enum\RoomStatus;
 use App\Enum\Status;
 use App\Services\ApiService;
-use App\Enum\AbilitiesStatus;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Foundation\Validation\ValidatesRequests;
+use App\Utils\Util;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
@@ -30,6 +31,11 @@ class Controller extends BaseController
     protected $status = null;
 
     /**
+     * @var \App\Enum\RoomStatus|null
+     */
+    protected $roomstatus = null;
+
+    /**
      * @var \App\Utils\Util|null
      */
     protected $util = null;
@@ -47,7 +53,6 @@ class Controller extends BaseController
 
         return $this->api;
     }
-
     /**
      * Lazy-load AbilitiesStatus only when needed.
      *
@@ -88,5 +93,18 @@ class Controller extends BaseController
         }
 
         return $this->util;
+    }
+    /**
+     * Lazy-load Status only when needed.
+     *
+     * @return \App\Enum\RoomStatus
+     */
+    protected function RoomStatus(): RoomStatus
+    {
+        if (!$this->roomstatus) {
+            $this->roomstatus = app(RoomStatus::class);
+        }
+
+        return $this->roomstatus;
     }
 }

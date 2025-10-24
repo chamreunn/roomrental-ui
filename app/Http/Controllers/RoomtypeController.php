@@ -47,12 +47,11 @@ class RoomtypeController extends Controller
                 $currentPage,
                 ['path' => url()->current(), 'query' => $request->query()]
             );
-
         } catch (Exception $e) {
             $roomtypes = new LengthAwarePaginator([], 0, 10);
         }
 
-        return view('app.room_typs.index', compact('buttons','roomtypes'));
+        return view('app.room-types.index', compact('buttons', 'roomtypes'));
     }
 
     public function create()
@@ -67,7 +66,7 @@ class RoomtypeController extends Controller
             ]
         ];
 
-        return view('app.room_typs.create', compact('buttons'));
+        return view('app.room-types.create', compact('buttons'));
     }
 
     public function store(Request $request)
@@ -123,28 +122,97 @@ class RoomtypeController extends Controller
             ]);
     }
 
+    public function show(Request $request, $id)
+    {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('roomtype.index'),
+            ],
+        ];
+
+        // Get location detail
+        $roomtypeResponse = $this->api()->get("v1/room-types", ['id' => $id]);
+        $roomtype = $roomtypeResponse['room_types']['data'][0] ?? null;
+
+        return view('app.room-types.show', compact('buttons', 'roomtype'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        // ✅ Validate input
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'size' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:1000',
+        ], [
+            'name.required' => __('roomtype.name_required'),
+            'name.string' => __('roomtype.name_string'),
+            'name.max' => __('roomtype.name_max'),
+
+            'size.required' => __('roomtype.size_required'),
+            'size.string' => __('roomtype.size_string'),
+            'size.max' => __('roomtype.size_max'),
+
+            'price.required' => __('roomtype.price_required'),
+            'price.numeric' => __('roomtype.price_numeric'),
+            'price.min' => __('roomtype.price_min'),
+
+            'description.string' => __('roomtype.description_string'),
+            'description.max' => __('roomtype.description_max'),
+        ]);
+
+        // ✅ Prepare payload for API
+        $payload = [
+            '_method' => 'PATCH', // For APIs expecting PATCH
+            'updated_by' => Session::get('user')['id'] ?? null,
+            'type_name' => $validated['name'],
+            'room_size' => $validated['size'],
+            'price' => $validated['price'],
+            'description' => $validated['description'] ?? null,
+        ];
+
+        // ✅ Send to API
+        $apiResponse = $this->api()->post("v1/room-types/{$id}", $payload);
+
+        // ✅ Handle API success
+        if (($apiResponse['status'] ?? '') === 'success') {
+            return redirect()
+                ->route('roomtype.index')
+                ->with('success', __('roomtype.updated_successfully'));
+        }
+
+        // ❌ Handle failure
+        return back()
+            ->withInput()
+            ->withErrors($apiResponse['errors'] ?? [
+                'error' => $apiResponse['message'] ?? __('roomtype.update_failed'),
+            ]);
+    }
+
     public function destroy($id)
     {
         try {
-            // Call the API to delete the location
-            $apiResponse = $this->api()->post("v1/room-types/{$id}", [
-                '_method' => 'DELETE',
-            ]);
+            // ✅ Call API DELETE endpoint
+            $apiResponse = $this->api()->delete("v1/room-types/{$id}");
 
-            // Check if API responded successfully
+            // ✅ Handle success
             if (($apiResponse['status'] ?? '') === 'success') {
                 return redirect()
                     ->route('roomtype.index')
                     ->with('success', __('roomtype.deleted_successfully'));
             }
 
-            // Handle failure
+            // ❌ Handle failure
             return back()->withErrors([
-                'error' => $apiResponse['errors'] ?? $apiResponse['message'] ?? __('roomtype.delete_failed')
+                'error' => $apiResponse['errors'] ?? $apiResponse['message'] ?? __('roomtype.delete_failed'),
             ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return back()->withErrors([
-                'error' => $e->getMessage() ?: __('roomtype.delete_failed')
+                'error' => $e->getMessage() ?: __('roomtype.delete_failed'),
             ]);
         }
     }

@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
             create: false,
             render: {
                 item: (data, escape) => `
-                    <div class="d-flex align-items-center p-1">
+                    <div class="d-flex align-items-center">
                         <span class="dropdown-item-indicator">${
                             data.customProperties || ""
                         }</span>

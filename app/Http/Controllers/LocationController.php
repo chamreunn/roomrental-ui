@@ -187,25 +187,23 @@ class LocationController extends Controller
     public function destroy($id)
     {
         try {
-            // Call the API to delete the location
-            $apiResponse = $this->api()->post("v1/locations/{$id}", [
-                '_method' => 'DELETE',
-            ]);
+            // ✅ Send real DELETE request to API
+            $apiResponse = $this->api()->delete("v1/locations/{$id}");
 
-            // Check if API responded successfully
+            // ✅ Handle success
             if (($apiResponse['status'] ?? '') === 'success') {
                 return redirect()
                     ->route('location.index')
                     ->with('success', __('location.deleted_successfully'));
             }
 
-            // Handle failure
+            // ❌ Handle failure
             return back()->withErrors([
-                'error' => $apiResponse['errors'] ?? $apiResponse['message'] ?? __('location.delete_failed')
+                'error' => $apiResponse['errors'] ?? $apiResponse['message'] ?? __('location.delete_failed'),
             ]);
         } catch (Exception $e) {
             return back()->withErrors([
-                'error' => $e->getMessage() ?: __('location.delete_failed')
+                'error' => $e->getMessage() ?: __('location.delete_failed'),
             ]);
         }
     }
