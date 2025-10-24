@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4776810dc1f9cc2ee65b6526f0091af8",
+    "content-hash": "84eb3a4fa2656bfe2982ec5445e7e21c",
     "packages": [
         {
             "name": "brick/math",
@@ -134,6 +134,59 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "chanthorn/carbon-kh",
+            "version": "v2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/chanthornsp/CarbonKh.git",
+                "reference": "b45562eb43d2251d6b9d2f0d24020c7f910c7bd1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chanthornsp/CarbonKh/zipball/b45562eb43d2251d6b9d2f0d24020c7f910c7bd1",
+                "reference": "b45562eb43d2251d6b9d2f0d24020c7f910c7bd1",
+                "shasum": ""
+            },
+            "require": {
+                "nesbot/carbon": "^3.0",
+                "php": ">=7.2"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/helper_fun.php"
+                ],
+                "psr-4": {
+                    "Chanthorn\\CarbonKh\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "chanthornsp",
+                    "email": "hoeurnchanthorn@gmail.com",
+                    "homepage": "https://github.com/chanthornsp"
+                }
+            ],
+            "description": "Covert Date to Khmer Lunar date",
+            "keywords": [
+                "Carbon Khmer",
+                "Khmer Lunar date",
+                "Khmer date",
+                "carbon",
+                "datetime",
+                "lunar"
+            ],
+            "support": {
+                "issues": "https://github.com/chanthornsp/CarbonKh/issues",
+                "source": "https://github.com/chanthornsp/CarbonKh/tree/v2.1"
+            },
+            "time": "2025-06-16T01:32:34+00:00"
         },
         {
             "name": "dflydev/dot-access-data",

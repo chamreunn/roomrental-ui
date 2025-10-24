@@ -1,11 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-    <form action="{{ route('account.store') }}" method="POST" enctype="multipart/form-data" >
+
+    <form action="{{ route('account.update', $user['id']) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PATCH')
+
         <div class="row row-cards">
             <div class="col-lg-8">
                 <div class="card">
-                    @csrf
                     <div class="card-body">
                         <div class="row g-3">
                             {{-- Username --}}
@@ -13,9 +16,9 @@
                                 <label for="username" class="form-label required">{{ __('account.username') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="user" /></span>
-                                    <input type="text" id="username"
-                                        class="form-control" name="name"
-                                        placeholder="{{ __('account.username') }}" value="{{ old('username') }}" autofocus>
+                                    <input type="text" id="username" class="form-control" name="name"
+                                        placeholder="{{ __('account.username') }}"
+                                        value="{{ old('name', $user['name'] ?? '') }}" autofocus>
                                 </div>
                                 @error('name')
                                     <div class="text-red mt-1">{{ $message }}</div>
@@ -27,13 +30,11 @@
                                 <label for="roleId" class="form-label required">{{ __('account.role') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="shield" /></span>
-                                    <select name="role" id="roleId"
-                                        class="form-select tom-select"
+                                    <select name="role" id="roleId" class="form-select tom-select"
                                         data-placeholder="{{ __('account.select_a_role') }}">
                                         <option value="">{{ __('account.select_a_role') }}</option>
                                         @foreach ($roles as $roleKey => $role)
-                                            <option value="{{ $roleKey }}"
-                                                {{ old('roleId', $selectedRole ?? '') == $roleKey ? 'selected' : '' }}
+                                            <option value="{{ $roleKey }}" {{ old('role', $user['role'] ?? ($selectedRole ?? '')) == $roleKey ? 'selected' : '' }}
                                                 data-custom-properties="<span class='{{ $role['class'] }} badge mx-0'>{{ ucfirst($role['name']) }}</span>">
                                             </option>
                                         @endforeach
@@ -49,13 +50,9 @@
                                 <label for="email" class="form-label required">{{ __('account.email') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="mail" /></span>
-                                    <input type="email" id="email"
-                                        class="form-control" name="email"
-                                        placeholder="{{ __('account.email') }}" value="{{ old('email') }}">
+                                    <input type="email" id="email" class="form-control" name="email"
+                                        value="{{ old('email', $user['email'] ?? '') }}">
                                 </div>
-                                @error('email')
-                                    <div class="text-red mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
 
                             {{-- Phone Number --}}
@@ -63,42 +60,30 @@
                                 <label for="phone" class="form-label required">{{ __('account.phone') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="phone" /></span>
-                                    <input type="tel" id="phone"
-                                        class="form-control" name="phone_number"
-                                        placeholder="{{ __('account.phone_placeholder') }}" value="{{ old('phone') }}">
+                                    <input type="tel" id="phone" class="form-control" name="phone_number"
+                                        value="{{ old('phone_number', $user['phone_number'] ?? '') }}">
                                 </div>
-                                @error('phone_number')
-                                    <div class="text-red mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
 
-                            {{-- Date of Birth --}}
+                            {{-- DOB --}}
                             <div class="col-lg-4">
                                 <label for="dob" class="form-label required">{{ __('account.date_of_birth') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="calendar-week" /></span>
-                                    <input type="text" id="dob"
-                                        class="form-control datepicker" name="dob"
-                                        placeholder="{{ __('account.date_of_birth') }}" value="{{ old('dob') }}"
+                                    <input type="text" id="dob" class="form-control datepicker" name="dob"
+                                        value="{{ old('dob', \Carbon\Carbon::parse($user['date_of_birth'] ?? '')->format('d-m-Y')) }}"
                                         readonly>
                                 </div>
-                                @error('dob')
-                                    <div class="text-red mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
 
-                            {{-- Password --}}
+                            {{-- Password (optional) --}}
                             <div class="col-lg-4">
-                                <label for="password" class="form-label required">{{ __('account.password') }}</label>
+                                <label for="password" class="form-label">{{ __('account.password') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="lock" /></span>
-                                    <input type="password" id="password"
-                                        class="form-control" name="password"
+                                    <input type="password" id="password" class="form-control" name="password"
                                         placeholder="{{ __('account.password') }}">
                                 </div>
-                                @error('password')
-                                    <div class="text-red mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
 
                             {{-- Address --}}
@@ -106,32 +91,31 @@
                                 <label for="address" class="form-label">{{ __('account.address') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="home" /></span>
-                                    <textarea id="address" class="form-control" name="address" rows="2"
-                                        placeholder="{{ __('account.address_placeholder') }}">{{ old('address') }}</textarea>
+                                    <textarea id="address" class="form-control" name="address"
+                                        rows="2">{{ old('address', $user['address'] ?? '') }}</textarea>
                                 </div>
-                                @error('address')
-                                    <div class="text-red mt-1">{{ $message }}</div>
-                                @enderror
                             </div>
-
                         </div>
                     </div>
+
                     <div class="card-footer">
-                        <button
-                            class="btn btn-primary ms-auto btn-animate-icon btn-animate-icon-rotate">{{ __('account.save') }}<x-icon
-                                name="plus" class="icon-end" /></button>
+                        <button class="btn btn-primary ms-auto btn-animate-icon btn-animate-icon-rotate">
+                            {{ __('account.save_update') }}
+                            <x-icon name="refresh" class="icon-end" />
+                        </button>
                     </div>
                 </div>
             </div>
 
+            {{-- Avatar Section --}}
             <div class="col-lg-4">
                 <div class="card">
                     <div class="card-body text-center">
-                        <h5 class="mb-3">{{ __('account.choose_profile_user') }}</h5>
+                        <h5 class="mb-3">{{ __('account.update_profile_user') }}</h5>
 
                         {{-- Avatar container --}}
                         <div class="position-relative d-inline-block" style="width: 300px; height: 300px;">
-                            <img id="avatarPreview" src="{{ old('avatar', '/imgs/default-avatar.png') }}"
+                            <img id="avatarPreview" src="{{ apiBaseUrl() . $user['profile_picture'] ?? '/imgs/default-avatar.png' }}"
                                 alt="Profile Picture" class="rounded border"
                                 style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
 
@@ -146,13 +130,14 @@
                         {{-- Hidden file input --}}
                         <input type="file" name="profile_picture" id="avatarInput" class="d-none" accept="image/*">
                         @error('profile_picture')
-                            <div class="text-red mt-1">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
             </div>
         </div>
     </form>
+
 @endsection
 
 @push('scripts')
@@ -170,7 +155,7 @@
         avatarPreview.addEventListener('click', () => avatarInput.click());
 
         // Preview selected image
-        avatarInput.addEventListener('change', function(event) {
+        avatarInput.addEventListener('change', function (event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();

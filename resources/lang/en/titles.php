@@ -23,4 +23,10 @@ return [
     'show' => 'Show',
     'view' => 'View',
     'delete' => 'Delete',
+    'back' => 'Back',
+    'created_at' => 'Created At',
+    'updated_at' => 'Updated At',
+    'status' => 'Status',
+    'actions' => 'Action',
+    'save_update' => 'Save Update'
 ];

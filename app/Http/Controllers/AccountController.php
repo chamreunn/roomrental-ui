@@ -121,4 +121,86 @@ class AccountController extends Controller
 
         return back()->withInput()->withErrors($apiResponse['errors'] ?? ['error' => __('account.creation_failed')]);
     }
+
+    public function show(Request $request, $id)
+    {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('account.index'),
+            ],
+        ];
+
+        // Roles
+        $roles = [
+            AbilitiesStatus::ADMIN => AbilitiesStatus::getStatus(AbilitiesStatus::ADMIN),
+            AbilitiesStatus::MANAGER => AbilitiesStatus::getStatus(AbilitiesStatus::MANAGER),
+            AbilitiesStatus::USER => AbilitiesStatus::getStatus(AbilitiesStatus::USER),
+        ];
+
+        // Get user detail
+        $userResponse = $this->api()->get("v1/users/{$id}");
+        $user = $userResponse['user'] ?? null;
+
+        if (!$user) {
+            return redirect()->route('account.index')->withErrors(__('account.user_not_found'));
+        }
+
+        return view('app.accounts.show', compact('buttons', 'user', 'roles'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        // ✅ Validation
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'role' => 'required',
+            'email' => 'required|email|max:255',
+            'phone_number' => 'required|string|max:20',
+            'dob' => 'required|date_format:d-m-Y',
+            'password' => 'nullable|string',
+            'address' => 'nullable|string|max:500',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        // ✅ Convert DOB format (to API format)
+        $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
+
+        // ✅ Prepare base payload
+        $payload = [
+            '_method' => 'PATCH', // for APIs that expect PATCH override
+            'name' => $validated['name'],
+            'role' => $validated['role'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone_number'],
+            'date_of_birth' => $dob,
+            'address' => $validated['address'] ?? null,
+        ];
+
+        // ✅ Only include password if not empty
+        if (!empty($validated['password'])) {
+            $payload['password'] = $validated['password']; // no need to hash — API handles it
+        }
+
+        // ✅ Handle file upload
+        $files = [];
+        if ($request->hasFile('profile_picture')) {
+            $files['profile_picture'] = $request->file('profile_picture');
+        }
+
+        // ✅ Send to API as multipart/form-data
+        $apiResponse = $this->api()->post("v1/users/{$id}", $payload, null, true, $files, 'profile_picture');
+
+        // ✅ Handle response
+        if (($apiResponse['success'] ?? false) || isset($apiResponse['id'])) {
+            return redirect()->route('account.index')
+                ->with('success', __('account.updated_successfully'));
+        }
+
+        return back()
+            ->withInput()
+            ->withErrors($apiResponse['errors'] ?? ['error' => __('account.update_failed')]);
+    }
 }

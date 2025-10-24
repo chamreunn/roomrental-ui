@@ -43,16 +43,16 @@ class PageHeader extends Component
         if (in_array($lastSegment, ['index', 'create', 'edit', 'show'])) {
             $action = __('titles.' . $lastSegment) !== 'titles.' . $lastSegment
                 ? __('titles.' . $lastSegment)
-                : ucwords(str_replace(['-', '_'], ' ', $lastSegment));
+                : ucwords(str_replace(['-', '_'], '', $lastSegment));
 
             // Combine action + last noun for natural language
             $lastNoun = end($pretitleParts) ?? '';
-            $this->title = $action . ' ' . $lastNoun;
+            $this->title = $action . '' . $lastNoun;
         } else {
             // Just show last segment or combined segments
-            $this->title = __('titles.' . $lastSegment) !== 'titles.' . $lastSegment
+            $this->title = __('titles.' .$lastSegment) !== 'titles.' . $lastSegment
                 ? __('titles.' . $lastSegment)
-                : ucwords(str_replace(['-', '_'], ' ', $lastSegment));
+                : ucwords(str_replace(['-', '_'], '', $lastSegment));
         }
     }
 

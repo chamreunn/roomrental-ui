@@ -14,4 +14,7 @@ return [
     'room_list' => 'Room List',
     'income' => 'Income',
     'expense' => 'Expense',
+    // location
+    'location_created' => 'Create Location',
+    'location_list' => 'Location List'
 ];

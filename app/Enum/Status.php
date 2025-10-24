@@ -13,14 +13,14 @@ enum Status
         switch ($status) {
             case self::ACTIVE:
                 return [
-                    'name' => 'Active',
+                    'name' => 'status.active',
                     'class' => 'badge bg-success text-success-fg',
                     'text' => 'text-success'
                 ]; // Light Green
             case self::INACTIVE:
                 return [
-                    'name' => 'Inactive', 
-                    'class' => 'badge bg-danger text-danger-fg', 
+                    'name' => 'status.in_active',
+                    'class' => 'badge bg-danger text-danger-fg',
                     'text' => 'text-danger']; // Red
             default:
                 return ['label' => 'Unknown', 'class' => 'badge bg-secondary-lt']; // Gray

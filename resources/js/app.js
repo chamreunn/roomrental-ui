@@ -33,13 +33,13 @@ document.addEventListener("DOMContentLoaded", function () {
         el.tomSelectInstance = new TomSelect(el, {
             copyClassesToDropdown: false,
             dropdownParent: dropdownParent,
-            dropdownClass: "dropdown-menu ts-dropdown shadow",
+            dropdownClass: "dropdown-menu ts-dropdown",
             optionClass: "dropdown-item",
             controlInput: "<input>",
             create: false,
             render: {
                 item: (data, escape) => `
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center p-1">
                         <span class="dropdown-item-indicator">${
                             data.customProperties || ""
                         }</span>

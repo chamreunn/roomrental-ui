@@ -108,7 +108,6 @@ class ApiService
         return $this->handleResponse($response);
     }
 
-
     protected function handleResponse($response)
     {
         if ($response->successful()) {

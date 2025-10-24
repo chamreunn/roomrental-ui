@@ -6,9 +6,10 @@
             <table class="table table-hover table-vcenter table-striped">
                 <thead>
                     <tr>
-                        <th>{{ __('location.name') }}</th>
-                        <th>{{ __('location.address') }}</th>
-                        <th>{{ __('location.description') }}</th>
+                        <th>{{ __('roomtype.name') }}</th>
+                        <th>{{ __('roomtype.size') }}</th>
+                        <th>{{ __('roomtype.price') }}</th>
+                        <th>{{ __('roomtype.description') }}</th>
                         <th>{{ __('titles.created_at') }}</th>
                         <th>{{ __('titles.updated_at') }}</th>
                         <th>{{ __('titles.status') }}</th>
@@ -16,22 +17,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($locations as $location)
+                    @forelse ($roomtypes as $roomtype)
                         <tr>
-                            <td>{{ $location['location_name'] }}</td>
-                            <td>{{ $location['address'] }}</td>
-                            <td>{{ $location['description'] }}</td>
-                            <td>{{ $location['create_date_kh'] }}</td>
-                            <td>{{ $location['update_date_kh'] }}</td>
+                            <td>{{ $roomtype['type_name'] }}</td>
+                            <td>{{ $roomtype['room_size'] }}</td>
+                            <td>{{ $roomtype['price'] }}</td>
+                            <td>{{ $roomtype['description'] ?? '-' }}</td>
+                            <td>{{ $roomtype['create_date_kh'] }}</td>
+                            <td>{{ $roomtype['update_date_kh'] }}</td>
                             <td><span
-                                    class="{{ $location['status_badge']['class'] }}">{{ __($location['status_badge']['name']) }}</span>
+                                    class="{{ $roomtype['status_badge']['class'] }}">{{ __($roomtype['status_badge']['name']) }}</span>
                             </td>
                             <td>
-                                <a href="{{ route('location.edit', $location['id']) }}" class="btn btn-sm btn-outline-primary"
+                                <a href="{{ route('roomtype.show', $roomtype['id']) }}" class="btn btn-sm btn-outline-primary"
                                     data-bs-toggle="tooltip" title="{{ __('titles.edit') }}" data-bs-placement="auto">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
-                                <button type="button" data-bs-toggle="modal" data-bs-target="#{{ $location['id'] }}"
+                                <button type="button" data-bs-toggle="modal" data-bs-target="#{{ $roomtype['id'] }}"
                                     class="btn btn-sm btn-outline-danger">
                                     <x-icon name="trash" class="icon me-0" />
                                 </button>
@@ -45,17 +47,17 @@
                 </tbody>
             </table>
         </div>
-        @if ($locations->hasPages())
+        @if ($roomtypes->hasPages())
             <div class="card-footer">
-                {{ $locations->links('pagination::bootstrap-5') }}
+                {{ $roomtypes->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>
 
-    @foreach ($locations as $location)
-        <div class="modal modal-blur fade" id="{{ $location['id'] }}" tabindex="-1" role="dialog" aria-hidden="true">
+    @foreach ($roomtypes as $roomtype)
+        <div class="modal modal-blur fade" id="{{ $roomtype['id'] }}" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                <form action="{{ route('location.destroy', $location['id']) }}" method="POST">
+                <form action="{{ route('roomtype.destroy', $roomtype['id']) }}" method="POST">
                     @csrf
                     @method('DELETE')
                     <div class="modal-content">
@@ -76,5 +78,4 @@
             </div>
         </div>
     @endforeach
-
 @endsection

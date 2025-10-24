@@ -162,7 +162,7 @@
                     </a>
                 </div>
             </div>
-            
+
             {{-- Language Switch --}}
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown">

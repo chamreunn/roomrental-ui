@@ -14,4 +14,11 @@ return [
     'address' => 'Address',
     'address_placeholder' => 'Enter your address',
     'save' => 'Save',
+    'created_successfully' => 'Account Created Successfully.',
+    'creation_failed' => 'Account Create Failed. Please check again.',
+    'updated_successfully' => 'Account Updated Successfully.',
+    'update_failed' => 'Cannot update your account.',
+    'choose_profile_user' => 'Choose Profile Picture',
+    'update_profile_user' => 'Update Profile Picture',
+    'save_update' => 'Save Update'
 ];

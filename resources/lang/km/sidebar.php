@@ -14,4 +14,7 @@ return [
     'room_list' => 'បញ្ជីបន្ទប់',
     'income' => 'ចំណូល',
     'expense' => 'ចំណាយ',
+    // location
+    'location_created' => 'បង្កើតទីតាំង',
+    'location_list' => 'បញ្ជីទីតាំង'
 ];

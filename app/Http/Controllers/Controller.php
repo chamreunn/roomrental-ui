@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enum\AbilitiesStatus;
+use App\Utils\Util;
+use App\Enum\Status;
 use App\Services\ApiService;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Validation\ValidatesRequests;
+use App\Enum\AbilitiesStatus;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class Controller extends BaseController
 {
@@ -21,6 +23,16 @@ class Controller extends BaseController
      * @var \App\Enum\AbilitiesStatus|null
      */
     protected $ability = null;
+
+    /**
+     * @var \App\Enum\Status|null
+     */
+    protected $status = null;
+
+    /**
+     * @var \App\Utils\Util|null
+     */
+    protected $util = null;
 
     /**
      * Lazy-load ApiService only when needed.
@@ -48,5 +60,33 @@ class Controller extends BaseController
         }
 
         return $this->ability;
+    }
+
+    /**
+     * Lazy-load Status only when needed.
+     *
+     * @return \App\Enum\Status
+     */
+    protected function Status(): Status
+    {
+        if (!$this->status) {
+            $this->status = app(Status::class);
+        }
+
+        return $this->status;
+    }
+
+    /**
+     * Lazy-load Status only when needed.
+     *
+     * @return \App\Utils\Util
+     */
+    protected function Util(): Util
+    {
+        if (!$this->util) {
+            $this->util = app(Util::class);
+        }
+
+        return $this->util;
     }
 }
