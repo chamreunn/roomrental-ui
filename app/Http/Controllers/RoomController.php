@@ -83,9 +83,8 @@ class RoomController extends Controller
             Log::error('Room fetch failed: ' . $e->getMessage());
         }
 
-        return view('app.rooms.room', compact('buttons', 'rooms'));
+        return view('app.rooms.room', compact('buttons', 'rooms', 'locationId'));
     }
-
 
     public function location(Request $request)
     {
@@ -137,7 +136,7 @@ class RoomController extends Controller
         ];
 
         // ✅ Send API request with locationId in header
-        $apiResponse = $this->api()->withHeaders(['locationId' => $locationId])->post('v1/rooms', $payload);
+        $apiResponse = $this->api()->withHeaders(['location_id' => $locationId])->post('v1/rooms', $payload);
 
         // ✅ Handle success
         if (($apiResponse['status'] ?? '') === 'success') {
@@ -152,5 +151,120 @@ class RoomController extends Controller
             ->withErrors($apiResponse['errors'] ?? [
                 'error' => $apiResponse['message'] ?? __('room.create_failed'),
             ]);
+    }
+
+    public function edit(Request $request, $roomId, $locationId)
+    {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('room.room_list', $locationId), // <-- go back to previous page
+            ],
+        ];
+
+        $color = $request->query('color');
+
+        // Get location detail
+        $roomtypeResponse = $this->api()->get("v1/room-types");
+        $roomtypes = $roomtypeResponse['room_types']['data'] ?? null;
+
+        $roomResponse = $this->api()->withHeaders(['location_id' => $locationId])->get("v1/rooms/{$roomId}");
+        $room = $roomResponse['room'];
+
+        return view('app.rooms.edit', compact('buttons', 'locationId', 'roomtypes', 'room', 'color'));
+    }
+
+    public function update(Request $request, $roomId, $locationId)
+    {
+        // ✅ Validate request
+        $validated = $request->validate([
+            'building_name' => 'required|string|max:255',
+            'floor_name'    => 'required|string|max:100',
+            'room_name'     => 'required|string|max:100',
+            'room_type_id'  => 'required|uuid',
+            'description'   => 'nullable|string|max:500',
+        ], [
+            'building_name.required' => __('room.building_name_required'),
+            'building_name.string'   => __('room.building_name_string'),
+            'building_name.max'      => __('room.building_name_max'),
+
+            'floor_name.required'    => __('room.floor_name_required'),
+            'floor_name.string'      => __('room.floor_name_string'),
+            'floor_name.max'         => __('room.floor_name_max'),
+
+            'room_name.required'     => __('room.name_required'),
+            'room_name.string'       => __('room.name_string'),
+            'room_name.max'          => __('room.name_max'),
+
+            'room_type_id.required'  => __('roomtype.select_required'),
+            'room_type_id.uuid'      => __('roomtype.select_invalid'),
+
+            'description.string'     => __('room.description_string'),
+            'description.max'        => __('room.description_max'),
+        ]);
+
+        // ✅ Prepare payload for API
+        $payload = [
+            '_method'       => 'PATCH', // If your API expects PATCH
+            'building_name' => $validated['building_name'],
+            'floor_name'    => $validated['floor_name'],
+            'room_name'     => $validated['room_name'],
+            'room_type_id'  => $validated['room_type_id'],
+            'description'   => $validated['description'] ?? null,
+            'updated_by'    => Session::get('user')['id'] ?? null,
+        ];
+
+        try {
+            // ✅ Send to API (assuming your helper $this->api() is a wrapper for HTTP client)
+            $apiResponse = $this->api()->withHeaders(['location_id' => $locationId])->post("v1/rooms/{$roomId}", $payload);
+
+            if (($apiResponse['status'] ?? '') === 'success') {
+                return redirect()->back()->with('success', __('room.updated_successfully'));
+            }
+
+            // ❌ API returned failure
+            return back()
+                ->withInput()
+                ->withErrors($apiResponse['errors'] ?? [
+                    'error' => $apiResponse['message'] ?? __('room.update_failed')
+                ]);
+        } catch (Exception $e) {
+            // ❌ Handle network or other exceptions
+            return back()
+                ->withInput()
+                ->withErrors(['error' => __('room.update_failed')]);
+        }
+    }
+
+    public function show(Request $request, $roomId, $locationId)
+    {
+        $roomResponse = $this->api()->withHeaders(['location_id' => $locationId])->get("v1/rooms/{$roomId}");
+        $room = $roomResponse['room'];
+
+        return view('app.rooms.show',compact('room'));
+    }
+
+    public function destroy($id, $locationId)
+    {
+        try {
+            // ✅ Call API DELETE endpoint
+            $apiResponse = $this->api()->withHeaders(['location_id' => $locationId])->delete("v1/rooms/{$id}");
+
+            // ✅ Handle success
+            if (($apiResponse['status'] ?? '') === 'success') {
+                return redirect()->back()->with('success', __('room.deleted_successfully'));
+            }
+
+            // ❌ Handle failure
+            return back()->withErrors([
+                'error' => $apiResponse['errors'] ?? $apiResponse['message'] ?? __('room.delete_failed'),
+            ]);
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'error' => $e->getMessage() ?: __('room.delete_failed'),
+            ]);
+        }
     }
 }
