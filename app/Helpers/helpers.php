@@ -18,6 +18,14 @@ if (!function_exists('userRole')) {
     }
 }
 
+if (!function_exists('canManageRooms')) {
+    function canManageRooms(): bool
+    {
+        return in_array(userRole(), ['manager', 'admin']);
+    }
+}
+
+
 if (!function_exists('apiBaseUrl')) {
     /**
      * Determine the correct API base URL depending on the environment.

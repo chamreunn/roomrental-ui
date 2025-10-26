@@ -1,4 +1,4 @@
-<aside class="navbar navbar-vertical navbar-expand-lg">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
     <div class="container-fluid">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
             aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
@@ -233,6 +233,10 @@
                                     href="{{ route('account.index') }}">
                                     {{ __('sidebar.account_list') }}
                                 </a>
+                                <a class="dropdown-item {{ active_class('account.index') }}"
+                                    href="{{ route('account.index') }}">
+                                    {{ __('sidebar.account_list') }}
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -304,7 +308,7 @@
                                     href="{{ route('room.choose_location') }}">
                                     {{ __('sidebar.create_room') }}
                                 </a>
-                                <a class="dropdown-item {{ active_class(['room.index','room.room_list']) }}"
+                                <a class="dropdown-item {{ active_class(['room.index','room.room_list','room.show']) }}"
                                     href="{{ route('room.index') }}">
                                     {{ __('sidebar.room_list') }}
                                 </a>

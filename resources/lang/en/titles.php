@@ -36,6 +36,7 @@ return [
     'show' => 'Show',
     'view' => 'View',
     'delete' => 'Delete',
+    'delete_selected' => 'Delete Selected',
     'back' => 'Back',
     'created_at' => 'Created At',
     'updated_at' => 'Updated At',

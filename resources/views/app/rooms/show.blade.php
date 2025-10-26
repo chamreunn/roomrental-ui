@@ -3,95 +3,205 @@
 @section('title', 'Room Details')
 
 @section('content')
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold mb-1">{{ $room['room_name'] }}</h2>
-            <p class="text-muted mb-0">
-                Building {{ $room['building_name'] }}, Floor {{ $room['floor_name'] }} •
-                <i class="ti ti-map-pin"></i> {{ ucfirst($room['location']['location_name']) }}
-            </p>
-        </div>
-        <a href="{{ route('room.index') }}" class="btn btn-outline-secondary">
-            <i class="ti ti-arrow-left me-1"></i> Back
-        </a>
-    </div>
 
-    <div class="row g-4">
-        <!-- Left Panel -->
+    <div class="row g-3">
+        <!-- Left Info -->
         <div class="col-lg-4">
-            <div class="card text-center h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="avatar avatar-xl bg-primary-lt mb-3">
-                        <i class="ti ti-door text-primary fs-2"></i>
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="avatar avatar-xl bg-primary-lt mb-3">
+                                <x-icon name="door" />
+                            </div>
+
+                            <h3 class="fw-bold mb-2">{{ $room['room_name'] }}</h3>
+                            <p class="text-muted small mb-2">
+                                {{ __('room.building') }} {{ $room['building_name'] }},
+                                {{ __('room.floor') }} {{ $room['floor_name'] }}
+                            </p>
+                            <p class="text-muted">
+                                <x-icon name="map-pin" />
+                                {{ ucfirst($room['location']['location_name']) }}
+                            </p>
+
+                            <span class="{{ $roomstatus['badge'] }}">
+                                {{ __($roomstatus['name']) }}
+                            </span>
+                        </div>
+
+                        <div class="card-body text-center">
+                            <div class="h1 text-success fw-bold mb-1">
+                                ${{ number_format($room['room_type']['price'], 2) }}
+                            </div>
+                            <span class="text-muted mb-2"> / {{ __('room.per_month') }}</span>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="text-muted mb-2">
+                                <x-icon name="tag" />
+                                {{ __('room.type') }}: <strong>{{ $room['room_type']['type_name'] }}</strong>
+                            </div>
+                            <div class="text-muted mb-2">
+                                <x-icon name="ruler" />
+                                {{ __('room.size') }}: <strong>{{ $room['room_type']['room_size'] }}</strong>
+                            </div>
+                        </div>
                     </div>
-                    <h4 class="fw-bold">{{ $room['room_type']['type_name'] }}</h4>
-                    <div class="text-muted mb-3">Room Type</div>
-
-                    <div class="h2 text-success mb-2">${{ number_format($room['room_type']['price'], 2) }}</div>
-                    <p class="text-muted mb-4">Per Month</p>
-
-                    <span class="badge bg-{{ $room['status'] ? 'success' : 'secondary' }}">
-                        {{ $room['status'] ? 'Available' : 'Unavailable' }}
-                    </span>
-
-                    <hr class="my-4">
-                    <div class="text-muted"><i class="ti ti-ruler"></i> {{ $room['room_type']['room_size'] }}</div>
-                    <div class="text-muted"><i class="ti ti-map-pin"></i>
-                        {{ ucfirst($room['location']['location_name']) }}</div>
+                </div>
+                <div class="col-12">
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <a href="{{ route('room.edit', ['room_id' => $room['id'], 'location_id' => $room['location_id']]) }}"
+                                class="btn btn-primary w-100" @disabled(!canManageRooms())>
+                                <x-icon name="edit" />{{ __('titles.edit') }}
+                            </a>
+                        </div>
+                        <div class="col-lg-6">
+                            <button class="btn btn-danger w-100" @disabled(!canManageRooms()) data-bs-toggle="modal"
+                                data-bs-target="#{{ $room['id'] }}">
+                                <x-icon name="trash" />
+                                {{ __('titles.delete') }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel -->
+        <!-- Right Info -->
         <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3"><i class="ti ti-info-circle me-2"></i>Room Information</h5>
-                    <p class="mb-0">{{ $room['description'] ?: 'No description available.' }}</p>
-                </div>
-            </div>
-
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
+            <!-- Description -->
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title text-muted mb-2"><i class="ti ti-calendar me-2"></i>Created At
-                            </h6>
-                            <div>{{ \Carbon\Carbon::parse($room['created_at'])->format('d M Y, H:i') }}</div>
+                            <h5 class="fw-bold mb-3">
+                                <x-icon name="info-circle" class="me-2 text-primary" />
+                                {{ __('room.information') }}
+                            </h5>
+                            <p class="mb-0">
+                                <x-empty-state title="{{ __('room.no_information_found') }}"
+                                    message="{{ __('room.this_room_is_no_information') }}" svg="svgs/no_result.svg"
+                                    width="200px" />
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
+                <!-- Clients -->
+                <div class="col-12">
+                    <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title text-muted mb-2"><i class="ti ti-refresh me-2"></i>Last Updated
-                            </h6>
-                            <div>{{ \Carbon\Carbon::parse($room['updated_at'])->format('d M Y, H:i') }}</div>
+                            <h5 class="fw-bold mb-3">
+                                <x-icon name="users" class="me-2 text-primary" />
+                                {{ __('room.clients') }}
+                            </h5>
+                            @if (empty($room['clients']))
+                                {{-- Display Empty State if no clients are found --}}
+                                <x-empty-state title="{{ __('room.no_client_found') }}"
+                                    message="{{ __('room.there_are_no_client_in_this_room') }}" svg="svgs/no_result.svg"
+                                    width="200px" />
+                            @else
+                                {{-- Client Cards/List Container (using Tabler Cards for better visual separation) --}}
+                                <div class="row row-cards g-2">
+                                    @foreach ($room['clients'] as $client)
+                                        <div class="col-12">
+                                            <div class="card card-sm">
+                                                <div class="card-body">
+                                                    <div class="d-flex align-items-center">
+
+                                                        {{-- Client Avatar/Initial --}}
+                                                        <span
+                                                            class="avatar me-3 bg-{{ $client['gender'] == 'ប្រុស' ? 'blue' : 'pink' }} text-primary-fg">
+                                                            {{ strtoupper(substr($client['username'], 0, 1)) }}
+                                                        </span>
+
+                                                        <div class="flex-fill">
+                                                            <div class="font-weight-medium">{{ $client['username'] }}</div>
+                                                            {{-- Phone/Email/Address line --}}
+                                                            <div class="text-muted">
+                                                                <span class="d-none d-lg-inline-block">
+                                                                    <x-icon name="phone" class="me-1" width="16" />
+                                                                    {{ $client['phone_number'] }}
+                                                                </span>
+                                                                <span class="mx-2 d-none d-lg-inline-block text-dot"></span>
+                                                                <span class="d-none d-lg-inline-block">
+                                                                    <x-icon name="map-pin" class="me-1" width="16" />
+                                                                    {{ $client['address'] }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Status and Dates --}}
+                                                        <div class="d-flex flex-column align-items-end me-3">
+
+                                                            {{-- Rental Status Badge --}}
+                                                            @if ($client['end_rental_date'])
+                                                                <span class="badge bg-danger-lt">Lease Ended</span>
+                                                            @elseif ($client['status'] == 1)
+                                                                <span class="badge bg-success-lt">Renting Now</span>
+                                                            @else
+                                                                <span class="badge bg-warning-lt">Pending</span>
+                                                            @endif
+
+                                                            {{-- Start Date (Visually smaller) --}}
+                                                            <div class="text-muted fs-6 mt-1">
+                                                                Since:
+                                                                {{ \Carbon\Carbon::parse($client['start_rental_date'])->format('d M Y') }}
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Action Dropdown (More Options) --}}
+                                                        <div class="dropdown">
+                                                            <a href="#" class="btn-action" data-bs-toggle="dropdown"
+                                                                aria-expanded="false">
+                                                                <x-icon name="dots-vertical" />
+                                                            </a>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a href="#" class="dropdown-item">View Profile</a>
+                                                                <a href="#" class="dropdown-item text-danger">End
+                                                                    Lease</a>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Clients -->
-            <div class="card shadow-sm mt-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3"><i class="ti ti-users me-2"></i>Clients</h5>
-                    @if (empty($room['clients']))
-                        <p class="text-muted mb-0">No clients assigned to this room.</p>
-                    @else
-                        <ul class="list-group list-group-flush">
-                            @foreach ($room['clients'] as $client)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>{{ $client['name'] }}</span>
-                                    <span class="badge bg-primary">{{ $client['status'] }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- modal delete --}}
+    <div class="modal modal-blur fade" id="{{ $room['id'] }}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <form action="{{ route('room.destroy', ['room_id' => $room['id'], 'location_id' => $room['location_id']]) }}"
+                method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="modal-title">{{ __('modal.confirm_title') }}</div>
+                        <div>{{ __('modal.confirm_message_room') }} <span
+                                class="badge bg-primary-lt">{{ $room['room_name'] }}</span> ?</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">
+                            {{ __('modal.cancel') }}
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            {{ __('modal.confirm') }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 @endsection

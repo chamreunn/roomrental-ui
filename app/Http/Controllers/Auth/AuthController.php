@@ -33,6 +33,8 @@ class AuthController extends Controller
             'password' => $request->password,
         ]);
 
+        // dd($response);
+
         if (!isset($response['error']) || $response['error'] === false) {
 
             $user = $response['user'];

@@ -188,7 +188,7 @@
                         style="background-image: url({{ asset($authUser['profile_picture']) }})"></span>
                     <div class="d-none d-xl-block ps-2">
                         <div class="text-uppercase fw-bolder text-primary">{{ $authUser['name'] }}</div>
-                        <div class="mt-1 small text-secondary">{{ $authUser['role'] }}</div>
+                        <div class="mt-1 small text-secondary">{{ ucfirst($authUser['role']) }}</div>
                     </div>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">

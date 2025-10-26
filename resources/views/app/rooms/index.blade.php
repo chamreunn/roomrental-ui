@@ -10,7 +10,7 @@
                         <x-icon name="map-pin" />
                     </span>
                     <div class="flex-fill">
-                        <div class="fw-bold text-dark">{{ $location['location_name'] }}</div>
+                        <div class="fw-bold">{{ $location['location_name'] }}</div>
                         <div class="text-muted small">{{ $location['address'] ?? __('room.no_address') }}</div>
                     </div>
                 </a>

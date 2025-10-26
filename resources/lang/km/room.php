@@ -10,6 +10,23 @@ return [
     'location' => 'ទីតាំង',
     'type' => 'ប្រភេទ',
     'size' => 'ទំហំ',
+    'book' => 'កក់',
+    'view' => 'ពិនិត្យ',
+    'room' => 'បន្ទប់',
+    'building' => 'អគារ',
+    'per_month' => 'ក្នុងមួយខែ',
+    'no_description' => 'មិនមានការពិពណ៌នាទេ។',
+    'created_at' => 'បានបង្កើតនៅ',
+    'updated_at' => 'បានធ្វើបច្ចុប្បន្នភាពចុងក្រោយ',
+    'clients' => 'អតិថិជន',
+    'no_clients' => 'មិនមានអតិថិជនក្នុងបន្ទប់នេះទេ។',
+    'information' => 'ព័ត៌មានអំពីបន្ទប់',
+    'no_information_found' => 'មិនមានព័ត៌មានទេ',
+    'this_room_is_no_information' => 'បន្ទប់នេះមិនមានព័ត៌មានទេ។',
+
+    'no_client_found' => 'មិនមានអតិថិជនទេ',
+    'there_are_no_client_in_this_room' => 'មិនមានអតិថិជននៅក្នុងបន្ទប់នេះទេ។',
+
 
     'building_name_required' => 'សូមបញ្ចូលឈ្មោះអគារ។',
     'floor_name_required'    => 'សូមបញ្ចូលឈ្មោះជាន់។',

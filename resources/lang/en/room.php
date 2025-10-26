@@ -10,6 +10,22 @@ return [
     'location' => 'Location',
     'type' => 'Type',
     'size' => 'Size',
+    'book' => 'Booking',
+    'view' => 'View',
+    'room' => 'Room(s)',
+    'building' => 'Building',
+    'per_month' => 'Per Month',
+    'information' => 'Room Information',
+    'no_description' => 'No description available.',
+    'created_at' => 'Created At',
+    'updated_at' => 'Last Updated',
+    'clients' => 'Clients',
+    'no_clients' => 'No clients assigned to this room.',
+    'no_information_found' => 'No Information Found',
+    'this_room_is_no_information' => 'This room does not have any information.',
+
+    'no_client_found' => 'No Client Found',
+    'there_are_no_client_in_this_room' => 'There are no clients in this room.',
 
     // Validation messages
     'building_name_required' => 'The building name is required.',

@@ -1,4 +1,6 @@
 import AOS from "aos";
+import ApexCharts from "apexcharts";
+import "@tabler/core/dist/css/tabler-vendors.min.css";
 import TomSelect from "@tabler/core/dist/libs/tom-select/dist/js/tom-select.base.min.js";
 import Litepicker from "litepicker";
 import "litepicker/dist/css/litepicker.css";
@@ -9,8 +11,7 @@ import "@tabler/core/dist/js/tabler-theme.min.js";
 import "@tabler/core/dist/css/tabler-flags.min.css";
 import "@tabler/core/dist/css/demo.min.css";
 import "@tabler/core/dist/libs/litepicker/dist/css/litepicker.css";
-import "@tabler/core/dist/css/tabler-vendors.min.css";
-
+// import "@tabler/core/dist/libs/apexcharts/dist/apexcharts.min.js";
 // Initialize AOS
 document.addEventListener("DOMContentLoaded", () => {
     AOS.init({
@@ -124,3 +125,27 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+// document.addEventListener("DOMContentLoaded", () => {
+//     const el = document.querySelector("#booking-stats-chart");
+//     if (!el) return;
+
+//     const chart = new ApexCharts(el, {
+//         chart: {
+//             type: "area",
+//             height: 260,
+//             toolbar: { show: false },
+//         },
+//         series: [
+//             {
+//                 name: "Bookings",
+//                 data: [20, 40, 60, 80, 100, 90, 120],
+//             },
+//         ],
+//         xaxis: {
+//             categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+//         },
+//         colors: ["#206bc4"],
+//     });
+
+//     chart.render();
+// });

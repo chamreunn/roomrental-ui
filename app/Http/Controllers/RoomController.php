@@ -33,6 +33,8 @@ class RoomController extends Controller
             ],
         ];
 
+        $colors = ['primary', 'success', 'warning', 'info', 'danger', 'purple', 'teal', 'orange'];
+
         try {
             $perPage = $request->query('per_page', 10);
             $currentPage = $request->query('page', 1);
@@ -83,7 +85,7 @@ class RoomController extends Controller
             Log::error('Room fetch failed: ' . $e->getMessage());
         }
 
-        return view('app.rooms.room', compact('buttons', 'rooms', 'locationId'));
+        return view('app.rooms.room', compact('buttons', 'rooms', 'locationId', 'colors'));
     }
 
     public function location(Request $request)
@@ -240,10 +242,21 @@ class RoomController extends Controller
 
     public function show(Request $request, $roomId, $locationId)
     {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('room.room_list', $locationId),
+            ],
+        ];
+
         $roomResponse = $this->api()->withHeaders(['location_id' => $locationId])->get("v1/rooms/{$roomId}");
         $room = $roomResponse['room'];
 
-        return view('app.rooms.show',compact('room'));
+        $roomstatus = RoomStatus::getStatus($room['status']);
+
+        return view('app.rooms.show', compact('room', 'buttons', 'roomstatus'));
     }
 
     public function destroy($id, $locationId)
@@ -261,6 +274,23 @@ class RoomController extends Controller
             return back()->withErrors([
                 'error' => $apiResponse['errors'] ?? $apiResponse['message'] ?? __('room.delete_failed'),
             ]);
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'error' => $e->getMessage() ?: __('room.delete_failed'),
+            ]);
+        }
+    }
+
+    public function multiDestroy(Request $request, $locationId)
+    {
+        $roomIds = explode(',', $request->room_ids);
+
+        try {
+            foreach ($roomIds as $id) {
+                $this->api()->withHeaders(['location_id' => $locationId])->delete("v1/rooms/{$id}");
+            }
+
+            return back()->with('success', __('room.deleted_successfully'));
         } catch (Exception $e) {
             return back()->withErrors([
                 'error' => $e->getMessage() ?: __('room.delete_failed'),

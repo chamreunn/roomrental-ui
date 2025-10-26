@@ -80,7 +80,6 @@ class AccountController extends Controller
 
     public function store(Request $request)
     {
-        // Validation
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required',
@@ -90,12 +89,14 @@ class AccountController extends Controller
             'password' => 'required|string',
             'address' => 'nullable|string|max:500',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'location_id' => 'nullable|array',
+            'location_id.*' => 'uuid',
         ]);
 
         // Convert DOB to API format
         $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
 
-        // Prepare data payload (non-file fields)
+        // Prepare payload
         $payload = [
             'name' => $validated['name'],
             'role' => $validated['role'],
@@ -106,20 +107,34 @@ class AccountController extends Controller
             'address' => $validated['address'] ?? null,
         ];
 
-        // Prepare files array for attach()
+        // Handle file upload
         $files = [];
         if ($request->hasFile('profile_picture')) {
             $files['profile_picture'] = $request->file('profile_picture');
         }
 
-        // Send to API as multipart/form-data
+        // Send to API (multipart/form-data)
         $apiResponse = $this->api()->post('v1/users', $payload, null, true, $files, 'profile_picture');
 
-        if ($apiResponse['success'] ?? false) {
-            return redirect()->route('account.index')->with('success', __('account.created_successfully'));
+        if (!($apiResponse['id'] ?? false)) {
+            return back()->withInput()->withErrors(
+                $apiResponse['errors'] ?? ['error' => __('account.creation_failed')]
+            );
         }
 
-        return back()->withInput()->withErrors($apiResponse['errors'] ?? ['error' => __('account.creation_failed')]);
+        // Attach user to locations if any selected
+        if (!empty($validated['location_id'])) {
+            foreach ($validated['location_id'] as $location_id) {
+                $this->api()->post('v1/user-locations', [
+                    'user_id' => $apiResponse['id'],
+                    'location_id' => $location_id,
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('account.index')
+            ->with('success', __('account.created_successfully'));
     }
 
     public function show(Request $request, $id)

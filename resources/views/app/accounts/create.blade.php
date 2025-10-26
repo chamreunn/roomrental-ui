@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <form action="{{ route('account.store') }}" method="POST" enctype="multipart/form-data" >
+    <form action="{{ route('account.store') }}" method="POST" enctype="multipart/form-data">
         <div class="row row-cards">
             <div class="col-lg-8">
                 <div class="card">
@@ -13,9 +13,8 @@
                                 <label for="username" class="form-label required">{{ __('account.username') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="user" /></span>
-                                    <input type="text" id="username"
-                                        class="form-control" name="name"
-                                        placeholder="{{ __('account.username') }}" value="{{ old('username') }}" autofocus>
+                                    <input type="text" id="username" class="form-control" name="name"
+                                        placeholder="{{ __('account.username') }}" value="{{ old('name') }}" autofocus>
                                 </div>
                                 @error('name')
                                     <div class="text-red mt-1">{{ $message }}</div>
@@ -27,13 +26,12 @@
                                 <label for="roleId" class="form-label required">{{ __('account.role') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="shield" /></span>
-                                    <select name="role" id="roleId"
-                                        class="form-select tom-select"
+                                    <select name="role" id="roleId" class="form-select tom-select"
                                         data-placeholder="{{ __('account.select_a_role') }}">
                                         <option value="">{{ __('account.select_a_role') }}</option>
                                         @foreach ($roles as $roleKey => $role)
                                             <option value="{{ $roleKey }}"
-                                                {{ old('roleId', $selectedRole ?? '') == $roleKey ? 'selected' : '' }}
+                                                {{ old('role', $selectedRole ?? '') == $roleKey ? 'selected' : '' }}
                                                 data-custom-properties="<span class='{{ $role['class'] }} badge mx-0'>{{ ucfirst($role['name']) }}</span>">
                                             </option>
                                         @endforeach
@@ -49,8 +47,7 @@
                                 <label for="email" class="form-label required">{{ __('account.email') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="mail" /></span>
-                                    <input type="email" id="email"
-                                        class="form-control" name="email"
+                                    <input type="email" id="email" class="form-control" name="email"
                                         placeholder="{{ __('account.email') }}" value="{{ old('email') }}">
                                 </div>
                                 @error('email')
@@ -63,9 +60,9 @@
                                 <label for="phone" class="form-label required">{{ __('account.phone') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="phone" /></span>
-                                    <input type="tel" id="phone"
-                                        class="form-control" name="phone_number"
-                                        placeholder="{{ __('account.phone_placeholder') }}" value="{{ old('phone') }}">
+                                    <input type="tel" id="phone" class="form-control" name="phone_number"
+                                        placeholder="{{ __('account.phone_placeholder') }}"
+                                        value="{{ old('phone_number') }}">
                                 </div>
                                 @error('phone_number')
                                     <div class="text-red mt-1">{{ $message }}</div>
@@ -77,8 +74,7 @@
                                 <label for="dob" class="form-label required">{{ __('account.date_of_birth') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="calendar-week" /></span>
-                                    <input type="text" id="dob"
-                                        class="form-control datepicker" name="dob"
+                                    <input type="text" id="dob" class="form-control datepicker" name="dob"
                                         placeholder="{{ __('account.date_of_birth') }}" value="{{ old('dob') }}"
                                         readonly>
                                 </div>
@@ -92,8 +88,7 @@
                                 <label for="password" class="form-label required">{{ __('account.password') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="lock" /></span>
-                                    <input type="password" id="password"
-                                        class="form-control" name="password"
+                                    <input type="password" id="password" class="form-control" name="password"
                                         placeholder="{{ __('account.password') }}">
                                 </div>
                                 @error('password')
@@ -113,13 +108,32 @@
                                     <div class="text-red mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-
                         </div>
                     </div>
+
+                    {{-- Locations --}}
+                    <div class="card-body">
+                        <div class="form-label">ទីតាំងអ្នកប្រើប្រាស់</div>
+                        <div>
+                            @foreach ($locations as $location)
+                                <label class="form-check form-check-inline cursor-pointer">
+                                    <input class="form-check-input cursor-pointer" name="location_id[]"
+                                        value="{{ $location['id'] }}" type="checkbox"
+                                        {{ in_array($location['id'], old('location_id', [])) ? 'checked' : '' }}>
+                                    <span class="form-check-label cursor-pointer">{{ $location['location_name'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('location_id')
+                            <div class="text-red mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="card-footer">
-                        <button
-                            class="btn btn-primary ms-auto btn-animate-icon btn-animate-icon-rotate">{{ __('account.save') }}<x-icon
-                                name="plus" class="icon-end" /></button>
+                        <button class="btn btn-primary ms-auto btn-animate-icon btn-animate-icon-rotate">
+                            {{ __('account.save') }}
+                            <x-icon name="plus" class="icon-end" />
+                        </button>
                     </div>
                 </div>
             </div>

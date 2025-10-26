@@ -69,6 +69,7 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::get('/rooms/edit/{room_id}/{location_id}', [RoomController::class, 'edit'])->name('room.edit');
     Route::patch('/rooms/update/{room_id}/{location_id}', [RoomController::class, 'update'])->name('room.update');
     Route::delete('/rooms/destroy/{room_id}/{location_id}', [RoomController::class, 'destroy'])->name('room.destroy');
+    Route::delete('/rooms/multi/{location_id}', [RoomController::class, 'multiDestroy'])->name('room.multi_destroy');
     Route::get('/rooms/show/{room_id}/{location_id}', [RoomController::class, 'show'])->name('room.show');
 });
 
