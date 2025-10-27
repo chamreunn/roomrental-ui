@@ -3,12 +3,64 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Session;
 
 class ClientController extends Controller
 {
+    public function index(Request $request)
+    {
+        try {
+            $perPage = $request->query('per_page', 10);
+            $currentPage = $request->query('page', 1);
+
+            $response = $this->api()->get('v1/clients');
+            $data = $response['clients'] ?? [];
+
+            // ✅ Safely get data list
+            $clientsArray = $data['data'] ?? [];
+            $total = $data['total'] ?? count($clientsArray);
+
+            // ✅ Create pagination
+            $clients = new LengthAwarePaginator(
+                collect($clientsArray),
+                $total,
+                $perPage,
+                $currentPage,
+                ['path' => url()->current(), 'query' => $request->query()]
+            );
+        } catch (Exception $e) {
+            $clients = new LengthAwarePaginator([], 0, 10);
+        }
+
+        return view('app.clients.index', compact('clients'));
+    }
+
+    public function edit(Request $request, $clientId)
+    {
+        // Fetch client from API
+        $response = $this->api()->get('v1/clients', ['id' => $clientId]);
+
+        $client = $response['clients']['data'][0] ?? null;
+
+        if (!$client) {
+            return redirect()->route('clients.index')
+                ->withErrors(['error' => __('client.no_clients_found')]);
+        }
+
+        // Map Khmer gender to 'm'/'f'
+        $genderMap = [
+            'ប្រុស' => 'm',
+            'ស្រី' => 'f',
+        ];
+
+        $client['gender_mapped'] = $genderMap[$client['gender']] ?? null;
+
+        return view('app.clients.edit', compact('client'));
+    }
+
     public function store(Request $request, $roomId)
     {
         $validated = $request->validate([
@@ -64,16 +116,90 @@ class ClientController extends Controller
                 'client_image'             // ✅ API field name for file
             );
 
-            if (isset($response['status']) && $response['status'] === 'success') {
-                return back()->with('success', __('messages.rental_success'));
+            if (($response['status'] ?? '') === 'success') {
+                return redirect()
+                    ->route(dashboardRoute())
+                    ->with('success', __('messages.rental_success'));
             }
 
-            Log::error('Client API failed', ['response' => $response]);
+
             return back()->withErrors([
                 'api' => 'API returned: ' . json_encode($response),
             ])->withInput();
         } catch (\Throwable $e) {
-            Log::error('Client Store Exception', ['error' => $e->getMessage()]);
+            return back()->withErrors(['api' => $e->getMessage()])->withInput();
+        }
+    }
+
+    public function update(Request $request, $clientId, $roomId)
+    {
+        $validated = $request->validate([
+            'username'          => 'required|string|max:100',
+            'gender'            => 'required|string|in:m,f',
+            'phone_number'      => 'required|string|max:20',
+            'email'             => 'nullable|email|max:100',
+            'date_of_birth'     => 'required|date_format:d-m-Y',
+            'national_id'       => 'nullable|string|max:30',
+            'passport'          => 'nullable|string|max:30',
+            'address'           => 'required|string|max:255',
+            'image'      => 'nullable|string|max:191', // nullable string
+            'start_rental_date' => 'nullable|date',
+            'end_rental_date'   => 'nullable|date',
+            'description'       => 'nullable|string|max:255',
+        ], [
+            'username.required' => __('client.username_required'),
+            'gender.required'   => __('client.gender_required'),
+            'gender.in'         => __('client.gender_invalid'),
+            'phone_number.required' => __('client.phone_required'),
+            'date_of_birth.required' => __('client.date_of_birth_required'),
+            'date_of_birth.date_format' => __('client.dob_format'),
+            'address.required'  => __('client.address_required'),
+        ]);
+
+        try {
+            // Convert dates to Y-m-d format
+            $dob = Carbon::createFromFormat('d-m-Y', $validated['date_of_birth'])->format('Y-m-d');
+            $startDate = $validated['start_rental_date'] ? Carbon::parse($validated['start_rental_date'])->format('Y-m-d') : now()->format('Y-m-d');
+            $endDate = $validated['end_rental_date'] ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d') : null;
+
+            // Prepare payload
+            $payload = [
+                '_method'           => 'PATCH',
+                'created_by'        => Session::get('user.id'),
+                'updated_by'        => Session::get('user.id'),
+                'room_id'           => $roomId,
+                'username'          => $validated['username'],
+                'date_of_birth'     => $dob,
+                'gender'            => $validated['gender'],
+                'phone_number'      => $validated['phone_number'],
+                'email'             => $validated['email'] ?? null,
+                'national_id'       => $validated['national_id'] ?? null,
+                'passport'          => $validated['passport'] ?? null,
+                'address'           => $validated['address'],
+                'start_rental_date' => $startDate,
+                'end_rental_date'   => $endDate,
+                'description'       => $validated['description'] ?? null,
+            ];
+
+            // Only include client_image if provided (as string)
+            if (!empty($validated['image'])) {
+                $payload['client_image'] = $validated['image'];
+            }
+
+            // Send payload to API (no file upload)
+            $response = $this->api()->post(
+                'v1/clients/' . $clientId,
+                $payload
+            );
+
+            if (($response['status'] ?? '') === 'success') {
+                return redirect()
+                    ->back()
+                    ->with('success', __('client.update_success'));
+            }
+
+            return back()->withErrors(['api' => __('client.update_failed')])->withInput();
+        } catch (\Throwable $e) {
             return back()->withErrors(['api' => $e->getMessage()])->withInput();
         }
     }

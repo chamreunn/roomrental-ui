@@ -74,6 +74,11 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::patch('/rooms/update/{room_id}/{location_id}', [RoomController::class, 'update'])->name('room.update');
     Route::delete('/rooms/destroy/{room_id}/{location_id}', [RoomController::class, 'destroy'])->name('room.destroy');
     Route::delete('/rooms/multi/{location_id}', [RoomController::class, 'multiDestroy'])->name('room.multi_destroy');
+    // For clients  
+    Route::get('/clients/index', [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/edit/{id}', [ClientController::class, 'edit'])->name('clients.edit');
+    Route::patch('/clients/update/{id}/{room_id}', [ClientController::class, 'update'])->name('clients.update');
+    Route::delete('/clients/destroy/{id}', [ClientController::class, 'destroy'])->name('clients.destroy');
 });
 
 // 🧩 Admin Routes
@@ -91,6 +96,7 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::get('/user/dashboard', [UserController::class, 'index'])->name('dashboard.user');
     Route::get('/rooms/show/{room_id}/{location_id}', [RoomController::class, 'show'])->name('room.show');
     Route::get('/rooms/booking/{room_id}/{location_id}', [RoomController::class, 'booking'])->name('room.booking');
+    Route::patch('/rooms/{room_id}/{location_id}', [RoomController::class, 'updateStatus'])->name('room.update-status');
     // for client
     Route::post('/client/store/{id}', [ClientController::class, 'store'])->name('client.store');
 });

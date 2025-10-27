@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Room Details')
-
 @section('content')
 
     <div class="row g-3">
@@ -16,6 +14,32 @@
                             </div>
 
                             <h3 class="fw-bold mb-2">{{ $room['room_name'] }}</h3>
+
+                            <form action="{{ route('room.update-status', [$room['id'], $room['location']['id']]) }}"
+                                method="POST" class="d-inline">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="dropdown d-inline-block mb-2">
+                                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown">
+                                        <x-icon name="pencil" class="me-1" /> {{ __('room.edit_status') }}
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        @foreach ($statuses as $key => $status)
+                                            <li>
+                                                <button type="submit" name="status" value="{{ $key }}"
+                                                    class="dropdown-item">
+                                                    <span class="{{ $status['text'] }}">
+                                                        {{ $status['name'] }}
+                                                    </span>
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </form>
+
                             <p class="text-muted small mb-2">
                                 {{ __('room.building') }} {{ $room['building_name'] }},
                                 {{ __('room.floor') }} {{ $room['floor_name'] }}
@@ -47,8 +71,9 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
-                @if(userRole() != 'user')
+                @if (userRole() != 'user')
                     <div class="col-12">
                         <div class="row g-3">
                             <div class="col-lg-6">
@@ -58,7 +83,8 @@
                                 </a>
                             </div>
                             <div class="col-lg-6">
-                                <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#{{ $room['id'] }}">
+                                <button class="btn btn-danger w-100" data-bs-toggle="modal"
+                                    data-bs-target="#{{ $room['id'] }}">
                                     <x-icon name="trash" />
                                     {{ __('titles.delete') }}
                                 </button>

@@ -256,7 +256,12 @@ class RoomController extends Controller
 
         $roomstatus = RoomStatus::getStatus($room['status']);
 
-        return view('app.rooms.show', compact('room', 'buttons', 'roomstatus'));
+        // status
+        $statuses = RoomStatus::all();
+
+        // dd($statuses);
+
+        return view('app.rooms.show', compact('room', 'buttons', 'roomstatus', 'statuses'));
     }
 
     public function destroy($id, $locationId)
@@ -298,7 +303,6 @@ class RoomController extends Controller
         }
     }
 
-
     // for booking
     public function booking(Request $request, $roomId, $locationId)
     {
@@ -316,6 +320,52 @@ class RoomController extends Controller
 
         $roomstatus = RoomStatus::getStatus($room['status']);
 
-        return view('app.rooms.booking',compact('room', 'buttons', 'roomstatus'));
+        return view('app.rooms.booking', compact('room', 'buttons', 'roomstatus'));
+    }
+
+    public function updateStatus(Request $request, $roomId, $locationId)
+    {
+        // ✅ Validate the incoming status value
+        $validated = $request->validate([
+            'status' => 'required|in:0,1,2,3',
+        ], [
+            'status.required' => __('room.status_required'),
+            'status.in' => __('room.invalid_status'),
+        ]);
+
+        // ✅ Prepare payload for API
+        $payload = [
+            '_method'    => 'PATCH',
+            'updated_by' => Session::get('user')['id'] ?? null,
+            'status'     => (int) $validated['status'],
+        ];
+
+        try {
+            // ✅ Send PATCH request to your API
+            $apiResponse = $this->api()
+                ->withHeaders(['location_id' => $locationId])
+                ->post("v1/rooms/{$roomId}", $payload);
+
+            // ✅ Check for success flag
+            if (($apiResponse['status'] ?? '') === 'success' || ($apiResponse['success'] ?? false)) {
+                return redirect()
+                    ->back()
+                    ->with('success', __('room.updated_successfully'));
+            }
+
+            // ❌ API returned an error response
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'error' => $apiResponse['message'] ?? __('room.update_failed'),
+                ]);
+        } catch (\Throwable $e) {
+            // ❌ Catch network, connection, or unexpected exceptions
+            report($e); // optional: log it for debugging
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => __('room.update_failed')]);
+        }
     }
 }

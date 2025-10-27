@@ -42,5 +42,7 @@ return [
     'updated_at' => 'Updated At',
     'status' => 'Status',
     'actions' => 'Action',
-    'save_update' => 'Save Update'
+    'save_update' => 'Save Update',
+    //client
+    'client' => 'Clents'
 ];

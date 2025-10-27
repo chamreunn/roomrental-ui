@@ -134,7 +134,7 @@
                         @endif
 
                         <div class="card-footer mt-auto">
-                            <a href="#" class="btn btn-sm w-100">
+                            <a href="{{ route('clients.index') }}" class="btn btn-sm w-100">
                                 {{ __('dashboard.view_all_clients') }}
                                 <x-icon name="arrow-right" />
                             </a>
@@ -224,7 +224,6 @@
 @endsection
 
 @push('scripts')
-
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -317,14 +316,21 @@
                     btnLeft.style.pointerEvents = scrollContainer.scrollLeft > 10 ? "auto" : "none";
 
                     btnRight.style.opacity = scrollContainer.scrollLeft < maxScrollLeft - 10 ? "1" : "0";
-                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 10 ? "auto" : "none";
+                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 10 ?
+                        "auto" : "none";
                 }
 
                 btnLeft.addEventListener("click", () => {
-                    scrollContainer.scrollBy({ left: -300, behavior: "smooth" });
+                    scrollContainer.scrollBy({
+                        left: -300,
+                        behavior: "smooth"
+                    });
                 });
                 btnRight.addEventListener("click", () => {
-                    scrollContainer.scrollBy({ left: 300, behavior: "smooth" });
+                    scrollContainer.scrollBy({
+                        left: 300,
+                        behavior: "smooth"
+                    });
                 });
 
                 scrollContainer.addEventListener("scroll", updateButtons);
@@ -334,5 +340,4 @@
             });
         });
     </script>
-
 @endpush

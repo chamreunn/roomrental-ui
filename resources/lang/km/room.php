@@ -23,6 +23,7 @@ return [
     'information' => 'ព័ត៌មានអំពីបន្ទប់',
     'no_information_found' => 'មិនមានព័ត៌មានទេ',
     'this_room_is_no_information' => 'បន្ទប់នេះមិនមានព័ត៌មានទេ។',
+    'edit_status' => 'កែប្រែស្ថានភាព',
 
     'no_client_found' => 'មិនមានអតិថិជនទេ',
     'there_are_no_client_in_this_room' => 'មិនមានអតិថិជននៅក្នុងបន្ទប់នេះទេ។',

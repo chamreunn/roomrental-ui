@@ -16,5 +16,7 @@ return [
     'expense' => 'Expense',
     // location
     'location_created' => 'Create Location',
-    'location_list' => 'Location List'
+    'location_list' => 'Location List',
+    //client
+    'client' => 'Clients'
 ];

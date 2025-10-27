@@ -16,5 +16,7 @@ return [
     'expense' => 'ចំណាយ',
     // location
     'location_created' => 'បង្កើតទីតាំង',
-    'location_list' => 'បញ្ជីទីតាំង'
+    'location_list' => 'បញ្ជីទីតាំង',
+    //client
+    'client' => 'អតិថិជន'
 ];

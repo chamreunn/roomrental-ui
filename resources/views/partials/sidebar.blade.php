@@ -222,7 +222,7 @@
                         </span>
                         <span class="nav-link-title">{{ __('sidebar.account') }}</span>
                     </a>
-                    <div class="dropdown-menu {{ active_class('account.*', '', true) }}">
+                    <div class="dropdown-menu {{ active_class('account.*', 'active', true) }}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
                                 <a class="dropdown-item {{ active_class('account.create') }}"
@@ -315,6 +315,16 @@
                             </div>
                         </div>
                     </div>
+                </li>
+
+                <!-- Clients -->
+                <li class="nav-item {{ active_class('clients.*', 'active') }}">
+                    <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.index') }}">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <x-icon name="users" />
+                        </span>
+                        <span class="nav-link-title">{{ __('sidebar.client') }}</span>
+                    </a>
                 </li>
 
                 <!-- Income -->
