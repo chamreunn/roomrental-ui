@@ -11,6 +11,7 @@ class AdminController extends Controller
     {
         // Fetch locations, room types, and statuses
         $locations = $this->api()->get('v1/locations')['locations']['data'] ?? [];
+        
         $roomTypes = collect($this->api->get('v1/room-types')['room_types']['data'] ?? []);
         $roomStatuses = RoomStatus::all();
 

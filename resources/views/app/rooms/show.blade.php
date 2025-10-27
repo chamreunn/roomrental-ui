@@ -48,23 +48,24 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12">
-                    <div class="row g-3">
-                        <div class="col-lg-6">
-                            <a href="{{ route('room.edit', ['room_id' => $room['id'], 'location_id' => $room['location_id']]) }}"
-                                class="btn btn-primary w-100" @disabled(!canManageRooms())>
-                                <x-icon name="edit" />{{ __('titles.edit') }}
-                            </a>
-                        </div>
-                        <div class="col-lg-6">
-                            <button class="btn btn-danger w-100" @disabled(!canManageRooms()) data-bs-toggle="modal"
-                                data-bs-target="#{{ $room['id'] }}">
-                                <x-icon name="trash" />
-                                {{ __('titles.delete') }}
-                            </button>
+                @if(userRole() != 'user')
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <a href="{{ route('room.edit', ['room_id' => $room['id'], 'location_id' => $room['location_id']]) }}"
+                                    class="btn btn-primary w-100">
+                                    <x-icon name="edit" />{{ __('titles.edit') }}
+                                </a>
+                            </div>
+                            <div class="col-lg-6">
+                                <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#{{ $room['id'] }}">
+                                    <x-icon name="trash" />
+                                    {{ __('titles.delete') }}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
 

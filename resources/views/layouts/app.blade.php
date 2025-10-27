@@ -32,11 +32,12 @@
     <!-- ✅ Main App Content (Hidden until loaded) -->
     <div id="app-content" style="display: none;">
         <div class="page">
-            @include('partials.sidebar')
+            @if(userRole() != 'user')
+                @include('partials.sidebar')
+            @endif
             @include('partials.nav')
 
             <div class="page-wrapper">
-
                 <x-page-header :buttons="$buttons ?? []" />
 
                 <div class="page-body">
@@ -50,16 +51,16 @@
     </div>
 
     @stack('scripts')
-    
+
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <!-- ✅ Loader JS -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             const loader = document.getElementById('page-loader');
             const content = document.getElementById('app-content');
 
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 loader.style.transition = 'opacity 0.4s ease';
                 loader.style.opacity = 0;
                 setTimeout(() => {

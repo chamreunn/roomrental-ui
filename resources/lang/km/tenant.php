@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'full_name' => 'ឈ្មោះអ្នកជួល',
+    'full_name_placeholder' => 'បំពេញឈ្មោះ',
+    'date_of_birth' => 'ថ្ងៃខែឆ្នាំកំណើត',
+    'date_of_birth_placeholder' => 'ជ្រើសរើសថ្ងៃកំណើត',
+    'gender' => 'ភេទ',
+    'select_option' => 'ជ្រើសរើស',
+    'male' => 'ប្រុស',
+    'female' => 'ស្រី',
+    'phone_number' => 'លេខទូរស័ព្ទ',
+    'phone_number_placeholder' => 'បំពេញលេខទូរស័ព្ទ',
+    'email_address' => 'អាសយដ្ឋានអ៊ីម៉ែល',
+    'email_placeholder' => 'បំពេញអាសយដ្ឋានអ៊ីម៉ែល',
+    'national_id' => 'លេខអត្តសញ្ញាណបណ្ណ',
+    'national_id_placeholder' => 'បំពេញលេខអត្តសញ្ញាណបណ្ណ',
+    'passport' => 'លិខិតឆ្លងដែន',
+    'passport_placeholder' => 'បំពេញលេខលិខិតឆ្លងដែន',
+    'start_date' => 'កាលបរិច្ឆេទចាប់ផ្តើម',
+    'start_date_placeholder' => 'ជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម',
+    'end_date' => 'ដល់កាលបរិច្ឆេទ',
+    'end_date_placeholder' => 'ជ្រើសរើសកាលបរិច្ឆេទបញ្ចប់',
+    'current_address' => 'អាសយដ្ឋានបច្ចុប្បន្ន',
+    'address_placeholder' => 'បំពេញអាសយដ្ឋានបច្ចុប្បន្ន',
+    'description' => 'សេចក្តីពិពណ៌នា',
+    'description_placeholder' => 'បំពេញសេចក្តីពិពណ៌នា',
+    'information' => 'ព័ត៌មានអ្នកជួល',
+    'save' => 'រក្សាទុក',
+    'cancel' => 'បោះបង់',
+    'click_here_to_upload_you_profile' => 'សូមចុចទីនេះដើម្បីបញ្ចូលរូបភាព។'
+];

@@ -67,10 +67,10 @@
         </div>
 
         <div class="col-12">
-            <div class="row g-3">
+            <div class="row g-3 row-deck row-cards align-items-stretch">
                 {{-- ===== Left: Recent Clients ===== --}}
-                <div class="col-md-4 col-lg-4 h-100">
-                    <div class="card">
+                <div class="col-md-4 col-lg-4 d-flex">
+                    <div class="card flex-fill d-flex flex-column">
                         <div class="card-header">
                             <h3 class="card-title">{{ __('dashboard.recent_clients') }}</h3>
                         </div>
@@ -81,11 +81,11 @@
                                 message="{{ __('dashboard.no_clients_message') }}" svg="svgs/no_result.svg"
                                 width="150px" />
                         @else
-                            <div class="table-responsive">
+                            <div class="table-responsive flex-fill">
                                 <table class="table card-table table-vcenter">
                                     <thead>
                                         <tr>
-                                            <th>{{ __('dashboard.room') }}</th>
+                                            <th>{{ __('dashboard.client') }}</th>
                                             <th>{{ __('dashboard.room') }}</th>
                                             <th>{{ __('dashboard.check_in') }}</th>
                                         </tr>
@@ -133,7 +133,7 @@
                             </div>
                         @endif
 
-                        <div class="card-footer">
+                        <div class="card-footer mt-auto">
                             <a href="#" class="btn btn-sm w-100">
                                 {{ __('dashboard.view_all_clients') }}
                                 <x-icon name="arrow-right" />
@@ -143,13 +143,13 @@
                 </div>
 
                 {{-- ===== Right: Booking Overview Chart ===== --}}
-                <div class="col-lg-8 h-100">
-                    <div class="card">
+                <div class="col-lg-8 d-flex">
+                    <div class="card flex-fill">
                         <div class="card-header">
                             <h3 class="card-title">{{ __('dashboard.booking_overview') }}</h3>
                         </div>
-                        <div class="card-body">
-                            <div id="booking-stats-chart"></div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div id="booking-stats-chart" class="w-100" style="height: 100%; min-height: 350px;"></div>
                         </div>
                     </div>
                 </div>
@@ -189,13 +189,15 @@
                                                     {{ $room['room_type']['room_size'] ?? '' }}
                                                 </div>
                                                 <div class="d-flex justify-content-center gap-2">
-                                                    <a href="" class="btn btn-sm btn-outline-primary px-3">
+                                                    <a href="{{ route('room.show', ['room_id' => $room['id'], 'location_id' => $room['location']['id']]) }}"
+                                                        class="btn btn-sm btn-outline-primary px-3 w-100">
                                                         {{ __('room.view') }}
                                                     </a>
                                                     @if ($room['status'] == '0')
-                                                        <button class="btn btn-sm btn-primary px-3">
+                                                        <a href="{{ route('room.booking', ['room_id' => $room['id'], 'location_id' => $room['location']['id']]) }}"
+                                                            class="btn btn-sm btn-primary px-3 w-100">
                                                             {{ __('room.book') }}
-                                                        </button>
+                                                        </a>
                                                     @endif
                                                 </div>
                                             </div>
@@ -222,6 +224,7 @@
 @endsection
 
 @push('scripts')
+
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -293,13 +296,15 @@
                 const btnRight = wrapper.querySelector(".scroll-right");
 
                 function updateButtons() {
-                    // Sometimes scrollWidth is just 1–2px more due to subpixel rounding, so we use Math.ceil
                     const scrollWidth = Math.ceil(scrollContainer.scrollWidth);
                     const clientWidth = Math.ceil(scrollContainer.clientWidth);
                     const maxScrollLeft = scrollWidth - clientWidth;
+                    const totalCards = scrollContainer.querySelectorAll(".room-card").length;
 
-                    // 🔒 Hide arrows if no horizontal overflow
-                    if (scrollWidth <= clientWidth + 2) {
+                    // ✅ Force showing arrows if there are many cards (even when screen is large)
+                    const forceShow = totalCards > 4;
+
+                    if (scrollWidth <= clientWidth + 2 && !forceShow) {
                         btnLeft.style.opacity = "0";
                         btnRight.style.opacity = "0";
                         btnLeft.style.pointerEvents = "none";
@@ -307,36 +312,27 @@
                         return;
                     }
 
-                    // ✅ Smoothly show/hide arrows based on scroll position
+                    // ✅ Smoothly show/hide based on scroll position
                     btnLeft.style.opacity = scrollContainer.scrollLeft > 10 ? "1" : "0";
                     btnLeft.style.pointerEvents = scrollContainer.scrollLeft > 10 ? "auto" : "none";
 
                     btnRight.style.opacity = scrollContainer.scrollLeft < maxScrollLeft - 10 ? "1" : "0";
-                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 10 ?
-                        "auto" : "none";
+                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 10 ? "auto" : "none";
                 }
 
-                // Scroll controls
                 btnLeft.addEventListener("click", () => {
-                    scrollContainer.scrollBy({
-                        left: -300,
-                        behavior: "smooth"
-                    });
+                    scrollContainer.scrollBy({ left: -300, behavior: "smooth" });
                 });
                 btnRight.addEventListener("click", () => {
-                    scrollContainer.scrollBy({
-                        left: 300,
-                        behavior: "smooth"
-                    });
+                    scrollContainer.scrollBy({ left: 300, behavior: "smooth" });
                 });
 
-                // Watch for scroll and resize
                 scrollContainer.addEventListener("scroll", updateButtons);
                 window.addEventListener("resize", updateButtons);
 
-                // Initialize
                 updateButtons();
             });
         });
     </script>
+
 @endpush

@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'full_name' => 'Full Name',
+    'full_name_placeholder' => 'Enter full name',
+    'date_of_birth' => 'Date of Birth',
+    'date_of_birth_placeholder' => 'Select date of birth',
+    'gender' => 'Gender',
+    'select_option' => 'Select',
+    'male' => 'Male',
+    'female' => 'Female',
+    'phone_number' => 'Phone Number',
+    'phone_number_placeholder' => 'Enter phone number',
+    'email_address' => 'Email Address',
+    'email_placeholder' => 'Enter email address',
+    'national_id' => 'National ID',
+    'national_id_placeholder' => 'Enter ID number',
+    'passport' => 'Passport',
+    'passport_placeholder' => 'Enter passport number',
+    'start_date' => 'Start Date',
+    'start_date_placeholder' => 'Select start date',
+    'end_date' => 'End Date',
+    'end_date_placeholder' => 'Select end date',
+    'current_address' => 'Current Address',
+    'address_placeholder' => 'Enter current address',
+    'description' => 'Description',
+    'description_placeholder' => 'Enter description',
+    'information' => 'Tenant Information',
+    'save' => 'Save',
+    'cancel' => 'Cancel',
+    'click_here_to_upload_you_profile' => 'Click here to upload your profile.'
+];

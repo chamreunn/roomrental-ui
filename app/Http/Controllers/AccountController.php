@@ -159,63 +159,149 @@ class AccountController extends Controller
         $userResponse = $this->api()->get("v1/users/{$id}");
         $user = $userResponse['user'] ?? null;
 
+        $response = $this->api()->get('v1/locations');
+        $locations = $response['locations']['data'];
+
         if (!$user) {
             return redirect()->route('account.index')->withErrors(__('account.user_not_found'));
         }
 
-        return view('app.accounts.show', compact('buttons', 'user', 'roles'));
+        // ✅ user_locations are already IDs, so just assign directly
+        // ✅ Extract only location_id from user_locations
+        $user['user_locations'] = collect($user['user_locations'] ?? [])
+            ->pluck('location_id')
+            ->toArray();
+
+        return view('app.accounts.show', compact('buttons', 'user', 'roles', 'locations'));
     }
+
 
     public function update(Request $request, $id)
     {
-        // ✅ Validation
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'role' => 'required',
-            'email' => 'required|email|max:255',
-            'phone_number' => 'required|string|max:20',
-            'dob' => 'required|date_format:d-m-Y',
-            'password' => 'nullable|string',
-            'address' => 'nullable|string|max:500',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
+        try {
+            // ✅ Validate input
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'role' => 'required',
+                'email' => 'required|email|max:255',
+                'phone_number' => 'required|string|max:20',
+                'dob' => 'required|date_format:d-m-Y',
+                'password' => 'nullable|string',
+                'address' => 'nullable|string|max:500',
+                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'location_id' => 'nullable|array',
+                'location_id.*' => 'uuid',
+            ]);
 
-        // ✅ Convert DOB format (to API format)
-        $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
+            // ✅ Convert DOB to API format
+            $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
 
-        // ✅ Prepare base payload
-        $payload = [
-            '_method' => 'PATCH', // for APIs that expect PATCH override
-            'name' => $validated['name'],
-            'role' => $validated['role'],
-            'email' => $validated['email'],
-            'phone_number' => $validated['phone_number'],
-            'date_of_birth' => $dob,
-            'address' => $validated['address'] ?? null,
-        ];
+            // ✅ Prepare payload for API
+            $payload = [
+                '_method' => 'PATCH',
+                'name' => $validated['name'],
+                'role' => $validated['role'],
+                'email' => $validated['email'],
+                'phone_number' => $validated['phone_number'],
+                'date_of_birth' => $dob,
+                'address' => $validated['address'] ?? null,
+            ];
 
-        // ✅ Only include password if not empty
-        if (!empty($validated['password'])) {
-            $payload['password'] = $validated['password']; // no need to hash — API handles it
+            if (!empty($validated['password'])) {
+                $payload['password'] = $validated['password'];
+            }
+
+            // ✅ Handle profile picture upload
+            $files = [];
+            if ($request->hasFile('profile_picture')) {
+                $files['profile_picture'] = $request->file('profile_picture');
+            }
+
+            // ✅ Update user info via API
+            $apiResponse = $this->api()->post("v1/users/{$id}", $payload, null, true, $files, 'profile_picture');
+
+            // ===============================
+            // ✅ Sync user locations
+            // ===============================
+
+            $newLocations = $validated['location_id'] ?? [];
+
+            // Get full current user locations (pivot records)
+            $currentUserLocations = $this->api()->get("v1/users/{$id}")['user']['user_locations'] ?? [];
+
+            // Current location IDs for comparison
+            $currentLocationIds = collect($currentUserLocations)->pluck('location_id')->toArray();
+
+            // Determine locations to add and remove
+            $locationsToAdd = array_diff($newLocations, $currentLocationIds);
+            $locationsToRemove = array_diff($currentLocationIds, $newLocations);
+
+            // Add new locations
+            foreach ($locationsToAdd as $location_id) {
+                try {
+                    $this->api()->post('v1/user-locations', [
+                        'user_id' => $id,
+                        'location_id' => $location_id,
+                    ]);
+                } catch (\Illuminate\Http\Client\RequestException $e) {
+                    $errorMessage = $this->mapApiErrorToTranslation($e);
+                    return back()->withInput()->with('error', $errorMessage);
+                }
+            }
+
+            // Remove unchecked locations
+            foreach ($locationsToRemove as $location_id) {
+                // Find the corresponding pivot ID
+                $userLocation = collect($currentUserLocations)->firstWhere('location_id', $location_id);
+                if ($userLocation) {
+                    try {
+                        $this->api()->delete('v1/user-locations/' . $userLocation['id']);
+                    } catch (\Illuminate\Http\Client\RequestException $e) {
+                        $errorMessage = $this->mapApiErrorToTranslation($e);
+                        return back()->withInput()->with('error', $errorMessage);
+                    }
+                }
+            }
+
+            // ✅ Handle success
+            if (($apiResponse['success'] ?? false) || isset($apiResponse['id'])) {
+                return redirect()->back()->with('success', __('account.updated_successfully'));
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', __('account.update_failed'));
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            $errorMessage = $this->mapApiErrorToTranslation($e);
+            return back()->withInput()->with('error', $errorMessage);
+        } catch (Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Unexpected error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Map API error messages to translation keys
+     */
+    protected function mapApiErrorToTranslation(\Illuminate\Http\Client\RequestException $e)
+    {
+        $response = $e->response->json();
+        $errorMessage = $response['message'] ?? null;
+
+        if (isset($response['errors'])) {
+            $flatErrors = collect($response['errors'])->flatten()->toArray();
+            $errorMessage = implode(', ', $flatErrors);
         }
 
-        // ✅ Handle file upload
-        $files = [];
-        if ($request->hasFile('profile_picture')) {
-            $files['profile_picture'] = $request->file('profile_picture');
+        if (str_contains($errorMessage, 'already assigned')) {
+            return __('account.location_already_assigned');
+        } elseif (str_contains($errorMessage, 'not found')) {
+            return __('account.location_not_found');
+        } elseif (str_contains($errorMessage, 'validation')) {
+            return __('account.validation_error');
         }
 
-        // ✅ Send to API as multipart/form-data
-        $apiResponse = $this->api()->post("v1/users/{$id}", $payload, null, true, $files, 'profile_picture');
-
-        // ✅ Handle response
-        if (($apiResponse['success'] ?? false) || isset($apiResponse['id'])) {
-            return redirect()->route('account.index')
-                ->with('success', __('account.updated_successfully'));
-        }
-
-        return back()
-            ->withInput()
-            ->withErrors($apiResponse['errors'] ?? ['error' => __('account.update_failed')]);
+        return $errorMessage ?? __('account.update_failed');
     }
 }

@@ -16,9 +16,12 @@ return [
     'save' => 'Save',
     'created_successfully' => 'Account Created Successfully.',
     'creation_failed' => 'Account Create Failed. Please check again.',
-    'updated_successfully' => 'Account Updated Successfully.',
-    'update_failed' => 'Cannot update your account.',
     'choose_profile_user' => 'Choose Profile Picture',
     'update_profile_user' => 'Update Profile Picture',
-    'save_update' => 'Save Update'
+    'save_update' => 'Save Update',
+    'updated_successfully' => 'User updated successfully.',
+    'update_failed' => 'Failed to update user.',
+    'validation_error' => 'Some fields are invalid. Please check again.',
+    'location_already_assigned' => 'This location is already assigned to the user.',
+    'location_not_found' => 'The selected location could not be found.',
 ];

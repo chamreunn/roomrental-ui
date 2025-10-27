@@ -95,7 +95,25 @@
                                         rows="2">{{ old('address', $user['address'] ?? '') }}</textarea>
                                 </div>
                             </div>
+
                         </div>
+                    </div>
+
+                    {{-- Locations --}}
+                    <div class="card-body">
+                        <div class="form-label">ទីតាំងអ្នកប្រើប្រាស់</div>
+                        <div>
+                            @foreach ($locations as $location)
+                                <label class="form-check form-check-inline cursor-pointer">
+                                    <input class="form-check-input cursor-pointer" name="location_id[]"
+                                        value="{{ $location['id'] }}" type="checkbox" {{ in_array($location['id'], old('location_id', $user['user_locations'] ?? [])) ? 'checked' : '' }}>
+                                    <span class="form-check-label cursor-pointer">{{ $location['location_name'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('location_id')
+                            <div class="text-red mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="card-footer">
@@ -115,7 +133,8 @@
 
                         {{-- Avatar container --}}
                         <div class="position-relative d-inline-block" style="width: 300px; height: 300px;">
-                            <img id="avatarPreview" src="{{ apiBaseUrl() . $user['profile_picture'] ?? '/imgs/default-avatar.png' }}"
+                            <img id="avatarPreview"
+                                src="{{ apiBaseUrl() . $user['profile_picture'] ?? '/imgs/default-avatar.png' }}"
                                 alt="Profile Picture" class="rounded border"
                                 style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
 

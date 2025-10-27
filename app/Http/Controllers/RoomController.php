@@ -297,4 +297,25 @@ class RoomController extends Controller
             ]);
         }
     }
+
+
+    // for booking
+    public function booking(Request $request, $roomId, $locationId)
+    {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('room.room_list', $locationId),
+            ],
+        ];
+
+        $roomResponse = $this->api()->withHeaders(['location_id' => $locationId])->get("v1/rooms/{$roomId}");
+        $room = $roomResponse['room'];
+
+        $roomstatus = RoomStatus::getStatus($room['status']);
+
+        return view('app.rooms.booking',compact('room', 'buttons', 'roomstatus'));
+    }
 }

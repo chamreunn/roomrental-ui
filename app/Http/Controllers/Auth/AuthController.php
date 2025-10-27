@@ -17,7 +17,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Validate input
+        // ✅ Validate input
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -27,60 +27,63 @@ class AuthController extends Controller
             'password.required' => __('auth.password_required'),
         ]);
 
-        // Call API
-        $response = $this->api()->post('login', [
-            'email' => $request->email,
-            'password' => $request->password,
-        ]);
-
-        // dd($response);
-
-        if (!isset($response['error']) || $response['error'] === false) {
-
-            $user = $response['user'];
-            $token = $response['token'];
-
-            Session::put('api_token', $token);
-            Session::put('user', $user);
-
-            $role = $response['user']['role'];
-
-            // ✅ Detect base API URL automatically
-            $baseApiUrl = apiBaseUrl();
-
-            // ✅ Store user session (lightweight)
-            Session::put('user', [
-                'id' => $user['id'],
-                'role' => $user['role'],
-                'role_badge' => AbilitiesStatus::getStatus($role),
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'phone_number' => $user['phone_number'],
-                'address' => $user['address'],
-                'date_of_birth' => $user['date_of_birth'],
-                'profile_picture' => $baseApiUrl . '/' . ltrim($user['profile_picture'], '/'),
+        try {
+            // Call API
+            $response = $this->api()->post('login', [
+                'email' => $request->email,
+                'password' => $request->password,
             ]);
 
-            // Flash success message
-            Session::flash('success', __('auth.welcome', ['name' => $response['user']['name']]));
+            if (!isset($response['error']) || $response['error'] === false) {
+                $user = $response['user'];
+                $token = $response['token'];
 
-            return match ($role) {
-                'admin' => redirect()->route('dashboard.admin'),
-                'manager' => redirect()->route('dashboard.manager'),
-                'user' => redirect()->route('dashboard.user'),
-                default => redirect()->route('home'),
-            };
+                Session::put('api_token', $token);
+
+                $baseApiUrl = apiBaseUrl();
+                Session::put('user', [
+                    'id' => $user['id'],
+                    'role' => $user['role'],
+                    'role_badge' => AbilitiesStatus::getStatus($user['role']),
+                    'name' => $user['name'],
+                    'email' => $user['email'],
+                    'phone_number' => $user['phone_number'],
+                    'address' => $user['address'],
+                    'date_of_birth' => $user['date_of_birth'],
+                    'profile_picture' => $baseApiUrl . '/' . ltrim($user['profile_picture'], '/'),
+                    // ✅ Store user locations
+                    'user_locations' => $user['user_locations'] ?? [],
+                ]);
+
+                Session::flash('success', __('auth.welcome', ['name' => $user['name']]));
+
+                return match ($user['role']) {
+                    'admin' => redirect()->route('dashboard.admin'),
+                    'manager' => redirect()->route('dashboard.manager'),
+                    'user' => redirect()->route('dashboard.user'),
+                    default => redirect()->route('home'),
+                };
+            }
+
+            // Handle API validation errors
+            if (isset($response['errors'])) {
+                return back()->withErrors($response['errors'])->withInput();
+            }
+
+            // Fallback general API error
+            Session::flash('error', $response['message'] ?? __('auth.login_failed'));
+            return back()->withInput();
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            // ✅ Catch HTTP exceptions (like 401 Unauthorized)
+            $resp = $e->response->json();
+            $errorMessage = $resp['message'] ?? __('auth.login_failed');
+            Session::flash('error', $errorMessage);
+            return back()->withInput();
+        } catch (\Exception $e) {
+            // ✅ Catch unexpected errors
+            Session::flash('error', 'Unexpected error: ' . $e->getMessage());
+            return back()->withInput();
         }
-
-        // Handle API validation errors
-        if (isset($response['errors'])) {
-            return back()->withErrors($response['errors'])->withInput();
-        }
-
-        // Fallback general error
-        return back()->withErrors([
-            'email' => $response['message'] ?? __('auth.login_failed'),
-        ])->withInput();
     }
 
     // Example logout

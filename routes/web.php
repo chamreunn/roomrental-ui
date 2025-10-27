@@ -3,11 +3,13 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomtypeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserLocationController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -53,6 +55,8 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::patch('locations/{id}', [LocationController::class, 'update'])->name('location.update');
     Route::post('/locations/store', [LocationController::class, 'store'])->name('location.store');
     Route::delete('/locations/destroy/{id}', [LocationController::class, 'destroy'])->name('location.destroy');
+    // for user location
+    Route::get('/user_locations', [UserLocationController::class, 'index'])->name('user_location.index');
     // for room type
     Route::get('/roomtype', [RoomtypeController::class, 'index'])->name('roomtype.index');
     Route::get('/roomtype/create', [RoomtypeController::class, 'create'])->name('roomtype.create');
@@ -60,7 +64,7 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::get('/roomtype/show/{id}', [RoomtypeController::class, 'show'])->name('roomtype.show');
     Route::patch('/roomtype/{id}', [RoomtypeController::class, 'update'])->name('roomtype.update');
     Route::delete('/roomtype/destroy/{id}', [RoomtypeController::class, 'destroy'])->name('roomtype.destroy');
-    // for room 
+    // for room
     Route::get('/choose-location', [RoomController::class, 'index'])->name('room.index');
     Route::get('/choose-location/{id}/room-list', [RoomController::class, 'rooms'])->name('room.room_list');
     Route::get('/rooms/create/choose-location', [RoomController::class, 'location'])->name('room.choose_location');
@@ -70,7 +74,6 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::patch('/rooms/update/{room_id}/{location_id}', [RoomController::class, 'update'])->name('room.update');
     Route::delete('/rooms/destroy/{room_id}/{location_id}', [RoomController::class, 'destroy'])->name('room.destroy');
     Route::delete('/rooms/multi/{location_id}', [RoomController::class, 'multiDestroy'])->name('room.multi_destroy');
-    Route::get('/rooms/show/{room_id}/{location_id}', [RoomController::class, 'show'])->name('room.show');
 });
 
 // 🧩 Admin Routes
@@ -84,6 +87,10 @@ Route::middleware(['auth.session', 'role:manager'])->group(function () {
 });
 
 // 🧩 User Routes
-Route::middleware(['auth.session', 'role:user'])->group(function () {
+Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function () {
     Route::get('/user/dashboard', [UserController::class, 'index'])->name('dashboard.user');
+    Route::get('/rooms/show/{room_id}/{location_id}', [RoomController::class, 'show'])->name('room.show');
+    Route::get('/rooms/booking/{room_id}/{location_id}', [RoomController::class, 'booking'])->name('room.booking');
+    // for client
+    Route::post('/client/store/{id}', [ClientController::class, 'store'])->name('client.store');
 });
