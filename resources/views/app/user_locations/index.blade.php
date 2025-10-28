@@ -4,7 +4,7 @@
     <div class="card">
         <div class="card-body">
 
-            @if(!empty($userLocations) && count($userLocations) > 0)
+            @if (!empty($userLocations) && count($userLocations) > 0)
                 <div class="table-responsive">
                     <table class="table table-vcenter table-bordered table-hover">
                         <thead class="table-light">
@@ -17,14 +17,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($userLocations as $index => $userLocation)
+                            @foreach ($userLocations as $index => $userLocation)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $userLocation['user']['name'] ?? '-' }}</td>
                                     <td>{{ $userLocation['location']['location_name'] ?? '-' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($userLocation['created_at'])->format('d-m-Y H:i') }}</td>
                                     <td>
-                                        <a href="{{ route('account.show',$userLocation['user']['id']) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('account.show', $userLocation['user']['id']) }}"
+                                            class="btn btn-sm btn-primary">
                                             {{ __('titles.edit') }}
                                         </a>
                                     </td>
@@ -34,7 +35,8 @@
                     </table>
                 </div>
             @else
-                <div class="alert alert-warning">{{ __('account.no_locations_found') }}</div>
+                <x-empty-state title="{{ __('titles.no_room_found') }}"
+                    message="{{ __('titles.please_find_another_location') }}" svg="svgs/no_result.svg" width="450px" />
             @endif
         </div>
     </div>

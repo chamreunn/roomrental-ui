@@ -81,11 +81,14 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::patch('/clients/update/{id}/{room_id}', [ClientController::class, 'update'])->name('clients.update');
     // for invoice
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
+    Route::get('/invoices/edit/{id}', [InvoiceController::class, 'edit'])->name('invoice.edit');
+    // invoice for admin 
     Route::get('/invoices/create/{room_id}/{location_id}', [InvoiceController::class, 'create'])->name('invoice.create');
     Route::get('/invoices/choose-location', [InvoiceController::class, 'chooseLocation'])->name('invoice.choose_location');
     Route::get('/invoices/choose-room/{id}', [InvoiceController::class, 'chooseRoom'])->name('invoice.choose_room');
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
-
+    Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
 });
 
 // 🧩 Admin Routes

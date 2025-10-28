@@ -328,18 +328,18 @@
                 </li>
 
                 <!-- Invoice -->
-                <li class="nav-item dropdown {{ active_class(['invoice.*']) }}">
-                    <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['invoice.*']) }}"
+                <li class="nav-item dropdown {{ active_class(['invoice.*','invoices*']) }}">
+                    <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['invoice.*','invoices*']) }}"
                         href="#navbar-invoice" data-bs-toggle="dropdown" data-bs-auto-close="false">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <x-icon name="invoice" />
                         </span>
                         <span class="nav-link-title">{{ __('sidebar.invoice') }}</span>
                     </a>
-                    <div class="dropdown-menu {{ active_class(['invoice.*'], '', true) }}">
+                    <div class="dropdown-menu {{ active_class(['invoice.*','invoices*'], '', true) }}">
                         <div class="dropdown-menu-columns">
                             <div class="dropdown-menu-column">
-                                <a class="dropdown-item {{ active_class(['invoice.choose_location','invoice.choose_room']) }}"
+                                <a class="dropdown-item {{ active_class(['invoice.choose_location','invoice.choose_room','invoices.preview','invoice.create']) }}"
                                     href="{{ route('invoice.choose_location') }}">
                                     {{ __('sidebar.create_invoice') }}
                                 </a>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enum\AbilitiesStatus;
+use App\Enum\InvoiceStatus;
 use App\Enum\RoomStatus;
 use App\Enum\Status;
 use App\Services\ApiService;
@@ -29,6 +30,11 @@ class Controller extends BaseController
      * @var \App\Enum\Status|null
      */
     protected $status = null;
+
+    /**
+     * @var \App\Enum\InvoiceStatus|null
+     */
+    protected $InvoiceStatus = null;
 
     /**
      * @var \App\Enum\RoomStatus|null
@@ -106,5 +112,19 @@ class Controller extends BaseController
         }
 
         return $this->roomstatus;
+    }
+
+    /**
+     * Lazy-load Status only when needed.
+     *
+     * @return \App\Enum\InvoiceStatus
+     */
+    protected function InvoiceStatus(): InvoiceStatus
+    {
+        if (!$this->InvoiceStatus) {
+            $this->InvoiceStatus = app(InvoiceStatus::class);
+        }
+
+        return $this->InvoiceStatus;
     }
 }

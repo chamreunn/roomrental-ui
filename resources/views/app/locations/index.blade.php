@@ -27,8 +27,9 @@
                                     class="{{ $location['status_badge']['class'] }}">{{ __($location['status_badge']['name']) }}</span>
                             </td>
                             <td>
-                                <a href="{{ route('location.edit', $location['id']) }}" class="btn btn-sm btn-outline-primary"
-                                    data-bs-toggle="tooltip" title="{{ __('titles.edit') }}" data-bs-placement="auto">
+                                <a href="{{ route('location.edit', $location['id']) }}"
+                                    class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip"
+                                    title="{{ __('titles.edit') }}" data-bs-placement="auto">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
                                 <button type="button" data-bs-toggle="modal" data-bs-target="#{{ $location['id'] }}"
@@ -39,7 +40,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center">{{ __('titles.no_data') }}</td>
+                            <td colspan="8" class="text-center">
+                                <x-empty-state title="{{ __('titles.no_room_found') }}"
+                                    message="{{ __('titles.please_find_another_location') }}" svg="svgs/no_result.svg"
+                                    width="450px" />
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -76,5 +81,4 @@
             </div>
         </div>
     @endforeach
-
 @endsection

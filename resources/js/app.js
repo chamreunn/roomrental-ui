@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
         plugins: [
             new monthSelectPlugin({
                 shorthand: false,
-                dateFormat: "F Y",
+                dateFormat: "Y-m",
                 altFormat: "Y-m",
             }),
         ],

@@ -2,10 +2,16 @@
 
 return [
     // Form titles
+    'status' => 'ស្ថានភាព',
+    'search_placeholder' => 'លេខវិក្កយបត្រ / បន្ទប់',
+    'actions' => 'សកម្មភាព',
     'generate_invoice' => 'បង្កើតវិក្កយបត្រ',
     'invoice_preview' => 'ពិនិត្យវិក្កយបត្រ',
     'save_invoice' => 'រក្សាទុកវិក្កយបត្រ',
-    'other_charge' => 'ផ្សេងៗ',
+    'other_charge' => 'ចំណាយផ្សេងៗ',
+    'invoice' => 'វិក័យប័ត្របន្ទប់ជួល',
+    'contact' => 'ទំនាក់ទំនង',
+    'room_detail' => 'បន្ទប់',
 
     // Input labels
     'month' => 'ខែ',
@@ -27,6 +33,7 @@ return [
     'electric_total' => 'សរុបអគ្គិសនី ($)',
     'water_total' => 'សរុបទឹក ($)',
     'total_amount' => 'សរុបចំនួនទឹកប្រាក់ ($)',
+    'room_rent' => 'តម្លៃបន្ទប់',
 
     // Buttons
     'create' => 'បង្កើត',
@@ -35,20 +42,28 @@ return [
     'cancel' => 'បោះបង់',
     'print' => 'បោះពុម្ព',
     'clear' => 'សម្អាត',
+    'search' => 'ស្វែងរក',
+    'reset' => 'កំណត់ឡើងវិញ',
+    'all' => 'ទាំងអស់',
+    'view' => 'មើល',
+    'edit' => 'កែប្រែ',
+    'totals' => 'សរុប',
 
-    // Table headings for preview
-    'invoice_table_old_electric' => 'អគ្គិសនីចាស់',
-    'invoice_table_new_electric' => 'អគ្គិសនីថ្មី',
-    'invoice_table_electric_rate' => 'តម្លៃអគ្គិសនី',
-    'invoice_table_electric_total' => 'សរុបអគ្គិសនី',
-    'invoice_table_old_water' => 'ទឹកចាស់',
-    'invoice_table_new_water' => 'ទឹកថ្មី',
-    'invoice_table_water_rate' => 'តម្លៃទឹក',
-    'invoice_table_water_total' => 'សរុបទឹក',
-    'invoice_table_grand_total' => 'សរុបចំនួនទឹកប្រាក់',
+    // Invoice Status
+    'draft' => 'ព្រាង',
+    'unpaid' => 'មិនទាន់បង់ប្រាក់',
+    'paid' => 'បានបង់ប្រាក់',
+    'cancelled' => 'បោះបង់',
+
+    // Table headings
+    'invoice_no' => 'លេខវិក្កយបត្រ',
+    'due_date' => 'កាលបរិច្ឆេទផុតកំណត់',
+
+    // Empty State
+    'no_invoice_found' => 'មិនមានវិក្កយបត្រ',
+    'no_invoices_message' => 'មិនមានវិក្កយបត្រដែលស្វែងរកបាន។',
 
     // Messages
+    'current_tenants' => 'អតិថិជនបច្ចុប្បន្ន',
     'no_clients' => 'មិនមានអតិថិជននៅបន្ទប់នេះទេ',
-    'current_tenants' => 'អតិថិជនបច្ចប្បន្ន',
-    'room_rent' => 'តម្លៃបន្ទប់'
 ];

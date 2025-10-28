@@ -13,6 +13,44 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class InvoiceController extends Controller
 {
+
+    public function index(Request $request)
+    {
+        // Get filter/search params
+        $statusFilter = $request->query('status'); // 0 = Pending, 1 = Paid
+        $search = $request->query('search');
+
+        // Fetch invoices from API
+        $response = $this->api()->get('v1/invoices');
+
+        $invoices = $response['data'] ?? [];
+        $totals = [
+            'room_fee' => $response['total_room_fee'] ?? 0,
+            'electric_charge' => $response['total_electric_charge'] ?? 0,
+            'water_charge' => $response['total_water_charge'] ?? 0,
+        ];
+
+        // Filter by status using enum
+        if ($statusFilter !== null && $statusFilter !== '') {
+            $invoices = array_filter($invoices, fn($inv) => $inv['status'] == $statusFilter);
+        }
+
+        // Search by invoice number or room name
+        if ($search) {
+            $invoices = array_filter($invoices, function ($inv) use ($search) {
+                return str_contains(strtolower($inv['invoice_no']), strtolower($search)) ||
+                    str_contains(strtolower($inv['room']['room_name'] ?? ''), strtolower($search));
+            });
+        }
+
+        return view('app.invoices.index', [
+            'invoices' => $invoices,
+            'totals' => $totals,
+            'filter_status' => $statusFilter,
+            'search' => $search,
+        ]);
+    }
+    
     public function chooseLocation(Request $request)
     {
         // Get location detail
@@ -89,6 +127,15 @@ class InvoiceController extends Controller
 
     public function create(Request $request, $roomId, $locationId)
     {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('invoice.choose_room', $locationId),
+            ],
+        ];
+
         $response = $this->api()
             ->withHeaders(['location_id' => $locationId])
             ->get('v1/rooms/' . $roomId);
@@ -103,7 +150,7 @@ class InvoiceController extends Controller
             return $client;
         });
 
-        return view('app.invoices.create', compact('room', 'clients'));
+        return view('app.invoices.create', compact('room', 'clients', 'buttons'));
     }
 
     public function preview(Request $request, $roomId, $locationId)
@@ -200,5 +247,69 @@ class InvoiceController extends Controller
                 'grand_total'      => $grandTotal,
             ]
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        // === 1. Validate input ===
+        $validator = Validator::make($request->all(), [
+            'month'          => 'required|string',
+            'old_electric'   => 'required|numeric|min:0',
+            'new_electric'   => 'required|numeric|min:0',
+            'electric_rate'  => 'required|numeric|min:0',
+            'old_water'      => 'required|numeric|min:0',
+            'new_water'      => 'required|numeric|min:0',
+            'water_rate'     => 'required|numeric|min:0',
+            'other_charge'   => 'nullable|numeric|min:0',
+        ], [
+            'month.required'         => __('validation.required_month'),
+            'old_electric.required'  => __('validation.required_old_electric'),
+            'new_electric.required'  => __('validation.required_new_electric'),
+            'electric_rate.required' => __('validation.required_electric_rate'),
+            'old_water.required'     => __('validation.required_old_water'),
+            'new_water.required'     => __('validation.required_new_water'),
+            'water_rate.required'    => __('validation.required_water_rate'),
+        ]);
+
+        // === 2. Custom validation logic ===
+        $validator->after(function ($validator) use ($request) {
+            if ($request->new_electric < $request->old_electric) {
+                $validator->errors()->add('new_electric', __('validation.new_electric_must_be_greater'));
+            }
+            if ($request->new_water < $request->old_water) {
+                $validator->errors()->add('new_water', __('validation.new_water_must_be_greater'));
+            }
+        });
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // === 3. Build payload ===
+        $payload = [
+            'room_id'       => $request->room_id,
+            'old_electric'  => (float) $request->old_electric,
+            'new_electric'  => (float) $request->new_electric,
+            'electric_rate' => (float) $request->electric_rate,
+            'old_water'     => (float) $request->old_water,
+            'new_water'     => (float) $request->new_water,
+            'water_rate'    => (float) $request->water_rate,
+            'other_charge'  => (float) ($request->other_charge ?? 0),
+            'invoice_date'  => $request->month, // Y-m format
+        ];
+
+        // === 4. Call API ===
+        $response = $this->api()->post('v1/invoices', $payload);
+
+        // === 5. Handle API response ===
+        if (!empty($response['success']) && $response['success'] === true) {
+            return redirect()
+                ->route('invoice.index')
+                ->with('success', __('invoice.created_successfully'));
+        }
+
+        return redirect()->back()
+            ->withInput()
+            ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.create_failed')]);
     }
 }

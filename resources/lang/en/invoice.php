@@ -2,10 +2,16 @@
 
 return [
     // Form titles
+    'status' => 'Status',
+    'search_placeholder' => 'Invoices NO / Room',
+    'actions' => 'Action',
     'generate_invoice' => 'Generate Invoice',
     'invoice_preview' => 'Invoice Preview',
     'save_invoice' => 'Save Invoice',
-    'other_charge' => 'Others',
+    'other_charge' => 'Other Charges',
+    'invoice' => 'Room Rental Invoice',
+    'contact' => 'Contact',
+    'room_detail' => 'Room',
 
     // Input labels
     'month' => 'Month',
@@ -22,11 +28,12 @@ return [
     'new_water_placeholder' => 'Enter new water reading',
     'water_rate' => 'Water Rate ($)',
     'water_rate_placeholder' => 'Enter water rate per m³',
-
+    
     // Totals
     'electric_total' => 'Electric Total ($)',
     'water_total' => 'Water Total ($)',
-    'total_amount' => 'Total Amount ($)',
+    'total_amount' => 'Grand Total ($)',
+    'room_rent' => 'Room Fee',
 
     // Buttons
     'create' => 'Generate',
@@ -35,20 +42,28 @@ return [
     'cancel' => 'Cancel',
     'print' => 'Print',
     'clear' => 'Clear',
+    'search' => 'Search',
+    'reset' => 'Reset',
+    'all' => 'All',
+    'view' => 'View',
+    'edit' => 'Edit',
+    'totals' => 'Totals',
 
-    // Table headings for preview
-    'invoice_table_old_electric' => 'Old Electric',
-    'invoice_table_new_electric' => 'New Electric',
-    'invoice_table_electric_rate' => 'Electric Rate',
-    'invoice_table_electric_total' => 'Electric Total',
-    'invoice_table_old_water' => 'Old Water',
-    'invoice_table_new_water' => 'New Water',
-    'invoice_table_water_rate' => 'Water Rate',
-    'invoice_table_water_total' => 'Water Total',
-    'invoice_table_grand_total' => 'Grand Total',
+    // Invoice Status
+    'draft' => 'Draft',
+    'unpaid' => 'Unpaid',
+    'paid' => 'Paid',
+    'cancelled' => 'Cancelled',
+
+    // Table headings
+    'invoice_no' => 'Invoice No',
+    'due_date' => 'Due Date',
+
+    // Empty State
+    'no_invoice_found' => 'No Invoices Found',
+    'no_invoices_message' => 'There are no invoices matching your search criteria.',
 
     // Messages
+    'current_tenants' => 'Current Tenants',
     'no_clients' => 'No clients assigned to this room',
-    'current_tenants' => 'Current Tenant',
-    'room_rent' => 'Price'
 ];
