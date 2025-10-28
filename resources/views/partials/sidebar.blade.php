@@ -1,4 +1,4 @@
-<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+<aside class="navbar navbar-vertical navbar-expand-lg d-print-none" data-bs-theme="dark">
     <div class="container-fluid">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
             aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
@@ -325,6 +325,31 @@
                         </span>
                         <span class="nav-link-title">{{ __('sidebar.client') }}</span>
                     </a>
+                </li>
+
+                <!-- Invoice -->
+                <li class="nav-item dropdown {{ active_class(['invoice.*']) }}">
+                    <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['invoice.*']) }}"
+                        href="#navbar-invoice" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <x-icon name="invoice" />
+                        </span>
+                        <span class="nav-link-title">{{ __('sidebar.invoice') }}</span>
+                    </a>
+                    <div class="dropdown-menu {{ active_class(['invoice.*'], '', true) }}">
+                        <div class="dropdown-menu-columns">
+                            <div class="dropdown-menu-column">
+                                <a class="dropdown-item {{ active_class(['invoice.choose_location','invoice.choose_room']) }}"
+                                    href="{{ route('invoice.choose_location') }}">
+                                    {{ __('sidebar.create_invoice') }}
+                                </a>
+                                <a class="dropdown-item {{ active_class(['invoice.index','invoice.invoice_list','invoice.show']) }}"
+                                    href="{{ route('invoice.index') }}">
+                                    {{ __('sidebar.invoice_list') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </li>
 
                 <!-- Income -->

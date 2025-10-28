@@ -18,5 +18,9 @@ return [
     'location_created' => 'បង្កើតទីតាំង',
     'location_list' => 'បញ្ជីទីតាំង',
     //client
-    'client' => 'អតិថិជន'
+    'client' => 'អតិថិជន',
+    //invoice
+    'invoice' => 'វិកយបត្រ',
+    'create_invoice' => 'បង្កើតវិកយបត្រ',
+    'invoice_list' => 'បញ្ជីវិកយបត្រ'
 ];

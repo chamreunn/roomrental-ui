@@ -128,7 +128,7 @@ class ApiService
     /** ----------------------------------------------------------
      * PUT
      * ---------------------------------------------------------- */
-    public function put(string $endpoint, array $data = [], $token = null, array $extraHeaders = [])
+    public function patch(string $endpoint, array $data = [], $token = null, array $extraHeaders = [])
     {
         $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
@@ -139,7 +139,7 @@ class ApiService
         }
 
         $response = $http->put($url, $data);
-        return $this->handleAuthAndResponse('put', func_get_args(), $response);
+        return $this->handleAuthAndResponse('PATCH', func_get_args(), $response);
     }
 
     /** ----------------------------------------------------------
@@ -169,7 +169,7 @@ class ApiService
 
     public function putWithHeaders(string $endpoint, array $data = [], array $headers = [], $token = null)
     {
-        return $this->put($endpoint, $data, $token, $headers);
+        return $this->patch($endpoint, $data, $token, $headers);
     }
 
     public function deleteWithHeaders(string $endpoint, array $data = [], array $headers = [], $token = null)

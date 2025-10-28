@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'status' => 'Status',
     'list' => 'Clients List',
     'add' => 'Add Client',
     'username' => 'Username',
@@ -35,4 +36,9 @@ return [
     'dob_required'        => 'Date of birth is required.',
     'dob_format'          => 'Date of birth format must be dd-mm-yyyy.',
     'address_required'    => 'Address is required.',
+    'view_profile' => 'View Profile',
+    'end_lease' => 'End Lease',
+    'status_updated_successfully' => 'Client status updated successfully.',
+    'status_update_failed' => 'Failed to update client status.',
+    'phone' => 'Phone Number',
 ];

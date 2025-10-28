@@ -11,7 +11,84 @@ import "@tabler/core/dist/js/tabler-theme.min.js";
 import "@tabler/core/dist/css/tabler-flags.min.css";
 import "@tabler/core/dist/css/demo.min.css";
 import "@tabler/core/dist/libs/litepicker/dist/css/litepicker.css";
-// import "@tabler/core/dist/libs/apexcharts/dist/apexcharts.min.js";
+
+import flatpickr from "flatpickr";
+import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect/index.js";
+
+import "flatpickr/dist/flatpickr.min.css";
+import "flatpickr/dist/plugins/monthSelect/style.css";
+import "flatpickr/dist/flatpickr.min.css";
+import "flatpickr/dist/plugins/monthSelect/style.css";
+// Optional: Khmer locale
+import { Khmer } from "flatpickr/dist/l10n/km.js";
+
+// for flatpickr
+document.addEventListener("DOMContentLoaded", function () {
+    const locale = window.appLocale || "en";
+    const months = window.monthsTranslation[locale] || [];
+
+    // Month Picker
+    flatpickr(".monthpicker", {
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: false,
+                dateFormat: "F Y",
+                altFormat: "Y-m",
+            }),
+        ],
+        locale: {
+            firstDayOfWeek: 1,
+            weekdays: {
+                shorthand: ["អា", "ច", "អ", "ពុ", "ព្រ", "សុ", "ស"],
+                longhand: [
+                    "អាទិត្យ",
+                    "ច័ន្ទ",
+                    "អង្គារ",
+                    "ពុធ",
+                    "ព្រហស្បតិ៍",
+                    "សុក្រ",
+                    "សៅរ៍",
+                ],
+            },
+            months: {
+                shorthand: months,
+                longhand: months,
+            },
+        },
+        allowInput: true,
+        wrap: false,
+    });
+
+    // DOB Picker
+    flatpickr(".dobpicker", {
+        dateFormat: "d-m-Y",
+        altInput: true,
+        altFormat: "d M Y",
+        locale:
+            locale === "km"
+                ? {
+                      firstDayOfWeek: 1,
+                      weekdays: {
+                          shorthand: ["អា", "ច", "អ", "ពុ", "ព្រ", "សុ", "ស"],
+                          longhand: [
+                              "អាទិត្យ",
+                              "ច័ន្ទ",
+                              "អង្គារ",
+                              "ពុធ",
+                              "ព្រហស្បតិ៍",
+                              "សុក្រ",
+                              "សៅរ៍",
+                          ],
+                      },
+                      months: { shorthand: months, longhand: months },
+                  }
+                : "en",
+        maxDate: "today",
+        allowInput: true,
+        wrap: false,
+    });
+});
+
 // Initialize AOS
 document.addEventListener("DOMContentLoaded", () => {
     AOS.init({
@@ -59,93 +136,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
-
-// ✅ Initialize Litepicker correctly
-document.addEventListener("DOMContentLoaded", function () {
-    const leaveDateInputs = document.querySelectorAll(".leave-picker");
-    leaveDateInputs.forEach((input) => {
-        new Litepicker({
-            element: input,
-            singleMode: true,
-            format: "DD-MM-YYYY",
-            lang: "kh", // correct for Litepicker
-            minDate: new Date(), // Disables past dates by setting the min date to today
-            buttonText: {
-                previousMonth: `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18" /></svg>`,
-                nextMonth: `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="9 6 15 12 9 18" /></svg>`,
-            },
-        });
-    });
-
-    // Initialize Flatpickr for elements with the 'time-picker' class
-    const timeInputs = document.querySelectorAll(".time-picker");
-    timeInputs.forEach((timeInput) => {
-        flatpickr(timeInput, {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: false,
-            defaultHour: 12,
-            defaultMinute: 0,
-            locale: flatpickr.l10ns.km,
-            allowInput: true, // Allow users to type directly into the input field
-            minuteIncrement: 1, // Set minute intervals to 1 (instead of 5)
-        });
-    });
-
-    // Check if elements with class 'date-picker' exist before initializing Litepicker
-    const dobInput = document.querySelectorAll(".datepicker");
-
-    dobInput.forEach((input) => {
-        new Litepicker({
-            element: input,
-            singleMode: true,
-            format: "DD-MM-YYYY",
-            lang: "kh",
-            numberOfMonths: 1,
-            numberOfColumns: 1,
-            dropdowns: {
-                minYear: 1950,
-                maxYear: new Date().getFullYear(),
-                months: true,
-                years: true,
-            },
-            autoApply: true,
-            mobileFriendly: true,
-            maxDate: new Date(),
-            buttonText: {
-                previousMonth: `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>`,
-                nextMonth: `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>`,
-            },
-            setup: (picker) => {
-                picker.on("selected", (date) => {
-                    console.log("Selected DOB:", date.format("DD-MM-YYYY"));
-                });
-            },
-        });
-    });
-});
-// document.addEventListener("DOMContentLoaded", () => {
-//     const el = document.querySelector("#booking-stats-chart");
-//     if (!el) return;
-
-//     const chart = new ApexCharts(el, {
-//         chart: {
-//             type: "area",
-//             height: 260,
-//             toolbar: { show: false },
-//         },
-//         series: [
-//             {
-//                 name: "Bookings",
-//                 data: [20, 40, 60, 80, 100, 90, 120],
-//             },
-//         ],
-//         xaxis: {
-//             categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-//         },
-//         colors: ["#206bc4"],
-//     });
-
-//     chart.render();
-// });

@@ -52,10 +52,10 @@
                                         </span>
                                     </div>
                                     <div class="col">
-                                        <div class="font-weight-medium">បន្ទប់{{ $status['name'] }}</div>
+                                        <div class="font-weight-medium">បន្ទប់{{ __($status['name']) }}</div>
                                         <div class="text-secondary">
                                             {{ $statusCounts[$statusKey] ?? 0 }}
-                                            {{ strtolower($status['name']) }}
+                                            {{ strtolower(__($status['name'])) }}
                                         </div>
                                     </div>
                                 </div>
@@ -183,7 +183,7 @@
                                                     {{ $room['building_name'] }} • {{ $room['floor_name'] }}
                                                 </div>
                                                 <span class="badge {{ $room['status_class'] }} mb-2">
-                                                    {{ $room['status_name'] }}
+                                                    {{ __($room['status_name']) }}
                                                 </span>
                                                 <div class="small text-secondary mb-2">
                                                     {{ $room['room_type']['room_size'] ?? '' }}

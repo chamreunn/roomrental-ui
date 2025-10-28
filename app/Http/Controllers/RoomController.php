@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Enum\RoomStatus;
-use App\Enum\Status;
-use App\Utils\Util;
 use Exception;
+use Carbon\Carbon;
+use App\Utils\Util;
+use App\Enum\Active;
+use App\Enum\Status;
+use App\Enum\RoomStatus;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class RoomController extends Controller
 {
@@ -251,17 +253,40 @@ class RoomController extends Controller
             ],
         ];
 
-        $roomResponse = $this->api()->withHeaders(['location_id' => $locationId])->get("v1/rooms/{$roomId}");
-        $room = $roomResponse['room'];
+        // ✅ Fetch room data from API
+        $roomResponse = $this->api()
+            ->withHeaders(['location_id' => $locationId])
+            ->get("v1/rooms/{$roomId}");
 
+        $room = $roomResponse['room'] ?? null;
+
+        if (!$room) {
+            abort(404, __('Room not found'));
+        }
+
+        // ✅ Get room status
         $roomstatus = RoomStatus::getStatus($room['status']);
 
-        // status
+        // ✅ Prepare clients safely
+        $clients = collect($room['clients'] ?? [])->map(function ($client) {
+            $client['clientstatus'] = Active::getStatus($client['status']);
+            $client['dateOfBirth'] = Carbon::parse($client['date_of_birth'])->translatedFormat('d F Y');
+            $client['start_rental_date'] = Carbon::parse($client['start_rental_date'])->translatedFormat('d F Y');
+            return $client;
+        });
+
+        // ✅ Get all statuses for display (if needed in view)
         $statuses = RoomStatus::all();
+        $inactive = Active::INACTIVE;
 
-        // dd($statuses);
-
-        return view('app.rooms.show', compact('room', 'buttons', 'roomstatus', 'statuses'));
+        return view('app.rooms.show', compact(
+            'room',
+            'buttons',
+            'roomstatus',
+            'statuses',
+            'clients',
+            'inactive'
+        ));
     }
 
     public function destroy($id, $locationId)

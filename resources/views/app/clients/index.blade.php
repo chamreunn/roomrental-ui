@@ -13,6 +13,7 @@
                         <th>{{ __('client.room') }}</th>
                         <th>{{ __('client.start_rental_date') }}</th>
                         <th>{{ __('client.end_rental_date') }}</th>
+                        <th>{{ __('client.status') }}</th>
                         <th class="text-end">{{ __('client.actions') }}</th>
                     </tr>
                 </thead>
@@ -38,6 +39,11 @@
                             </td>
                             <td>{{ $client['start_rental_date'] ?? '-' }}</td>
                             <td>{{ $client['end_rental_date'] ?? '-' }}</td>
+                            <td>
+                                <span class="{{ $client['status_badge']['badge'] ?? '-' }}">
+                                    {{ __($client['status_badge']['name']) }}
+                                </span>
+                            </td>
                             <td class="text-end">
                                 <a href="{{ route('room.show', [$client['room']['id'], $client['room']['location_id']]) }}"
                                     class="btn btn-sm btn-info">
@@ -46,15 +52,6 @@
                                 <a href="{{ route('clients.edit', $client['id']) }}" class="btn btn-sm btn-warning">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
-                                <form action="{{ route('clients.destroy', $client['id']) }}" method="POST"
-                                    class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger"
-                                        onclick="return confirm('{{ __('client.confirm_delete') }}')">
-                                        <x-icon name="trash" class="me-0" />
-                                    </button>
-                                </form>
                             </td>
                         </tr>
                     @empty

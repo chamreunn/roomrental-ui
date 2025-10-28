@@ -23,6 +23,8 @@
         "@tabler/icons-react": "^3.35.0",
         "aos": "^2.3.4",
         "apexcharts": "^5.3.5",
-        "litepicker": "^2.0.12"
+        "flatpickr": "^4.6.13",
+        "litepicker": "^2.0.12",
+        "pickadate": "^5.0.0-alpha.3"
     }
 }

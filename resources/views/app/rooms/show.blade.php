@@ -3,7 +3,7 @@
 @section('content')
 
     <div class="row g-3">
-        <!-- Left Info -->
+        <!-- ===== Left Info (Room Overview) ===== -->
         <div class="col-lg-4">
             <div class="row g-3">
                 <div class="col-12">
@@ -15,6 +15,7 @@
 
                             <h3 class="fw-bold mb-2">{{ $room['room_name'] }}</h3>
 
+                            {{-- ===== Status Edit Dropdown ===== --}}
                             <form action="{{ route('room.update-status', [$room['id'], $room['location']['id']]) }}"
                                 method="POST" class="d-inline">
                                 @csrf
@@ -28,11 +29,8 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         @foreach ($statuses as $key => $status)
                                             <li>
-                                                <button type="submit" name="status" value="{{ $key }}"
-                                                    class="dropdown-item">
-                                                    <span class="{{ $status['text'] }}">
-                                                        {{ $status['name'] }}
-                                                    </span>
+                                                <button type="submit" name="status" value="{{ $key }}" class="dropdown-item">
+                                                    <span class="{{ $status['text'] }}">{{ __($status['name']) }}</span>
                                                 </button>
                                             </li>
                                         @endforeach
@@ -41,11 +39,13 @@
                             </form>
 
                             <p class="text-muted small mb-2">
-                                {{ __('room.building') }} {{ $room['building_name'] }},
-                                {{ __('room.floor') }} {{ $room['floor_name'] }}
+                                <x-icon name="building" class="me-1" />
+                                {{ __('room.building') }}: {{ $room['building_name'] }},
+                                {{ __('room.floor') }}: {{ $room['floor_name'] }}
                             </p>
+
                             <p class="text-muted">
-                                <x-icon name="map-pin" />
+                                <x-icon name="map-pin" class="me-1" />
                                 {{ ucfirst($room['location']['location_name']) }}
                             </p>
 
@@ -58,35 +58,35 @@
                             <div class="h1 text-success fw-bold mb-1">
                                 ${{ number_format($room['room_type']['price'], 2) }}
                             </div>
-                            <span class="text-muted mb-2"> / {{ __('room.per_month') }}</span>
+                            <span class="text-muted">/ {{ __('room.per_month') }}</span>
                         </div>
+
                         <div class="card-body text-center">
                             <div class="text-muted mb-2">
-                                <x-icon name="tag" />
-                                {{ __('room.type') }}: <strong>{{ $room['room_type']['type_name'] }}</strong>
+                                <x-icon name="tag" class="me-1" /> {{ __('room.type') }}:
+                                <strong>{{ $room['room_type']['type_name'] }}</strong>
                             </div>
-                            <div class="text-muted mb-2">
-                                <x-icon name="ruler" />
-                                {{ __('room.size') }}: <strong>{{ $room['room_type']['room_size'] }}</strong>
+                            <div class="text-muted">
+                                <x-icon name="ruler" class="me-1" /> {{ __('room.size') }}:
+                                <strong>{{ $room['room_type']['room_size'] }}</strong>
                             </div>
                         </div>
                     </div>
-
                 </div>
+
+                {{-- ===== Edit/Delete Buttons (Admin Only) ===== --}}
                 @if (userRole() != 'user')
                     <div class="col-12">
                         <div class="row g-3">
                             <div class="col-lg-6">
                                 <a href="{{ route('room.edit', ['room_id' => $room['id'], 'location_id' => $room['location_id']]) }}"
                                     class="btn btn-primary w-100">
-                                    <x-icon name="edit" />{{ __('titles.edit') }}
+                                    <x-icon name="edit" /> {{ __('titles.edit') }}
                                 </a>
                             </div>
                             <div class="col-lg-6">
-                                <button class="btn btn-danger w-100" data-bs-toggle="modal"
-                                    data-bs-target="#{{ $room['id'] }}">
-                                    <x-icon name="trash" />
-                                    {{ __('titles.delete') }}
+                                <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#{{ $room['id'] }}">
+                                    <x-icon name="trash" /> {{ __('titles.delete') }}
                                 </button>
                             </div>
                         </div>
@@ -95,10 +95,10 @@
             </div>
         </div>
 
-        <!-- Right Info -->
+        <!-- ===== Right Info (Details + Clients) ===== -->
         <div class="col-lg-8">
-            <!-- Description -->
             <div class="row g-3">
+                {{-- ===== Room Description ===== --}}
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
@@ -106,16 +106,19 @@
                                 <x-icon name="info-circle" class="me-2 text-primary" />
                                 {{ __('room.information') }}
                             </h5>
-                            <p class="mb-0">
+
+                            @if (empty($room['description']))
                                 <x-empty-state title="{{ __('room.no_information_found') }}"
                                     message="{{ __('room.this_room_is_no_information') }}" svg="svgs/no_result.svg"
                                     width="200px" />
-                            </p>
+                            @else
+                                <p class="text-muted mb-0">{{ $room['description'] }}</p>
+                            @endif
                         </div>
                     </div>
                 </div>
 
-                <!-- Clients -->
+                {{-- ===== Clients List ===== --}}
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
@@ -123,74 +126,71 @@
                                 <x-icon name="users" class="me-2 text-primary" />
                                 {{ __('room.clients') }}
                             </h5>
-                            @if (empty($room['clients']))
-                                {{-- Display Empty State if no clients are found --}}
+
+                            @if ($clients->isEmpty())
                                 <x-empty-state title="{{ __('room.no_client_found') }}"
                                     message="{{ __('room.there_are_no_client_in_this_room') }}" svg="svgs/no_result.svg"
                                     width="200px" />
                             @else
-                                {{-- Client Cards/List Container (using Tabler Cards for better visual separation) --}}
                                 <div class="row row-cards g-2">
-                                    @foreach ($room['clients'] as $client)
+                                    @foreach ($clients as $client)
                                         <div class="col-12">
                                             <div class="card card-sm">
                                                 <div class="card-body">
                                                     <div class="d-flex align-items-center">
 
-                                                        {{-- Client Avatar/Initial --}}
+                                                        {{-- Avatar --}}
                                                         <span
-                                                            class="avatar me-3 bg-{{ $client['gender'] == 'ប្រុស' ? 'blue' : 'pink' }} text-primary-fg">
+                                                            class="avatar me-3 bg-{{ $client['gender'] == 'ប្រុស' ? 'blue' : 'pink' }} text-white fw-bold">
                                                             {{ strtoupper(substr($client['username'], 0, 1)) }}
                                                         </span>
 
                                                         <div class="flex-fill">
-                                                            <div class="font-weight-medium">{{ $client['username'] }}</div>
-                                                            {{-- Phone/Email/Address line --}}
-                                                            <div class="text-muted">
-                                                                <span class="d-none d-lg-inline-block">
-                                                                    <x-icon name="phone" class="me-1" width="16" />
-                                                                    {{ $client['phone_number'] }}
-                                                                </span>
-                                                                <span class="mx-2 d-none d-lg-inline-block text-dot"></span>
-                                                                <span class="d-none d-lg-inline-block">
-                                                                    <x-icon name="map-pin" class="me-1" width="16" />
-                                                                    {{ $client['address'] }}
-                                                                </span>
+                                                            <div class="fw-bold text-primary">{{ ucfirst($client['username']) }}
+                                                            </div>
+                                                            <div class="text-muted small">
+                                                                <x-icon name="calendar-week" class="me-1" width="16" />
+                                                                {{ __('client.date_of_birth') }}:
+                                                                {{ $client['dateOfBirth'] }}
+                                                            </div>
+                                                            <div class="text-muted small mt-1">
+                                                                <x-icon name="phone" class="me-1" width="16" />
+                                                                {{ $client['phone_number'] }}
+                                                                <span class="mx-2 text-dot"></span>
+                                                                <x-icon name="map-pin" class="me-1" width="16" />
+                                                                {{ $client['address'] }}
                                                             </div>
                                                         </div>
 
-                                                        {{-- Status and Dates --}}
+                                                        {{-- Rental Info --}}
                                                         <div class="d-flex flex-column align-items-end me-3">
-
-                                                            {{-- Rental Status Badge --}}
-                                                            @if ($client['end_rental_date'])
-                                                                <span class="badge bg-danger-lt">Lease Ended</span>
-                                                            @elseif ($client['status'] == 1)
-                                                                <span class="badge bg-success-lt">Renting Now</span>
-                                                            @else
-                                                                <span class="badge bg-warning-lt">Pending</span>
-                                                            @endif
-
-                                                            {{-- Start Date (Visually smaller) --}}
+                                                            <span class="{{ $client['clientstatus']['badge'] }}">
+                                                                {{ __($client['clientstatus']['name']) }}
+                                                            </span>
                                                             <div class="text-muted fs-6 mt-1">
-                                                                Since:
-                                                                {{ \Carbon\Carbon::parse($client['start_rental_date'])->format('d M Y') }}
+                                                                {{ __('client.start_rental_date') }}:
+                                                                {{ $client['start_rental_date'] }}
                                                             </div>
                                                         </div>
 
-                                                        {{-- Action Dropdown (More Options) --}}
+                                                        {{-- Dropdown Actions --}}
                                                         <div class="dropdown">
-                                                            <a href="#" class="btn-action" data-bs-toggle="dropdown"
-                                                                aria-expanded="false">
+                                                            <a href="#" class="btn-action" data-bs-toggle="dropdown">
                                                                 <x-icon name="dots-vertical" />
                                                             </a>
                                                             <div class="dropdown-menu dropdown-menu-end">
-                                                                <a href="#" class="dropdown-item">View Profile</a>
-                                                                <a href="#" class="dropdown-item text-danger">End
-                                                                    Lease</a>
+                                                                <a href="#" class="dropdown-item">
+                                                                    <x-icon name="eye" class="me-1" />
+                                                                    {{ __('client.view_profile') }}
+                                                                </a>
+                                                                <a href="#" data-bs-toggle="modal"
+                                                                    data-bs-target="#{{ $client['id'] }}"
+                                                                    class="dropdown-item text-danger">
+                                                                    <x-icon name="xbox-x" class="me-1" />
+                                                                    {{ __('client.end_lease') }}
+                                                                </a>
                                                             </div>
                                                         </div>
-
                                                     </div>
                                                 </div>
                                             </div>
@@ -230,5 +230,37 @@
             </form>
         </div>
     </div>
+
+    {{-- End Lease Modal --}}
+    @foreach ($clients as $client)
+        <div class="modal modal-blur fade" id="{{ $client['id'] }}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                <form action="{{ route('clients.update-client-status', [$client['id'], $inactive]) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <div class="modal-title">{{ __('modal.confirm_client_title') }}</div>
+                            <div>
+                                {!! __('modal.confirm_client_message', [
+                                    'action' => '<span class="badge bg-danger-lt">' . __('client.end_lease') . '</span>',
+                                    'name' => '<span class="text-primary">' . $client['username'] . '</span>'
+                                ]) !!}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">
+                                {{ __('modal.cancel') }}
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                {{ __('modal.confirm') }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
+
 
 @endsection

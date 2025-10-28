@@ -8,4 +8,6 @@ return [
     'confirm_message_room' => 'តើអ្នកប្រកដជាចង់លុបបន្ទប់',
 
     'confirm_message_multi_delete' => 'តើអ្នកប្រាកដថាចង់លុប',
+    'confirm_client_title' => 'ការបញ្ជាក់',
+    'confirm_client_message' => 'តើអ្នកប្រាកដទេថាចង់ :action របស់អតិថិជនឈ្មោះ :name ?',
 ];

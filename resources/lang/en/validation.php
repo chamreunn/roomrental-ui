@@ -69,4 +69,61 @@ return [
     'image_max' => 'Image size must not exceed 2MB.',
 
     'description_max' => 'Description must not exceed 255 characters.',
+
+    'custom' => [
+        'username' => [
+            'required' => 'Please enter the client name.',
+            'max'      => 'Client name may not be greater than :max characters.',
+        ],
+        'gender' => [
+            'required' => 'Please select a gender.',
+            'in'       => 'The selected gender is invalid.',
+        ],
+        'phone_number' => [
+            'required' => 'Please enter a phone number.',
+            'max'      => 'Phone number may not exceed :max characters.',
+        ],
+        'email' => [
+            'email' => 'Please enter a valid email address.',
+            'max'   => 'Email may not exceed :max characters.',
+        ],
+        'dob' => [
+            'required'    => 'Please enter the date of birth.',
+            'date_format' => 'Date of birth must be in dd-mm-YYYY format.',
+        ],
+        'national_id' => [
+            'max' => 'National ID may not exceed :max characters.',
+        ],
+        'passport' => [
+            'max' => 'Passport number may not exceed :max characters.',
+        ],
+        'address' => [
+            'required' => 'Please enter the address.',
+            'max'      => 'Address may not exceed :max characters.',
+        ],
+        'image' => [
+            'image' => 'The file must be an image.',
+            'max'   => 'The image size may not be greater than 2MB.',
+        ],
+        'start_rental_date' => [
+            'required' => 'Please enter the rental start date.',
+            'date'     => 'Start rental date must be a valid date.',
+        ],
+        'end_rental_date' => [
+            'date' => 'End rental date must be a valid date.',
+        ],
+        'description' => [
+            'max' => 'Description may not exceed :max characters.',
+        ],
+    ],
+
+    'required_month' => 'The month field is required.',
+    'required_old_electric' => 'Please enter the previous electric reading.',
+    'required_new_electric' => 'Please enter the new electric reading.',
+    'required_electric_rate' => 'Please enter the electric rate.',
+    'required_old_water' => 'Please enter the previous water reading.',
+    'required_new_water' => 'Please enter the new water reading.',
+    'required_water_rate' => 'Please enter the water rate.',
+    'new_electric_must_be_greater' => 'The new electric reading must be greater than the old reading.',
+    'new_water_must_be_greater' => 'The new water reading must be greater than the old reading.',
 ];

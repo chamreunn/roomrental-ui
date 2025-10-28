@@ -18,5 +18,9 @@ return [
     'location_created' => 'Create Location',
     'location_list' => 'Location List',
     //client
-    'client' => 'Clients'
+    'client' => 'Clients',
+    //invoice
+    'invoice' => 'Invoices',
+    'create_invoice' => 'Create Invoice',
+    'invoice_list' => 'Invoice Lists'
 ];

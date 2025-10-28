@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\Active;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -23,9 +24,16 @@ class ClientController extends Controller
             $clientsArray = $data['data'] ?? [];
             $total = $data['total'] ?? count($clientsArray);
 
+            // ✅ Transform each room entry
+            $dataCollection = collect($clientsArray)->transform(function ($item) {
+                $item['status_badge'] = Active::getStatus($item['status']);
+
+                return $item;
+            });
+
             // ✅ Create pagination
             $clients = new LengthAwarePaginator(
-                collect($clientsArray),
+                collect($dataCollection),
                 $total,
                 $perPage,
                 $currentPage,
@@ -73,7 +81,7 @@ class ClientController extends Controller
             'passport'          => 'nullable|string|max:30',
             'address'           => 'required|string|max:255',
             'image'             => 'nullable|image|max:2048',
-            'start_rental_date' => 'nullable|date',
+            'start_rental_date' => 'required|date',
             'end_rental_date'   => 'nullable|date',
             'description'       => 'nullable|string|max:255',
         ]);
@@ -199,6 +207,27 @@ class ClientController extends Controller
             }
 
             return back()->withErrors(['api' => __('client.update_failed')])->withInput();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['api' => $e->getMessage()])->withInput();
+        }
+    }
+
+    public function updateClientStatus($clientId, $status)
+    {
+        try {
+            // Send PATCH request to update client status
+            $response = $this->api()->post("v1/clients/{$clientId}", [
+                '_method' => 'PATCH',
+                'updated_by' => session('user.id'),
+                'status' => $status,
+            ]);
+
+            // Optional: check if API returns success
+            if (isset($response['status']) && $response['status'] === "success") {
+                return back()->with('success', __('client.status_updated_successfully'));
+            }
+
+            return back()->withErrors(['api' => __('client.status_update_failed')])->withInput();
         } catch (\Throwable $e) {
             return back()->withErrors(['api' => $e->getMessage()])->withInput();
         }

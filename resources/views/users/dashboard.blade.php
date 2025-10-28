@@ -27,7 +27,7 @@
                                                     {{ $room['building_name'] }} • {{ $room['floor_name'] }}
                                                 </div>
                                                 <span class="badge {{ $room['status_class'] }} mb-2">
-                                                    {{ $room['status_name'] }}
+                                                    {{ __($room['status_name']) }}
                                                 </span>
                                                 <div class="small text-secondary mb-2">
                                                     {{ $room['room_type']['room_size'] ?? '' }}

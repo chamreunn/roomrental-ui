@@ -89,6 +89,45 @@
         }
     </script>
 
+    {{-- for calendar flatpickr --}}
+    @php
+        $months = [
+            'en' => [
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December',
+            ],
+            'km' => [
+                'មករា',
+                'កុម្ភៈ',
+                'មិនា',
+                'មេសា',
+                'ឧសភា',
+                'មិថុនា',
+                'កក្កដា',
+                'សីហា',
+                'កញ្ញា',
+                'តុលា',
+                'វិច្ឆិកា',
+                'ធ្នូ',
+            ],
+        ];
+    @endphp
+
+    <script>
+        window.appLocale = "{{ app()->getLocale() }}";
+        window.monthsTranslation = @json($months);
+    </script>
+
 </body>
 
 </html>

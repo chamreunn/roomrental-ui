@@ -14,7 +14,7 @@ enum RoomStatus
         switch ($status) {
             case self::Available:
                 return [
-                    'name' => 'ទំនេរ',
+                    'name' => 'status.available',
                     'class' => 'bg-success text-success-fg',
                     'badge' => 'badge bg-success text-success-fg',
                     'text' => 'text-success',
@@ -22,7 +22,7 @@ enum RoomStatus
                 ];
             case self::Unavailable:
                 return [
-                    'name' => 'ជាប់រវល់',
+                    'name' => 'status.unavailable',
                     'class' => 'bg-danger text-danger-fg',
                     'badge' => 'badge bg-danger text-danger-fg',
                     'text' => 'text-danger',
@@ -30,7 +30,7 @@ enum RoomStatus
                 ];
             case self::Reserved:
                 return [
-                    'name' => 'បានកក់',
+                    'name' => 'status.reserved',
                     'class' => 'bg-yellow text-yellow-fg',
                     'badge' => 'badge bg-yellow text-yellow-fg',
                     'text' => 'text-yellow',
@@ -38,7 +38,7 @@ enum RoomStatus
                 ];
             case self::Maintenance:
                 return [
-                    'name' => 'កំពុងជួលជុល',
+                    'name' => 'status.maintenance',
                     'class' => 'bg-secondary text-secondary-fg',
                     'badge' => 'badge bg-secondary text-secondary-fg',
                     'text' => 'text-secondary',

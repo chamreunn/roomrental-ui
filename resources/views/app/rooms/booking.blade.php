@@ -80,8 +80,7 @@
                                     </div>
 
                                     {{-- Hidden file input --}}
-                                    <input type="file" name="image" id="avatarInput" class="d-none"
-                                        accept="image/*">
+                                    <input type="file" name="image" id="avatarInput" class="d-none" accept="image/*">
                                     @error('image')
                                         <div class="text-red mt-1">{{ $message }}</div>
                                     @enderror
@@ -125,7 +124,7 @@
                                                                     <x-icon name="calendar" />
                                                                 </span>
                                                                 <input type="text" name="dob" id="dob"
-                                                                    class="form-control datepicker"
+                                                                    class="form-control dobpicker"
                                                                     placeholder="{{ __('tenant.date_of_birth_placeholder') }}"
                                                                     value="{{ old('dob') }}" readonly>
                                                             </div>
@@ -242,7 +241,8 @@
 
                                                         {{-- Start Date --}}
                                                         <div class="col-lg-3">
-                                                            <label class="form-label">{{ __('tenant.start_date') }}</label>
+                                                            <label
+                                                                class="form-label required">{{ __('tenant.start_date') }}</label>
                                                             <div class="input-group">
                                                                 <span class="input-group-text">
                                                                     <x-icon name="calendar-plus" />
@@ -252,6 +252,9 @@
                                                                     placeholder="{{ __('tenant.start_date_placeholder') }}"
                                                                     value="{{ old('start_rental_date') }}">
                                                             </div>
+                                                            @error('start_rental_date')
+                                                                <div class="text-danger mt-1">{{ $message }}</div>
+                                                            @enderror
                                                         </div>
 
                                                         {{-- End Date --}}
