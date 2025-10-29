@@ -361,15 +361,15 @@ class RoomController extends Controller
         // ✅ Prepare payload for API
         $payload = [
             '_method'    => 'PATCH',
-            'updated_by' => Session::get('user')['id'] ?? null,
-            'status'     => (int) $validated['status'],
+            'updated_by' => session('user.id') ?? null,
+            'status'     => $validated['status'],
         ];
 
         try {
             // ✅ Send PATCH request to your API
             $apiResponse = $this->api()
                 ->withHeaders(['location_id' => $locationId])
-                ->post("v1/rooms/{$roomId}", $payload);
+                ->post("v1/rooms/{$roomId}/status", $payload);
 
             // ✅ Check for success flag
             if (($apiResponse['status'] ?? '') === 'success' || ($apiResponse['success'] ?? false)) {

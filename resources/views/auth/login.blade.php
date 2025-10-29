@@ -1,7 +1,5 @@
 @extends('layouts.auth')
 
-@section('page_title', 'ចូលប្រព័ន្ធ')
-
 @section('content')
 
     <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">

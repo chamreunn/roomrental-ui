@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enum\AbilitiesStatus;
+use App\Enum\CashTransactionCategory;
+use App\Enum\CashTransactionType;
 use App\Enum\InvoiceStatus;
 use App\Enum\RoomStatus;
 use App\Enum\Status;
@@ -45,6 +47,16 @@ class Controller extends BaseController
      * @var \App\Utils\Util|null
      */
     protected $util = null;
+
+    /**
+     * @var \App\Enum\CashTransactionType|null
+     */
+    protected $cashTransactionType = null;
+
+    /**
+     * @var \App\Enum\CashTransactionCategory|null
+     */
+    protected $cashTransactionCategory = null;
 
     /**
      * Lazy-load ApiService only when needed.
@@ -126,5 +138,34 @@ class Controller extends BaseController
         }
 
         return $this->InvoiceStatus;
+    }
+
+    /**
+     * Lazy-load CashTransactionType only when needed.
+     *
+     * @return \App\Enum\CashTransactionType
+     */
+    protected function CashTransactionType(): CashTransactionType
+    {
+        if (!$this->cashTransactionType) {
+            $this->cashTransactionType = app(CashTransactionType::class);
+        }
+
+        return $this->cashTransactionType;
+    }
+
+
+    /**
+     * Lazy-load CashTransactionCategory only when needed.
+     *
+     * @return \App\Enum\CashTransactionCategory
+     */
+    protected function CashTransactionCategory(): CashTransactionCategory
+    {
+        if (!$this->cashTransactionCategory) {
+            $this->cashTransactionCategory = app(CashTransactionCategory::class);
+        }
+
+        return $this->cashTransactionCategory;
     }
 }

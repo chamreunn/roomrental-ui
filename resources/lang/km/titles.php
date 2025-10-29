@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'login' => 'ចូលប្រព័ន្ធ',
     'dashboard_admin' => 'ផ្ទាំងអ្នកគ្រប់គ្រង',
     // Nouns / pretitle
     'admin' => 'អ្នកគ្រប់គ្រង',
@@ -45,5 +46,6 @@ return [
     'actions' => 'សកម្មភាព',
     'save_update' => 'ធ្វើបច្ចុប្បន្នភាព',
      //client
-    'client' => 'អតិថិជន'
+    'client' => 'អតិថិជន',
+    'remove' => 'យកចេញ',
 ];

@@ -3,7 +3,9 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CashTransactionController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ManagerController;
@@ -89,6 +91,17 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::get('/invoices/choose-room/{id}', [InvoiceController::class, 'chooseRoom'])->name('invoice.choose_room');
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
+    //cash transaction
+    Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
+    Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+    Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+    Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+    Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
+    Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+    Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
+    //income
+    Route::get('/income/choose-location', [IncomeController::class, 'index'])->name('income.index');
+    Route::get('/income/choose-location/{id}', [IncomeController::class, 'list'])->name('income.list');
 });
 
 // 🧩 Admin Routes

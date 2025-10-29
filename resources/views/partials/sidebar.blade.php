@@ -352,24 +352,29 @@
                     </div>
                 </li>
 
-                <!-- Income -->
-                <li class="nav-item">
-                    <a class="nav-link {{ active_class('income.*') }}" href="{{ url('income') }}">
+                <!-- Cash Transaction Income & Expense -->
+                <li class="nav-item dropdown {{ active_class(['cash_transaction.*','income.*']) }}">
+                    <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['cash_transaction.*','income.*']) }}"
+                        href="#navbar-cash_transaction" data-bs-toggle="dropdown" data-bs-auto-close="false">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                             <x-icon name="cash-register" />
                         </span>
-                        <span class="nav-link-title">{{ __('sidebar.income') }}</span>
+                        <span class="nav-link-title">{{ __('sidebar.cash_transaction') }}</span>
                     </a>
-                </li>
-
-                <!-- Expense -->
-                <li class="nav-item">
-                    <a class="nav-link {{ active_class('expense.*') }}" href="{{ url('expense') }}">
-                        <span class="nav-link-icon d-md-none d-lg-inline-block">
-                            <x-icon name="businessplan" />
-                        </span>
-                        <span class="nav-link-title">{{ __('sidebar.expense') }}</span>
-                    </a>
+                    <div class="dropdown-menu {{ active_class(['cash_transaction.*', 'income.*'], '', true) }}">
+                        <div class="dropdown-menu-columns">
+                            <div class="dropdown-menu-column">
+                                <a class="dropdown-item {{ active_class(['cash_transaction.choose_location','cash_transaction.create']) }}"
+                                    href="{{ route('cash_transaction.choose_location') }}">
+                                    {{ __('sidebar.create_cash_transaction') }}
+                                </a>
+                                <a class="dropdown-item {{ active_class(['income.index']) }}"
+                                    href="{{ route('income.index') }}">
+                                    {{ __('sidebar.income.index') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </li>
             </ul>
         </div>

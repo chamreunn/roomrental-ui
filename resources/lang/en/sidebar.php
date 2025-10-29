@@ -22,5 +22,11 @@ return [
     //invoice
     'invoice' => 'Invoices',
     'create_invoice' => 'Create Invoice',
-    'invoice_list' => 'Invoice Lists'
+    'invoice_list' => 'Invoice Lists',
+    //cash transaction
+    'cash_transaction' => 'Cash Transaction',
+    'create_cash_transaction' => 'Create',
+    'cash_transaction_list' => 'Cash Transaction Lists',
+    //Income
+    'income.index' => 'Income Lists',
 ];

@@ -87,6 +87,34 @@ document.addEventListener("DOMContentLoaded", function () {
         allowInput: true,
         wrap: false,
     });
+
+    // date Picker
+    flatpickr(".datepicker", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "Y-M-d",
+        locale:
+            locale === "km"
+                ? {
+                      firstDayOfWeek: 1,
+                      weekdays: {
+                          shorthand: ["អា", "ច", "អ", "ពុ", "ព្រ", "សុ", "ស"],
+                          longhand: [
+                              "អាទិត្យ",
+                              "ច័ន្ទ",
+                              "អង្គារ",
+                              "ពុធ",
+                              "ព្រហស្បតិ៍",
+                              "សុក្រ",
+                              "សៅរ៍",
+                          ],
+                      },
+                      months: { shorthand: months, longhand: months },
+                  }
+                : "en",
+        allowInput: false,
+        wrap: false,
+    });
 });
 
 // Initialize AOS

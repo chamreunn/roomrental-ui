@@ -72,7 +72,7 @@ if (!function_exists('page_title')) {
      */
     function page_title(bool $withAppName = true): string
     {
-        $appName = config('app.name');
+        // $appName = config('app.name');
 
         // Get current route name, fallback to 'home'
         $routeName = Route::currentRouteName() ?? 'home';
@@ -89,7 +89,7 @@ if (!function_exists('page_title')) {
         }
 
         // Append app name if requested
-        return $withAppName ? $title . ' | ' . $appName : $title;
+        return $withAppName ? $title : $title;
     }
 }
 

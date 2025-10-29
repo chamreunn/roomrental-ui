@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'login' => 'Login',
     'dashboard_admin' => 'Admin Dashboard',
     // Nouns / pretitle
     'admin' => 'Administrator',
@@ -44,5 +45,6 @@ return [
     'actions' => 'Action',
     'save_update' => 'Save Update',
     //client
-    'client' => 'Clents'
+    'client' => 'Clents',
+    'remove' => 'Remove',
 ];
