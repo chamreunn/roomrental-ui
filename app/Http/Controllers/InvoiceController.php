@@ -50,7 +50,7 @@ class InvoiceController extends Controller
             'search' => $search,
         ]);
     }
-    
+
     public function chooseLocation(Request $request)
     {
         // Get location detail

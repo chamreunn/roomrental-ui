@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class IncomeController extends Controller
+class ExpenseController extends Controller
 {
     public function index()
     {
@@ -13,7 +13,7 @@ class IncomeController extends Controller
         $locationResponse = $this->api()->get("v1/locations");
         $locations = $locationResponse['locations']['data'] ?? null;
 
-        return view('app.income.index', compact('locations'));
+        return view('app.expense.index', compact('locations'));
     }
 
     public function list($id)
@@ -23,33 +23,31 @@ class IncomeController extends Controller
                 'text' => __('titles.back'),
                 'icon' => 'chevrons-left',
                 'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
-                'url' => route('income.index', $id),
+                'url' => route('expense.index', $id),
             ],
         ];
 
-        $type = $this->CashTransactionType()::INCOME;
+        $type = $this->CashTransactionType()::EXPENSE;
         $page = request('page', 1);
 
-        // Base params for API
-        $filters = [
-            'type' => $type,
-            'page' => $page,
-        ];
-
-        // ✅ Fetch all data (no date filter in API)
+        // Base API request
         $response = $this->api()
             ->withHeaders(['location_id' => $id])
-            ->get('v1/cash-transactions', $filters);
+            ->get('v1/cash-transactions', [
+                'type' => $type,
+                'page' => $page,
+            ]);
 
+        // Handle missing or null response
         $data = $response['data']['data'] ?? [];
         $total = $response['data']['total'] ?? 0;
         $perPage = $response['data']['per_page'] ?? 10;
         $currentPage = $response['data']['current_page'] ?? $page;
 
-        // ✅ Convert to collection for local filtering
+        // Convert to collection for local filtering
         $collection = collect($data);
 
-        // 🧠 Apply filters locally (in Laravel)
+        // ✅ Local filters (since API doesn’t support these)
         if (request()->filled('from_date')) {
             $collection = $collection->filter(function ($item) {
                 return $item['transaction_date'] >= request('from_date');
@@ -71,12 +69,12 @@ class IncomeController extends Controller
             });
         }
 
-        // ✅ Reset keys and count
+        // Rebuild filtered collection
         $filteredData = $collection->values();
         $total = $filteredData->count();
 
-        // ✅ Manually paginate filtered results
-        $incomes = new LengthAwarePaginator(
+        // Manual pagination
+        $expenses = new LengthAwarePaginator(
             $filteredData->forPage($currentPage, $perPage),
             $total,
             $perPage,
@@ -87,6 +85,6 @@ class IncomeController extends Controller
             ]
         );
 
-        return view('app.income.list', compact('incomes', 'buttons', 'id'));
+        return view('app.expense.list', compact('expenses', 'buttons', 'id'));
     }
 }

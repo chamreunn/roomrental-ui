@@ -3,11 +3,12 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title text-primary mb-0">{{ __('cash_transaction.income_list') ?? 'Income Transactions' }}</h3>
+            <h3 class="card-title text-primary">{{ __('cash_transaction.expense_list') ?? 'Expense Transactions' }}</h3>
         </div>
         <div class="card-body">
+
             {{-- ✅ Filter Form --}}
-            <form method="GET" action="{{ route('income.list', $id) }}" class="row g-3 mb-3">
+            <form method="GET" action="{{ route('expense.list', $id) }}" class="row g-3 mb-3">
                 <div class="col-md-3">
                     <label for="from_date" class="form-label">{{ __('cash_transaction.from_date') }}</label>
                     <div class="input-icon">
@@ -27,7 +28,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label for="category" class="form-label">{{ __('cash_transaction.category_income') }}</label>
+                    <label for="category" class="form-label">{{ __('cash_transaction.category_expense') }}</label>
                     <div class="input-icon">
                         <span class="input-icon-addon"><x-icon name="category" /></span>
                         <input type="text" name="category" id="category" class="form-control"
@@ -39,32 +40,32 @@
                     <button type="submit" class="btn btn-primary me-2 w-100">
                         <i class="fas fa-filter"></i> {{ __('cash_transaction.filter') }}
                     </button>
-                    <a href="{{ route('income.list', $id) }}" class="btn btn-outline-secondary w-100">
+                    <a href="{{ route('expense.list', $id) }}" class="btn btn-outline-secondary w-100">
                         {{ __('cash_transaction.reset') }}
                     </a>
                 </div>
             </form>
 
             {{-- ✅ Table --}}
-            @if ($incomes->count() > 0)
+            @if ($expenses->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped table-vcentered">
                         <thead>
                             <tr>
                                 <th class="text-center text-primary" style="width: 50px;">#</th>
                                 <th>{{ __('cash_transaction.date') ?? 'Date' }}</th>
-                                <th>{{ __('cash_transaction.category_income') ?? 'Category' }}</th>
+                                <th>{{ __('cash_transaction.category_expense') ?? 'Category' }}</th>
                                 <th class="text-end">{{ __('cash_transaction.amount') ?? 'Amount' }}</th>
                                 <th>{{ __('cash_transaction.note') ?? 'Note' }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($incomes as $index => $item)
+                            @foreach ($expenses as $index => $item)
                                 <tr>
-                                    <td class="text-center">{{ $incomes->firstItem() + $index }}</td>
+                                    <td class="text-center">{{ $expenses->firstItem() + $index }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item['transaction_date'])->translatedFormat('d-M-Y') }}</td>
                                     <td>{{ $item['category'] }}</td>
-                                    <td class="text-end text-primary">{{ number_format($item['amount'], 2) }}</td>
+                                    <td class="text-end text-danger">{{ number_format($item['amount'], 2) }}</td>
                                     <td>{{ $item['description'] ?? '-' }}</td>
                                 </tr>
                             @endforeach
@@ -72,14 +73,14 @@
                     </table>
                 </div>
 
-                {{-- Pagination --}}
-                @if ($incomes->hasPages())
+                {{-- ✅ Pagination --}}
+                @if ($expenses->hasPages())
                     <div class="d-flex justify-content-center mt-3">
-                        {{ $incomes->appends(request()->query())->links('pagination::bootstrap-5') }}
+                        {{ $expenses->appends(request()->query())->links('pagination::bootstrap-5') }}
                     </div>
                 @endif
             @else
-                <div class="alert alert-info text-center mb-0 justify-content-center">
+                <div class="alert alert-info text-center mb-0">
                     <x-empty-state title="{{ __('cash_transaction.no_data') }}" message="{{ __('cash_transaction.no_data') }}"
                         svg="svgs/no_result.svg" width="450px" />
                 </div>

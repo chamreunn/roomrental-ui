@@ -93,6 +93,8 @@ class CashTransactionController extends Controller
                 'description' => $transaction['description'] ?? null,
             ];
 
+            // dd($payload);
+
             try {
                 $response = $this->api()
                     ->withHeaders(['location_id' => $location_id])

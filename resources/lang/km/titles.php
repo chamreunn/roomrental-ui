@@ -48,4 +48,7 @@ return [
      //client
     'client' => 'អតិថិជន',
     'remove' => 'យកចេញ',
+    //invoice
+    'invoice' => 'វិក្កយបត្រ',
+    'choose_room' => 'ជ្រើសរើសបន្ទប់',
 ];

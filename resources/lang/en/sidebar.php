@@ -29,4 +29,6 @@ return [
     'cash_transaction_list' => 'Cash Transaction Lists',
     //Income
     'income.index' => 'Income Lists',
+    //Expense
+    'expense.index' => 'Expense Lists',
 ];

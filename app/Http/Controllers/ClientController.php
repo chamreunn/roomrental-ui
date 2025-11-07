@@ -150,7 +150,7 @@ class ClientController extends Controller
             'national_id'       => 'nullable|string|max:30',
             'passport'          => 'nullable|string|max:30',
             'address'           => 'required|string|max:255',
-            'image'      => 'nullable|string|max:191', // nullable string
+            'image'             => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240', // nullable string
             'start_rental_date' => 'nullable|date',
             'end_rental_date'   => 'nullable|date',
             'description'       => 'nullable|string|max:255',
@@ -175,7 +175,7 @@ class ClientController extends Controller
                 '_method'           => 'PATCH',
                 'created_by'        => Session::get('user.id'),
                 'updated_by'        => Session::get('user.id'),
-                'room_id'           => $roomId,
+                // 'room_id'           => $roomId,
                 'username'          => $validated['username'],
                 'date_of_birth'     => $dob,
                 'gender'            => $validated['gender'],
@@ -189,15 +189,22 @@ class ClientController extends Controller
                 'description'       => $validated['description'] ?? null,
             ];
 
-            // Only include client_image if provided (as string)
-            if (!empty($validated['image'])) {
-                $payload['client_image'] = $validated['image'];
+            // Only include client_image if provided (handle file upload)
+            $files = [];
+            $isMultipart = false;
+            if ($request->hasFile('image')) {
+                $isMultipart = true;
+                $files = [$request->file('image')];
             }
 
-            // Send payload to API (no file upload)
+            // Send payload to API (support multipart if file provided)
             $response = $this->api()->post(
                 'v1/clients/' . $clientId,
-                $payload
+                $payload,
+                null,
+                $isMultipart,
+                $files,
+                'client_image'
             );
 
             if (($response['status'] ?? '') === 'success') {
@@ -216,7 +223,7 @@ class ClientController extends Controller
     {
         try {
             // Send PATCH request to update client status
-            $response = $this->api()->post("v1/clients/{$clientId}", [
+            $response = $this->api()->post("v1/clients/{$clientId}/status", [
                 '_method' => 'PATCH',
                 'updated_by' => session('user.id'),
                 'status' => $status,

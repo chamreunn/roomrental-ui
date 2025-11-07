@@ -35,7 +35,6 @@
                 <div class="nav-item dropdown d-none d-md-flex">
                     <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1"
                         aria-label="Show notifications" data-bs-auto-close="outside" aria-expanded="false">
-                        <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                             class="icon icon-1">
@@ -162,7 +161,7 @@
                     </div>
                 </div>
                 <div class="nav-item btn-animate-icon btn-animate-icon-rotate">
-                    <a href="#" class="nav-link px-0" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                    <a href="{{ route('settings.index') }}" class="nav-link px-0 {{ active_class('settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="bottom"
                         aria-label="{{ __('nav.settings') }}" data-bs-original-title="{{ __('nav.settings') }}">
                         <x-icon name="settings" />
                     </a>

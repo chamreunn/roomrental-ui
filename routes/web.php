@@ -5,12 +5,14 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CashTransactionController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomtypeController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserLocationController;
 use Illuminate\Support\Facades\App;
@@ -85,7 +87,7 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
     Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
     Route::get('/invoices/edit/{id}', [InvoiceController::class, 'edit'])->name('invoice.edit');
-    // invoice for admin 
+    // invoice for admin
     Route::get('/invoices/create/{room_id}/{location_id}', [InvoiceController::class, 'create'])->name('invoice.create');
     Route::get('/invoices/choose-location', [InvoiceController::class, 'chooseLocation'])->name('invoice.choose_location');
     Route::get('/invoices/choose-room/{id}', [InvoiceController::class, 'chooseRoom'])->name('invoice.choose_room');
@@ -102,6 +104,9 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     //income
     Route::get('/income/choose-location', [IncomeController::class, 'index'])->name('income.index');
     Route::get('/income/choose-location/{id}', [IncomeController::class, 'list'])->name('income.list');
+    //expense
+    Route::get('/expense/choose-location', [ExpenseController::class, 'index'])->name('expense.index');
+    Route::get('/expense/choose-location/{id}', [ExpenseController::class, 'list'])->name('expense.list');
 });
 
 // 🧩 Admin Routes
@@ -123,4 +128,6 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     // for client
     Route::post('/client/store/{id}', [ClientController::class, 'store'])->name('client.store');
     Route::patch('/client/update-status/{id}/{inactive}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
+    //settings
+    Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
 });

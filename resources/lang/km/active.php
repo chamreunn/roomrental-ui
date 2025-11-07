@@ -2,6 +2,6 @@
 
 return [
     'active' => 'កំពុងជួល',
-    'inactive' => 'អសកម្ម',
+    'in_active' => 'អសកម្ម',
     'pending' => 'រង់ចាំ...'
 ];

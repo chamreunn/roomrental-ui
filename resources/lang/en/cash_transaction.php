@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return [
     'type' => 'Type',
@@ -37,4 +37,15 @@ return [
     // ✅ Success / Error Messages
     'added_to_list' => 'Transaction added to list successfully.',
     'removed_from_list' => 'Transaction removed from list.',
+
+    'income_list' => 'Income List',
+    'expense_list' => 'Expense List',
+    'no_data' => 'No data available.',
+    //filter
+    'from_date' => 'From Date',
+    'to_date' => 'To Date',
+    'select_date' => 'Select date',
+    'search_category' => 'Search category...',
+    'filter' => 'Filter',
+    'reset' => 'Reset',
 ];

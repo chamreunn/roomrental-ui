@@ -47,4 +47,7 @@ return [
     //client
     'client' => 'Clents',
     'remove' => 'Remove',
+    //invoice
+    'invoice' => 'Invoice',
+    'choose_room' => 'Choose Room',
 ];

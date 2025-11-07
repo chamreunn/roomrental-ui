@@ -12,12 +12,12 @@
                     enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
-
+{{-- <pre>{{ print_r($client['room']['id']) }}</pre> --}}
                     <div class="card-body d-flex justify-content-center">
                         <div class="text-center">
                             {{-- Avatar --}}
                             <div class="position-relative" style="width:200px; height:200px;">
-                                <img id="avatarPreview" src="{{ $client['client_image'] ?? '/imgs/default-avatar.png' }}"
+                                <img id="avatarPreview" src="{{ env('API_LOCAL').$client['client_image'] ?? '/imgs/default-avatar.png' }}"
                                     alt="Profile Picture" class="rounded border"
                                     style="width:100%; height:100%; object-fit:cover; cursor:pointer;">
                                 <div id="uploadOverlay"

@@ -7,7 +7,7 @@
     <title>{{ page_title() }}</title>
 
     <!-- Vite -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @vite(['resources/sass/app.scss', 'resources/js/app.js','resources/js/settings.js'])
 </head>
 
 <body>

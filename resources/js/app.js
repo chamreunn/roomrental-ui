@@ -8,6 +8,7 @@ import "litepicker/dist/css/litepicker.css";
 // Tabler Core
 import "@tabler/core/dist/js/tabler.min.js";
 import "@tabler/core/dist/js/tabler-theme.min.js";
+import "@tabler/core/js/tabler-theme.js";
 import "@tabler/core/dist/css/tabler-flags.min.css";
 import "@tabler/core/dist/css/demo.min.css";
 import "@tabler/core/dist/libs/litepicker/dist/css/litepicker.css";
@@ -92,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
     flatpickr(".datepicker", {
         dateFormat: "Y-m-d",
         altInput: true,
-        altFormat: "Y-M-d",
+        altFormat: "Y-m-d",
         locale:
             locale === "km"
                 ? {

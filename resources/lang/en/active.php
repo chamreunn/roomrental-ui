@@ -2,6 +2,6 @@
 
 return [
     'active' => 'Active',
-    'inactive' => 'Inactive',
+    'in_active' => 'Inactive',
     'pending' => 'Pending'
 ];

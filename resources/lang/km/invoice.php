@@ -9,7 +9,7 @@ return [
     'invoice_preview' => 'ពិនិត្យវិក្កយបត្រ',
     'save_invoice' => 'រក្សាទុកវិក្កយបត្រ',
     'other_charge' => 'ចំណាយផ្សេងៗ',
-    'invoice' => 'វិក័យប័ត្របន្ទប់ជួល',
+    'invoice' => 'វិក្កយបត្របន្ទប់ជួល',
     'contact' => 'ទំនាក់ទំនង',
     'room_detail' => 'បន្ទប់',
 

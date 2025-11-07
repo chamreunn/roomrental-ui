@@ -24,8 +24,8 @@ return [
     'create_invoice' => 'បង្កើតវិកយបត្រ',
     'invoice_list' => 'បញ្ជីវិកយបត្រ',
     //cash transaction
-    'cash_transaction' => 'ចំណូល / ចំណាយ',
-    'create_cash_transaction' => 'បង្កើតប្រតិបត្តិការប្រាក់',
+    'cash_transaction' => 'របាយការណ៍ចំណូលចំណាយ',
+    'create_cash_transaction' => 'បង្កើតរបាយការណ៍',
     'cash_transaction_list' => 'បញ្ជីប្រតិបត្តិការប្រាក់',
     'cash_transaction.income' => 'ចំណូល',
     'cash_transaction.expense' => 'ចំណាយ',
@@ -35,5 +35,6 @@ return [
     'cash_transaction.salary' => 'ប្រាក់ខែ',
     'cash_transaction.other' => 'ផ្សេងៗ',
     //Income
-    'income.index' => 'បញ្ជីចំណូល',
+    'income.index' => 'របាយការណ៍ចំណូល',
+    'expense.index' => 'របាយការណ៍ចំណាយ',
 ];
