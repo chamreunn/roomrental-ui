@@ -5,21 +5,57 @@
 @section('content')
 
     {{-- 🏠 Hero Section with Carousel --}}
-    <section id="home" class="position-relative">
+    <section id="home" class="position-relative" data-aos="fade-down">
         <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
             <div class="carousel-inner">
-                @foreach ([['img' => 'https://picsum.photos/1920/800?random=1', 'title' => __('landing.hero.headline'), 'text' => __('landing.hero.subtext')], ['img' => 'https://picsum.photos/1920/800?random=2', 'title' => 'ស្វែងរកផ្ទះស្រួលៗជិតអ្នក', 'text' => 'ជ្រើសរើសផ្ទះស្រួលជាមួយ RoomioFlex'], ['img' => 'https://picsum.photos/1920/800?random=3', 'title' => 'បញ្ចេញការផ្សាយជួលផ្ទះរបស់អ្នក', 'text' => 'ជួយអ្នករកអ្នកជួលក្នុងរយៈពេលខ្លី!']] as $index => $slide)
-                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                        <img src="{{ $slide['img'] }}" class="d-block w-100" alt="Hero Slide {{ $index + 1 }}">
-                        <div
-                            class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded-4 p-4 animate__animated animate__fadeInUp">
-                            <h1 class="fw-bold text-white">{{ $slide['title'] }}</h1>
-                            <p class="text-light">{{ $slide['text'] }}</p>
-                            <a href="#rooms" class="btn btn-primary me-2">{{ __('landing.hero.start') }}</a>
-                            <a href="#features" class="btn btn-outline-light">{{ __('landing.hero.learn') }}</a>
-                        </div>
+                @php
+                    $slides = [
+                        [
+                            'img' => 'https://www.thespruce.com/thmb/iMt63n8NGCojUETr6-T8oj-5-ns=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/PAinteriors-7-cafe9c2bd6be4823b9345e591e4f367f.jpg',
+                            'title' => __('landing.hero.headline'),
+                            'text' => __('landing.hero.subtext'),
+                        ],
+                        [
+                            'img' => 'https://www.vanorohotel.com/wp-content/uploads/2021/07/drz-vanoro_6737.jpg',
+                            'title' => 'ស្វែងរកផ្ទះស្រួលៗជិតអ្នក',
+                            'text' => 'ជ្រើសរើសផ្ទះស្រួលជាមួយ RoomioFlex',
+                        ],
+                        [
+                            'img' => 'https://www.houzlook.com/assets/images/upload/Rooms/Bed%20Rooms/Malson%20Modern%20Bed%20Room-20180819090641741.jpg',
+                            'title' => 'បញ្ចេញការផ្សាយជួលផ្ទះរបស់អ្នក',
+                            'text' => 'ជួយអ្នករកអ្នកជួលក្នុងរយៈពេលខ្លី!',
+                        ],
+                    ];
+                @endphp
+
+                <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        @foreach ($slides as $index => $slide)
+                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                <img src="{{ $slide['img'] }}" class="d-block w-100" alt="Hero Slide {{ $index + 1 }}"
+                                    style="object-fit: cover; width: 100%; height: 800px;">
+                                <div
+                                    class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded-4 p-4 animate__animated animate__fadeInUp">
+                                    <h1 class="fw-bold text-white">{{ $slide['title'] }}</h1>
+                                    <p class="text-light">{{ $slide['text'] }}</p>
+                                    <a href="#rooms" class="btn btn-primary me-2">{{ __('landing.hero.start') }}</a>
+                                    <a href="#features" class="btn btn-outline-light">{{ __('landing.hero.learn') }}</a>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+
+                    <!-- Optional Carousel Controls -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">{{ __('landing.hero.prev') }}</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">{{ __('landing.hero.next') }}</span>
+                    </button>
+                </div>
+
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
                 <x-icon name="chevron-left" width="36" height="36" class="text-white" />
@@ -31,7 +67,7 @@
     </section>
 
     {{-- 🌟 Features --}}
-    <section id="features" class="py-5 text-center">
+    <section id="features" class="py-5 text-center" data-aos="zoom-in">
         <div class="container">
             <h2 class="fw-bold mb-4">{{ __('landing.features.title') }}</h2>
             <div class="row g-4">
@@ -60,10 +96,9 @@
             <h2 class="fw-bold mb-4">{{ __('landing.nav.rooms') }}</h2>
             <div class="row g-4">
                 @foreach (range(1, 3) as $i)
-                    <div class="col-md-4">
+                    <div class="col-md-4" data-aos="slide-up">
                         <div class="card shadow-sm rounded-4 overflow-hidden h-100">
-                            <img src="https://picsum.photos/400/250?random={{ $i }}" class="card-img-top"
-                                alt="Room">
+                            <img src="https://picsum.photos/400/250?random={{ $i }}" class="card-img-top" alt="Room">
                             <div class="card-body">
                                 <h5 class="card-title">Room #{{ $i }}</h5>
                                 <p class="card-text text-muted">គ្រឿងសង្ហារិមពេញលេញ ជិតផ្សារ និងសាលា។</p>
@@ -90,8 +125,7 @@
                         <div class="card border-0 shadow-sm rounded-4 h-100">
                             <div class="card-body text-start p-4">
                                 <div class="d-flex align-items-center mb-3">
-                                    <x-icon name="star-filled" class="text-warning me-2" width="28"
-                                        height="28" />
+                                    <x-icon name="star-filled" class="text-warning me-2" width="28" height="28" />
                                     <h5 class="mb-0 fw-semibold">{{ $promo['title'] }}</h5>
                                 </div>
                                 <p class="text-muted">{{ $promo['desc'] }}</p>
@@ -113,15 +147,14 @@
     {{-- 👥 Careers Section --}}
     <section id="careers" class="py-5 text-center">
         <div class="container">
-            <h2 class="fw-bold mb-4"><x-icon name="briefcase-filled" class="text-primary me-2" width="32"
-                    height="32" />Join Our Team</h2>
+            <h2 class="fw-bold mb-4"><x-icon name="briefcase-filled" class="text-primary me-2" width="32" height="32" />Join
+                Our Team</h2>
             <p class="text-muted mb-5">We’re hiring passionate people to help shape the future of housing in Cambodia.</p>
             <div class="row justify-content-center g-4">
                 @foreach ([['title' => 'Frontend Developer', 'icon' => 'code'], ['title' => 'Customer Support', 'icon' => 'headphones'], ['title' => 'Marketing Specialist', 'icon' => 'megaphone']] as $job)
                     <div class="col-md-4">
                         <div class="card h-100 shadow-sm rounded-4 p-4 text-start">
-                            <x-icon name="{{ $job['icon'] }}-filled" class="text-primary mb-3" width="40"
-                                height="40" />
+                            <x-icon name="{{ $job['icon'] }}-filled" class="text-primary mb-3" width="40" height="40" />
                             <h5>{{ $job['title'] }}</h5>
                             <p class="text-muted">We’re looking for talented people who love innovation and teamwork.</p>
                             <a href="#" class="btn btn-outline-primary btn-sm mt-auto">Apply Now</a>

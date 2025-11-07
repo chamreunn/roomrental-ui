@@ -12,7 +12,6 @@
                     enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
-{{-- <pre>{{ print_r($client['room']['id']) }}</pre> --}}
                     <div class="card-body d-flex justify-content-center">
                         <div class="text-center">
                             {{-- Avatar --}}
@@ -53,7 +52,7 @@
                                 <label class="form-label required">{{ __('client.date_of_birth') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="calendar" /></span>
-                                    <input type="text" name="date_of_birth" class="form-control datepicker"
+                                    <input type="text" name="date_of_birth" class="form-control dobpicker"
                                         value="{{ old('date_of_birth', $client['date_of_birth']) }}">
                                 </div>
                                 @error('date_of_birth')

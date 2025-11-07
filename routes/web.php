@@ -93,6 +93,9 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::get('/invoices/choose-room/{id}', [InvoiceController::class, 'chooseRoom'])->name('invoice.choose_room');
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
+    Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
+    Route::patch('/invoices/update/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
+    Route::delete('/invoices/destroy/{id}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
     //cash transaction
     Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
     Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');

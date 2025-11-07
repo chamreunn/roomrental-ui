@@ -28,7 +28,7 @@ return [
     'new_water_placeholder' => 'Enter new water reading',
     'water_rate' => 'Water Rate ($)',
     'water_rate_placeholder' => 'Enter water rate per m³',
-    
+
     // Totals
     'electric_total' => 'Electric Total ($)',
     'water_total' => 'Water Total ($)',
@@ -66,4 +66,14 @@ return [
     // Messages
     'current_tenants' => 'Current Tenants',
     'no_clients' => 'No clients assigned to this room',
+
+    'location' => 'Location',
+    'room' => 'Room',
+    'room_type' => 'Room Type',
+    'building' => 'Building',
+    'floor' => 'Floor',
+    'from_date' => 'From Date',
+    'to_date' => 'To Date',
+    'filter' => 'Filter',
+    'invoice_date' => 'Invoice Date',
 ];

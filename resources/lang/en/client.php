@@ -41,4 +41,5 @@ return [
     'status_updated_successfully' => 'Client status updated successfully.',
     'status_update_failed' => 'Failed to update client status.',
     'phone' => 'Phone Number',
+    'name' => 'Client Name',
 ];

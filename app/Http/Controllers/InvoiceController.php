@@ -8,6 +8,7 @@ use App\Utils\Util;
 use App\Enum\Active;
 use App\Enum\RoomStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -16,38 +17,122 @@ class InvoiceController extends Controller
 
     public function index(Request $request)
     {
-        // Get filter/search params
-        $statusFilter = $request->query('status'); // 0 = Pending, 1 = Paid
-        $search = $request->query('search');
+        // === 1. Get filter/search params ===
+        $statusFilter   = $request->query('status');
+        $search         = $request->query('search');
+        $locationFilter = $request->query('location');
+        $buildingFilter = $request->query('building_name');
+        $floorFilter    = $request->query('floor_name');
+        $roomFilter     = $request->query('room_name');
+        $roomTypeFilter = $request->query('room_type');
+        $monthFilter    = $request->query('month');
+        $fromDate       = $request->query('from_date');
+        $toDate         = $request->query('to_date');
 
-        // Fetch invoices from API
+        // === 2. Fetch invoices from API ===
         $response = $this->api()->get('v1/invoices');
-
         $invoices = $response['data'] ?? [];
+
         $totals = [
-            'room_fee' => $response['total_room_fee'] ?? 0,
+            'room_fee'        => $response['total_room_fee'] ?? 0,
             'electric_charge' => $response['total_electric_charge'] ?? 0,
-            'water_charge' => $response['total_water_charge'] ?? 0,
+            'water_charge'    => $response['total_water_charge'] ?? 0,
         ];
 
-        // Filter by status using enum
+        // === 3. Apply Filters ===
+
+        // Status filter
         if ($statusFilter !== null && $statusFilter !== '') {
             $invoices = array_filter($invoices, fn($inv) => $inv['status'] == $statusFilter);
         }
 
-        // Search by invoice number or room name
-        if ($search) {
-            $invoices = array_filter($invoices, function ($inv) use ($search) {
-                return str_contains(strtolower($inv['invoice_no']), strtolower($search)) ||
-                    str_contains(strtolower($inv['room']['room_name'] ?? ''), strtolower($search));
+        // Location filter
+        if ($locationFilter !== null && $locationFilter !== '') {
+            $invoices = array_filter(
+                $invoices,
+                fn($inv) => ($inv['room']['location_id'] ?? null) == $locationFilter
+            );
+        }
+
+        // Building name filter
+        if ($buildingFilter) {
+            $invoices = array_filter(
+                $invoices,
+                fn($inv) =>
+                str_contains(strtolower($inv['room']['building_name'] ?? ''), strtolower($buildingFilter))
+            );
+        }
+
+        // Floor name filter
+        if ($floorFilter) {
+            $invoices = array_filter(
+                $invoices,
+                fn($inv) =>
+                str_contains(strtolower($inv['room']['floor_name'] ?? ''), strtolower($floorFilter))
+            );
+        }
+
+        // Room name filter
+        if ($roomFilter) {
+            $invoices = array_filter(
+                $invoices,
+                fn($inv) =>
+                str_contains(strtolower($inv['room']['room_name'] ?? ''), strtolower($roomFilter))
+            );
+        }
+
+        // Room type filter
+        if ($roomTypeFilter !== null && $roomTypeFilter !== '') {
+            $invoices = array_filter(
+                $invoices,
+                fn($inv) => ($inv['room']['room_type_id'] ?? null) == $roomTypeFilter
+            );
+        }
+
+        // Month filter (YYYY-MM)
+        if ($monthFilter) {
+            $invoices = array_filter($invoices, function ($inv) use ($monthFilter) {
+                return \Carbon\Carbon::parse($inv['invoice_date'])->format('Y-m') === $monthFilter;
             });
         }
 
+        // Date range filter
+        if ($fromDate && $toDate) {
+            $invoices = array_filter($invoices, function ($inv) use ($fromDate, $toDate) {
+                $date = \Carbon\Carbon::parse($inv['invoice_date'])->toDateString();
+                return $date >= $fromDate && $date <= $toDate;
+            });
+        }
+
+        // General search
+        if ($search) {
+            $search = strtolower($search);
+            $invoices = array_filter($invoices, function ($inv) use ($search) {
+                return str_contains(strtolower($inv['invoice_no']), $search) ||
+                    str_contains(strtolower($inv['room']['room_name'] ?? ''), $search);
+            });
+        }
+
+        // === 4. Fetch dropdown data ===
+        $locations  = $this->api()->get('v1/locations')['locations']['data'] ?? [];
+        $roomTypes  = $this->api()->get('v1/room-types')['room_types']['data'] ?? [];
+
+        // === 5. Return view ===
         return view('app.invoices.index', [
-            'invoices' => $invoices,
-            'totals' => $totals,
-            'filter_status' => $statusFilter,
-            'search' => $search,
+            'invoices'         => $invoices,
+            'totals'           => $totals,
+            'filter_status'    => $statusFilter,
+            'filter_location'  => $locationFilter,
+            'filter_building'  => $buildingFilter,
+            'filter_floor'     => $floorFilter,
+            'filter_room'      => $roomFilter,
+            'filter_room_type' => $roomTypeFilter,
+            'filter_month'     => $monthFilter,
+            'from_date'        => $fromDate,
+            'to_date'          => $toDate,
+            'search'           => $search,
+            'locations'        => $locations,
+            'roomTypes'        => $roomTypes,
         ]);
     }
 
@@ -311,5 +396,41 @@ class InvoiceController extends Controller
         return redirect()->back()
             ->withInput()
             ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.create_failed')]);
+    }
+
+    public function show(Request $request, $id)
+    {
+        try {
+            // === 1. Fetch invoice details from API ===
+            $response = $this->api()->get("v1/invoices/{$id}");
+
+            // === 2. Validate and extract invoice data ===
+            $invoice = $response['invoice'] ?? null;
+
+            if (!$invoice) {
+                return redirect()
+                    ->route('invoice.index')
+                    ->withErrors(['error' => __('invoice.not_found')]);
+            }
+
+            // === 3. Optional: compute useful totals (for view display) ===
+            $invoice['electric_total'] = ($invoice['new_electric'] - $invoice['old_electric']) * $invoice['electric_rate'];
+            $invoice['water_total']    = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
+            $invoice['grand_total']    = $invoice['total']
+                ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
+
+            // === 4. Pass to view ===
+            return view('app.invoices.show', compact('invoice'));
+        } catch (\Throwable $e) {
+            // === 5. Handle unexpected errors gracefully ===
+            Log::error('Failed to fetch invoice details', [
+                'invoice_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('invoice.index')
+                ->withErrors(['error' => __('invoice.fetch_failed')]);
+        }
     }
 }

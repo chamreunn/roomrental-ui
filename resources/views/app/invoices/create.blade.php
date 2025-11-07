@@ -143,7 +143,7 @@
                             <form method="POST" action="{{ route('invoice.store') }}">
                                 @csrf
                                 @foreach ($preview as $key => $value)
-                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                    <input type="text" name="{{ $key }}" value="{{ $value }}">
                                 @endforeach
                                 <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                                 <button type="submit" class="btn btn-success">
@@ -168,7 +168,7 @@
                         <div class="row g-3">
                             @php
                                 $old = old();
-                                $currentMonth = \Carbon\Carbon::now()->format('Y-m'); // e.g. "October 2025"
+                                $currentMonth = \Carbon\Carbon::now()->format('Y-m-d'); // e.g. "October 2025"
                             @endphp
 
                             @foreach (['month', 'old_electric', 'new_electric', 'electric_rate', 'old_water', 'new_water', 'water_rate', 'other_charge'] as $field)
@@ -179,7 +179,7 @@
 
                                     {{-- ✅ Apply "monthpicker" only to the month field --}}
                                     @if ($field === 'month')
-                                        <input type="text" name="month" class="form-control monthpicker"
+                                        <input type="text" name="month" class="form-control datepicker"
                                             value="{{ $old['month'] ?? ($preview['month'] ?? $currentMonth) }}"
                                             placeholder="{{ __('invoice.select_month') }}" autocomplete="off">
                                     @else
