@@ -123,7 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
     AOS.init({
         duration: 600,
         easing: "ease-out",
-        once: true,
+        once: false,
+        offset: 120,
     });
 });
 
