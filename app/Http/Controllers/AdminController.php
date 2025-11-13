@@ -104,8 +104,7 @@ class AdminController extends Controller
         // ✅ Count bookings per day (e.g., by start_rental_date)
         $bookingsByDate = collect($recentClients)
             ->groupBy(fn($client) => \Carbon\Carbon::parse($client['start_rental_date'])->format('Y-m-d'))
-            ->map->count()
-            ->sortKeys();
+            ->map->count();
 
             // dd($groupedRooms);
 

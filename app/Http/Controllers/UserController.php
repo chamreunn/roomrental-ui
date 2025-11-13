@@ -102,8 +102,7 @@ class UserController extends Controller
 
         $bookingsByDate = collect($recentClients)
             ->groupBy(fn($client) => \Carbon\Carbon::parse($client['start_rental_date'])->format('Y-m-d'))
-            ->map->count()
-            ->sortKeys();
+            ->map->count();
 
         return view('users.dashboard', compact(
             'groupedRooms',

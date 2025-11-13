@@ -1,33 +1,87 @@
+// Fonts
 @charset "UTF-8";
 
 // Google Fonts
+// Fonts
+@charset "UTF-8";
 @import url("https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto Sans Khmer:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Koulen:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Freehand:wght@400;700&display=swap");
-
-// Custom fonts
+/*!
+ * Tabler v1.2.0 (https://tabler.io)
+ * Copyright 2018-2025 The Tabler Authors
+ * Copyright 2018-2025 codecalm.net Paweł Kuna
+ * Licensed under MIT (https://github.com/tabler/tabler/blob/master/LICENSE)
+ */
 @font-face {
-  font-family: "khmer";
-  src: url("../fonts/siemreap.ttf") format("truetype");
-  font-weight: normal;
-}
-@font-face {
-  font-family: "khmer";
-  src: url("../fonts/Muol-Light.ttf") format("truetype");
-  font-weight: bold;
-}
-@font-face {
-  font-family: "khmer-mef";
-  src: url("../fonts/mef1.ttf") format("truetype");
-}
-@font-face {
-  font-family: "khmer-mef";
-  src: url("../fonts/mef2.ttf") format("truetype");
-  font-weight: bold;
+    font-family: "khmer";
+    src: url("../../public/fonts/siemreap.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
 }
 
-// Tabler imports
+@font-face {
+    font-family: "khmer";
+    src: url("../../public/fonts/Muol-Light.ttf") format("truetype");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "khmer-mef";
+    src: url("../../public/fonts/mef1.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "khmer-mef";
+    src: url("../../public/fonts/mef2.ttf") format("truetype");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Tacteing";
+    src: url("../../public/fonts/Tacteing.TTF") format("truetype");
+}
+
+// Tabler SCSS
+@import "@tabler/core/scss/tabler";
+@import "@tabler/core/scss/tabler-vendors";
+@import "@tabler/core/scss/tabler-themes";
+@import "@tabler/core/scss/tabler-marketing";
+@import "@tabler/core/scss/tabler-flags";
+@import "@tabler/core/scss/tabler-payments";
+@import "@tabler/core/scss/tabler-props";
+@import "@tabler/core/scss/tabler-socials";
+
+// Tabler Tom Select SCSS
+/* Tom Select precompiled CSS first */
+@import "@tabler/core/dist/libs/tom-select/dist/css/tom-select.bootstrap5.min";
+
+// AOS Animate On Scroll
+@import "aos/dist/aos.css";
+
+// Custom overrides
+html[data-bs-theme-font="khmer"] body {
+    font-family: "khmer", sans-serif;
+}
+html[data-bs-theme-font="battambang"] body {
+    font-family: "Battambang", sans-serif;
+}
+html[data-bs-theme-font="noto-sans-khmer"] body {
+    font-family: "Noto Sans Khmer", sans-serif;
+}
+html[data-bs-theme-font="koulen"] body {
+    font-family: "Koulen", sans-serif;
+}
+html[data-bs-theme-font="freehand"] body {
+    font-family: "Freehand", sans-serif;
+}
+
+// Apply custom font
 @import "@tabler/core/scss/tabler";
 @import "@tabler/core/scss/tabler-themes";
 
