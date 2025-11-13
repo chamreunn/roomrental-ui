@@ -12,6 +12,7 @@ return [
     'invoice' => 'Room Rental Invoice',
     'contact' => 'Contact',
     'room_detail' => 'Room',
+    'back' => 'Back',
 
     // Input labels
     'month' => 'Month',
@@ -28,12 +29,21 @@ return [
     'new_water_placeholder' => 'Enter new water reading',
     'water_rate' => 'Water Rate ($)',
     'water_rate_placeholder' => 'Enter water rate per m³',
+    'updated_successfully' => 'Invoice updated successfully',
+    'status_updated_successfully' => 'Invoice status updated successfully',
 
     // Totals
     'electric_total' => 'Electric Total ($)',
     'water_total' => 'Water Total ($)',
     'total_amount' => 'Grand Total ($)',
     'room_rent' => 'Room Fee',
+    'electric' => 'Electricity',
+    'water' => 'Water',
+    'room_fee' => 'Room Fee',
+    'date' => 'Date',
+    'no' => 'Invoice No',
+    'latest_invoice' => 'Latest Invoice',
+    'view_all'=> 'View All',
 
     // Buttons
     'create' => 'Generate',
@@ -76,4 +86,8 @@ return [
     'to_date' => 'To Date',
     'filter' => 'Filter',
     'invoice_date' => 'Invoice Date',
+
+    //user invoice
+    'save_all' => 'Save All',
+    'invoice_update' => 'Update Invoice',
 ];

@@ -47,21 +47,17 @@ if (!function_exists('apiBaseUrl')) {
 }
 
 if (!function_exists('dashboardRoute')) {
-    /**
-     * Get the correct dashboard route based on the user's role.
-     *
-     * @return string
-     */
     function dashboardRoute(): string
     {
         return match (userRole()) {
-            'admin' => route('dashboard.admin'),
-            'manager' => route('dashboard.manager'),
-            'user' => route('dashboard.user'),
-            default => route('home'),
+            'admin'   => 'dashboard.admin',
+            'manager' => 'dashboard.manager',
+            'user'    => 'dashboard.user',
+            default   => 'home',
         };
     }
 }
+
 
 if (!function_exists('page_title')) {
     /**

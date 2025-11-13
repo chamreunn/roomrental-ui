@@ -20,18 +20,6 @@
                     </select>
                 </div>
 
-                {{-- Location --}}
-                <div class="col-lg-2 col-md-4">
-                    <select name="location" id="location" class="form-select tom-select">
-                        <option value="">{{ __('invoice.location') ?? 'All' }}</option>
-                        @foreach ($locations as $loc)
-                            <option value="{{ $loc['id'] }}" {{ $filter_location == $loc['id'] ? 'selected' : '' }}>
-                                {{ $loc['location_name'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
                 {{-- Room Type --}}
                 <div class="col-lg-2 col-md-4">
                     <select name="room_type" id="room_type" class="form-select tom-select">
@@ -96,7 +84,7 @@
                             </button>
                         </div>
                         <div class="col-6">
-                            <a href="{{ route('invoice.index') }}" class="btn btn-secondary w-100">
+                            <a href="{{ route('invoice.user_index') }}" class="btn btn-secondary w-100">
                                 {{ __('invoice.reset') ?? 'Reset' }}
                             </a>
                         </div>
@@ -154,7 +142,7 @@
                                                         class="d-inline">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <div class="dropdown d-inline-block mb-0">
+                                                        <div class="dropdown d-inline-block mb-2">
                                                             <button class="btn {{ $status['badge'] }} btn-sm dropdown-toggle" type="button"
                                                                 data-bs-toggle="dropdown">
                                                                 <x-icon name="pencil" class="me-1" /> {{ __($status['name']) }}

@@ -253,7 +253,7 @@ class RoomController extends Controller
             ],
         ];
 
-        // ✅ Fetch room data from API
+        // ✅ Fetch room with invoices + clients
         $roomResponse = $this->api()
             ->withHeaders(['location_id' => $locationId])
             ->get("v1/rooms/{$roomId}");
@@ -261,21 +261,75 @@ class RoomController extends Controller
         $room = $roomResponse['room'] ?? null;
 
         if (!$room) {
-            abort(404, __('Room not found'));
+            abort(404, __('room.not_found'));
         }
 
         // ✅ Get room status
         $roomstatus = RoomStatus::getStatus($room['status']);
 
+
         // ✅ Prepare clients safely
         $clients = collect($room['clients'] ?? [])->map(function ($client) {
             $client['clientstatus'] = Active::getStatus($client['status']);
-            $client['dateOfBirth'] = Carbon::parse($client['date_of_birth'])->translatedFormat('d F Y');
-            $client['start_rental_date'] = Carbon::parse($client['start_rental_date'])->translatedFormat('d F Y');
+            $client['image'] =  apiBaseUrl() . $client['client_image'] ?? asset('images/default-avatar.png');
+
+            // ✅ Keep raw dates
+            $dobRaw = $client['date_of_birth'] ?? null;
+            $startRentalRaw = $client['start_rental_date'] ?? null;
+            $endRentalRaw = $client['end_rental_date'] ?? null;
+
+            // ✅ Days left — use raw date (not translated)
+            if (!empty($endRentalRaw)) {
+                try {
+                    $endDate = Carbon::parse($endRentalRaw)->startOfDay();
+                    $daysLeft = now()->startOfDay()->diffInDays($endDate, false);
+                } catch (Exception $e) {
+                    $daysLeft = null; // handle invalid or localized date safely
+                }
+            } else {
+                $daysLeft = null;
+            }
+
+            // ✅ Display-friendly formatted dates
+            $client['dateOfBirth'] = $dobRaw
+                ? Carbon::parse($dobRaw)->translatedFormat('d F Y')
+                : __('N/A');
+
+            $client['start_rental_date'] = $startRentalRaw
+                ? Carbon::parse($startRentalRaw)->translatedFormat('d F Y')
+                : __('N/A');
+
+            $client['end_rental_date'] = $endRentalRaw
+                ? Carbon::parse($endRentalRaw)->translatedFormat('d F Y')
+                : __('N/A');
+
+            // ✅ Rental status logic
+            $client['days_left'] = $daysLeft;
+            $client['nearly_end'] = false;
+            $client['dot_color'] = 'bg-success';
+
+            if (!is_null($daysLeft)) {
+                if ($daysLeft < 0) {
+                    $client['nearly_end'] = true;
+                    $client['dot_color'] = 'bg-danger';
+                    $client['alert_message'] = __('room.rental_expired');
+                } elseif ($daysLeft <= 7) {
+                    $client['nearly_end'] = true;
+                    $client['dot_color'] = 'bg-warning';
+                    $client['alert_message'] = trans_choice('room.rental_ending', $daysLeft, ['days' => $daysLeft]);
+                } else {
+                    $client['alert_message'] = __('room.rental_active');
+                }
+            } else {
+                $client['alert_message'] = __('room.rental_ongoing');
+            }
+
             return $client;
         });
 
-        // ✅ Get all statuses for display (if needed in view)
+        // dd($clients);
+
+        // ✅ Get statuses
         $statuses = RoomStatus::all();
         $inactive = Active::INACTIVE;
 

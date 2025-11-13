@@ -125,11 +125,9 @@ class ClientController extends Controller
             );
 
             if (($response['status'] ?? '') === 'success') {
-                return redirect()
-                    ->route(dashboardRoute())
+                return redirect()->route(dashboardRoute())
                     ->with('success', __('messages.rental_success'));
             }
-
 
             return back()->withErrors([
                 'api' => 'API returned: ' . json_encode($response),

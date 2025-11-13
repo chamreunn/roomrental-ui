@@ -79,14 +79,8 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::patch('/rooms/update/{room_id}/{location_id}', [RoomController::class, 'update'])->name('room.update');
     Route::delete('/rooms/destroy/{room_id}/{location_id}', [RoomController::class, 'destroy'])->name('room.destroy');
     Route::delete('/rooms/multi/{location_id}', [RoomController::class, 'multiDestroy'])->name('room.multi_destroy');
-    // For clients
-    Route::get('/clients/index', [ClientController::class, 'index'])->name('clients.index');
-    Route::get('/clients/edit/{id}', [ClientController::class, 'edit'])->name('clients.edit');
-    Route::patch('/clients/update/{id}/{room_id}', [ClientController::class, 'update'])->name('clients.update');
     // for invoice
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
-    Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
-    Route::get('/invoices/edit/{id}', [InvoiceController::class, 'edit'])->name('invoice.edit');
     // invoice for admin
     Route::get('/invoices/create/{room_id}/{location_id}', [InvoiceController::class, 'create'])->name('invoice.create');
     Route::get('/invoices/choose-location', [InvoiceController::class, 'chooseLocation'])->name('invoice.choose_location');
@@ -94,7 +88,6 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
     Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
-    Route::patch('/invoices/update/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
     Route::delete('/invoices/destroy/{id}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
     //cash transaction
     Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
@@ -128,9 +121,23 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::get('/rooms/show/{room_id}/{location_id}', [RoomController::class, 'show'])->name('room.show');
     Route::get('/rooms/booking/{room_id}/{location_id}', [RoomController::class, 'booking'])->name('room.booking');
     Route::patch('/rooms/{room_id}/{location_id}', [RoomController::class, 'updateStatus'])->name('room.update-status');
-    // for client
+     // For clients
+    Route::get('/clients/index', [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/edit/{id}', [ClientController::class, 'edit'])->name('clients.edit');
+    Route::patch('/clients/update/{id}/{room_id}', [ClientController::class, 'update'])->name('clients.update');
     Route::post('/client/store/{id}', [ClientController::class, 'store'])->name('client.store');
     Route::patch('/client/update-status/{id}/{inactive}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
     //settings
     Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
+
+    // Invoice for user
+    Route::prefix('invoices')->group(function () {
+        Route::get('/invoice_index', [InvoiceController::class, 'userIndex'])->name('invoice.user_index');
+        Route::get('/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
+        Route::get('/edit/{id}', [InvoiceController::class, 'edit'])->name('invoice.edit');
+        Route::patch('/update/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
+        Route::patch('/updateStatus/{id}', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
+        Route::get('/user-create-invoice', [InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
+        Route::post('/store-multiple', [InvoiceController::class, 'storeMultiple'])->name('invoices.storeMultiple');
+    });
 });

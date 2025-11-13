@@ -56,13 +56,13 @@ class InvoiceStatus
      *
      * @return array
      */
-    public static function all(): array
+     public static function all(): array
     {
         return [
-            self::DRAFT => 'Draft',
-            self::UNPAID => 'Unpaid',
-            self::PAID => 'Paid',
-            self::CANCELLED => 'Cancelled',
+            self::DRAFT => self::getStatus(self::DRAFT),
+            self::UNPAID => self::getStatus(self::UNPAID),
+            self::PAID => self::getStatus(self::PAID),
+            self::CANCELLED => self::getStatus(self::CANCELLED),
         ];
     }
 }

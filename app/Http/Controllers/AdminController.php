@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\Active;
 use App\Enum\RoomStatus;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,7 @@ class AdminController extends Controller
     {
         // Fetch locations, room types, and statuses
         $locations = $this->api()->get('v1/locations')['locations']['data'] ?? [];
-        
+
         $roomTypes = collect($this->api->get('v1/room-types')['room_types']['data'] ?? []);
         $roomStatuses = RoomStatus::all();
 
@@ -40,11 +41,9 @@ class AdminController extends Controller
             $locationCounts[$locationName] = count($rooms);
             $statusCounts['all'] += count($rooms);
 
-            foreach ($rooms as $room) {
+            foreach ($rooms as &$room) {
                 $statusKey = $room['status'] ?? null;
                 $statusInfo = RoomStatus::getStatus($statusKey);
-
-                // Skip if invalid status
                 if (!$statusInfo) continue;
 
                 $statusCounts[$statusKey]++;
@@ -52,7 +51,35 @@ class AdminController extends Controller
                 $roomTypeName = $roomTypes->firstWhere('id', $room['room_type_id'] ?? null)['type_name']
                     ?? 'មិនមានប្រភេទបន្ទប់';
 
-                // Add formatted info
+                // ==========================
+                // Rental End Detection
+                // ==========================
+                $room['is_ending_soon'] = false;
+
+                $roomClients = $room['clients'] ?? [];
+                if (!empty($roomClients)) {
+                    $latestClient = collect($roomClients)
+                        ->sortByDesc('start_rental_date')
+                        ->first();
+
+                    if (!empty($latestClient['end_rental_date'])) {
+                        try {
+                            $today = \Carbon\Carbon::today();
+                            $endDate = \Carbon\Carbon::parse($latestClient['end_rental_date']);
+                            $daysLeft = $today->diffInDays($endDate, false);
+
+                            if ($daysLeft >= 0 && $daysLeft <= 7) {
+                                $room['is_ending_soon'] = true;
+                            }
+                        } catch (\Exception $e) {
+                            $room['is_ending_soon'] = false; // fallback if date cannot be parsed
+                        }
+                    }
+                }
+
+                // ==========================
+                // Normal Room Info
+                // ==========================
                 $room['status_name'] = $statusInfo['name'];
                 $room['status_class'] = $statusInfo['badge'];
                 $room['status_text'] = $statusInfo['text'];
@@ -66,9 +93,13 @@ class AdminController extends Controller
         $hasRooms = !empty($groupedRooms);
 
         $responseClient = $this->api()->get('v1/clients')['clients'] ?? [];
-
-        // Extract the 'data' array from the paginated response
         $recentClients = $responseClient['data'] ?? [];
+
+        $clients = collect($recentClients)->map(function ($client) {
+            $client['clientstatus'] = Active::getStatus($client['status']);
+            $client['image'] = ($client['client_image'] ? apiBaseUrl() . $client['client_image'] : asset('images/default-avatar.png'));
+            return $client;
+        });
 
         // ✅ Count bookings per day (e.g., by start_rental_date)
         $bookingsByDate = collect($recentClients)
@@ -87,7 +118,7 @@ class AdminController extends Controller
             'locations',
             'locationCounts',
             'roomStatuses',
-            'recentClients',
+            'clients',
             'bookingsByDate',
         ));
     }

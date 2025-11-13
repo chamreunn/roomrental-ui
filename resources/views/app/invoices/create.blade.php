@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
     <div class="row g-3">
 
         {{-- ===== Room Details ===== --}}
@@ -215,4 +216,5 @@
             </div>
         </div>
     </div>
+    
 @endsection

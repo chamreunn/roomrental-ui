@@ -32,9 +32,10 @@
     <!-- ✅ Main App Content (Hidden until loaded) -->
     <div id="app-content" style="display: none;">
         <div class="page">
-            @if(userRole() != 'user')
+            {{-- @if(userRole() != 'user') --}}
                 @include('partials.sidebar')
-            @endif
+            {{-- @endif --}}
+
             @include('partials.nav')
 
             <div class="page-wrapper">

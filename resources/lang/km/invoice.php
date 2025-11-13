@@ -12,6 +12,7 @@ return [
     'invoice' => 'វិក្កយបត្របន្ទប់ជួល',
     'contact' => 'ទំនាក់ទំនង',
     'room_detail' => 'បន្ទប់',
+    'back' => 'ត្រឡប់ក្រោយ',
 
     // Input labels
     'month' => 'ខែ',
@@ -28,12 +29,21 @@ return [
     'new_water_placeholder' => 'បញ្ចូលចំនួនទឹកថ្មី',
     'water_rate' => 'តម្លៃទឹក ($)',
     'water_rate_placeholder' => 'បញ្ចូលតម្លៃទឹកក្នុងមួយម៉ែត្រគូប',
+    'updated_successfully' => 'ធ្វើបច្ចុប្បន្នភាពវិក្កយបត្រជោគជ័យ',
+    'status_updated_successfully' => 'ធ្វើបច្ចុប្បន្នភាពស្ថានភាពវិក្កយបត្រជោគជ័យ',
 
     // Totals
     'electric_total' => 'សរុបអគ្គិសនី ($)',
     'water_total' => 'សរុបទឹក ($)',
     'total_amount' => 'សរុបចំនួនទឹកប្រាក់ ($)',
     'room_rent' => 'តម្លៃបន្ទប់',
+    'electric' => 'អគ្គិសនី',
+    'water' => 'ទឹក',
+    'room_fee' => 'ថ្លៃបន្ទប់',
+    'date' => 'កាលបរិច្ឆេទ',
+    'no' => 'លេខវិក្កយបត្រ',
+    'latest_invoice' => 'វិក្កយបត្រចុងក្រោយ',
+    'view_all'=> 'មើលទាំងអស់',
 
     // Buttons
     'create' => 'បង្កើត',
@@ -76,4 +86,8 @@ return [
     'to_date' => 'ដល់កាលបរិច្ឆេទ',
     'filter' => 'តម្រង',
     'invoice_date' => 'ថ្ងៃវិក័យប័ត្រ',
+
+    //user invoice
+    'save_all' => 'រក្សាទុកទាំងអស់',
+    'invoice_update' => 'ធ្វើបច្ចុប្បន្នភាពវិក្កយបត្រ',
 ];

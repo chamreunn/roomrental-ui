@@ -2,9 +2,118 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\Active;
+use App\Enum\RoomStatus;
 use Illuminate\Http\Request;
 
 class ManagerController extends Controller
 {
-    //
+    public function index(Request $request)
+    {
+        // Fetch locations, room types, and statuses
+        $locations = $this->api()->get('v1/locations')['locations']['data'] ?? [];
+        $roomTypes = collect($this->api()->get('v1/room-types')['room_types']['data'] ?? []);
+        $roomStatuses = RoomStatus::all();
+
+        // Initialize counts
+        $statusCounts = collect($roomStatuses)->mapWithKeys(fn($_, $key) => [$key => 0])->toArray();
+        $statusCounts['all'] = 0;
+
+        $groupedRooms = [];
+        $locationCounts = [];
+
+        foreach ($locations as $location) {
+            $locationId = $location['id'];
+            $locationName = $location['location_name'] ?? 'មិនមានទីតាំង';
+
+            // Build filter query
+            $query = $request->only(['room_type_id', 'status', 'search']);
+            $query['location_id'] = $locationId;
+
+            // Fetch rooms for this location
+            $rooms = $this->api
+                ->withHeaders(['location_id' => $locationId])
+                ->get('v1/rooms', $query)['rooms']['data'] ?? [];
+
+            // Count per location
+            $locationCounts[$locationName] = count($rooms);
+            $statusCounts['all'] += count($rooms);
+
+            foreach ($rooms as &$room) {
+                $statusKey = $room['status'] ?? null;
+                $statusInfo = RoomStatus::getStatus($statusKey);
+                if (!$statusInfo) continue;
+
+                $statusCounts[$statusKey]++;
+
+                $roomTypeName = $roomTypes->firstWhere('id', $room['room_type_id'] ?? null)['type_name']
+                    ?? 'មិនមានប្រភេទបន្ទប់';
+
+                // ==========================
+                // Rental End Detection
+                // ==========================
+                $room['is_ending_soon'] = false;
+
+                $roomClients = $room['clients'] ?? [];
+                if (!empty($roomClients)) {
+                    $latestClient = collect($roomClients)
+                        ->sortByDesc('start_rental_date')
+                        ->first();
+
+                    if (!empty($latestClient['end_rental_date'])) {
+                        try {
+                            $today = \Carbon\Carbon::today();
+                            $endDate = \Carbon\Carbon::parse($latestClient['end_rental_date']);
+                            $daysLeft = $today->diffInDays($endDate, false);
+
+                            if ($daysLeft >= 0 && $daysLeft <= 7) {
+                                $room['is_ending_soon'] = true;
+                            }
+                        } catch (\Exception $e) {
+                            $room['is_ending_soon'] = false; // fallback if date cannot be parsed
+                        }
+                    }
+                }
+
+                // ==========================
+                // Normal Room Info
+                // ==========================
+                $room['status_name'] = $statusInfo['name'];
+                $room['status_class'] = $statusInfo['badge'];
+                $room['status_text'] = $statusInfo['text'];
+                $room['room_type_name'] = $roomTypeName;
+
+                // Group by location > room type > status
+                $groupedRooms[$locationName][$roomTypeName][$statusKey][] = $room;
+            }
+        }
+
+        $hasRooms = !empty($groupedRooms);
+
+        $responseClient = $this->api()->get('v1/clients')['clients'] ?? [];
+        $recentClients = $responseClient['data'] ?? [];
+
+        $clients = collect($recentClients)->map(function ($client) {
+            $client['clientstatus'] = Active::getStatus($client['status']);
+            $client['image'] = ($client['client_image'] ? apiBaseUrl() . $client['client_image'] : asset('images/default-avatar.png'));
+            return $client;
+        });
+
+        $bookingsByDate = collect($recentClients)
+            ->groupBy(fn($client) => \Carbon\Carbon::parse($client['start_rental_date'])->format('Y-m-d'))
+            ->map->count()
+            ->sortKeys();
+
+        return view('manager.dashboard', compact(
+            'groupedRooms',
+            'hasRooms',
+            'statusCounts',
+            'roomTypes',
+            'locations',
+            'locationCounts',
+            'roomStatuses',
+            'clients',
+            'bookingsByDate',
+        ));
+    }
 }

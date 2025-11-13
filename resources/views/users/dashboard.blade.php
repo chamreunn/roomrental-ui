@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
     <div class="row row-cards g-3">
         <div class="col-12">
             @foreach ($groupedRooms as $locationName => $roomTypes)
@@ -20,18 +21,29 @@
                             <div class="room-scroll d-flex gap-3 pb-2" style="overflow-x: auto; scroll-behavior: smooth;">
                                 @foreach ($statuses as $statusKey => $rooms)
                                     @foreach ($rooms as $room)
-                                        <div class="card room-card text-center flex-shrink-0" style="width: 170px; min-width: 160px;">
+                                        <div class="card room-card text-center flex-shrink-0 shadow-sm border-0"
+                                            style="width: 170px; min-width: 160px;">
                                             <div class="card-body p-2">
-                                                <h5 class="fw-bold text-truncate mb-1">{{ $room['room_name'] }}</h5>
+                                                <h5 class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
+                                                    {{ $room['room_name'] }}
+                                                    @if (!empty($room['is_ending_soon']) && $room['is_ending_soon'])
+                                                        <span class="status-dot status-dot-animated bg-red d-block ms-2"
+                                                            style="width: 8px; height: 8px;" title="Rental ending soon"></span>
+                                                    @endif
+                                                </h5>
+
                                                 <div class="text-muted small mb-2">
                                                     {{ $room['building_name'] }} • {{ $room['floor_name'] }}
                                                 </div>
+
                                                 <span class="badge {{ $room['status_class'] }} mb-2">
                                                     {{ __($room['status_name']) }}
                                                 </span>
+
                                                 <div class="small text-secondary mb-2">
                                                     {{ $room['room_type']['room_size'] ?? '' }}
                                                 </div>
+
                                                 <div class="d-flex justify-content-center gap-2">
                                                     <a href="{{ route('room.show', ['room_id' => $room['id'], 'location_id' => $room['location']['id']]) }}"
                                                         class="btn btn-sm btn-outline-primary px-3 w-100">
@@ -79,10 +91,18 @@
         overflow-x: auto;
         scroll-behavior: smooth;
     }
+
+    .scroll-btn {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .room-scroll-wrapper:hover .scroll-btn {
+        opacity: 1;
+    }
 </style>
 
 @push('scripts')
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".room-scroll-wrapper").forEach(wrapper => {
@@ -200,5 +220,4 @@
             });
         });
     </script>
-
 @endpush

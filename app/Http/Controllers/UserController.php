@@ -48,7 +48,7 @@ class UserController extends Controller
             $locationCounts[$locationName] = count($rooms);
             $statusCounts['all'] += count($rooms);
 
-            foreach ($rooms as $room) {
+            foreach ($rooms as &$room) {
                 $statusKey = $room['status'] ?? null;
                 $statusInfo = RoomStatus::getStatus($statusKey);
 
@@ -59,7 +59,32 @@ class UserController extends Controller
                 $roomTypeName = $roomTypes->firstWhere('id', $room['room_type_id'] ?? null)['type_name']
                     ?? 'មិនមានប្រភេទបន្ទប់';
 
-                // Add formatted info
+                // ==========================
+                // 🔍 Rental End Detection
+                // ==========================
+                $room['is_ending_soon'] = false;
+
+                $roomClients = $room['clients'] ?? [];
+                if (!empty($roomClients)) {
+                    $latestClient = collect($roomClients)
+                        ->sortByDesc('start_rental_date')
+                        ->first();
+
+                    if (!empty($latestClient['end_rental_date'])) {
+                        $today = \Carbon\Carbon::today();
+                        $endDate = \Carbon\Carbon::parse($latestClient['end_rental_date']);
+                        $daysLeft = $today->diffInDays($endDate, false);
+
+                        // Mark if rental is ending within 7 days
+                        if ($daysLeft >= 0 && $daysLeft <= 7) {
+                            $room['is_ending_soon'] = true;
+                        }
+                    }
+                }
+
+                // ==========================
+                // Normal Room Info
+                // ==========================
                 $room['status_name'] = $statusInfo['name'];
                 $room['status_class'] = $statusInfo['badge'];
                 $room['status_text'] = $statusInfo['text'];

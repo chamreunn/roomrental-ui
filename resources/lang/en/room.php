@@ -45,4 +45,11 @@ return [
     'updated_successfully'   => 'Room updated successfully.',
     'update_failed'          => 'Failed to update the room.',
     'not_found'              => 'Room not found.',
+    'rental_expired' => "This client's rental has already expired.",
+    'rental_ending'  => "This client's rental will end in :days day|This client's rental will end in :days days",
+    'rental_active'  => "This client's rental is still active.",
+
+     //user invoice
+    'select_room' => 'Select Rooms',
+    'please_select_rooms' => 'Please select at least one room to generate invoices.',
 ];
