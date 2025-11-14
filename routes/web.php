@@ -88,7 +88,6 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
     Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
-    Route::delete('/invoices/destroy/{id}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
     //cash transaction
     Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
     Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
@@ -136,6 +135,7 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
         Route::get('/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
         Route::get('/edit/{id}', [InvoiceController::class, 'edit'])->name('invoice.edit');
         Route::patch('/update/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
+        Route::delete('/destroy/{id}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
         Route::patch('/updateStatus/{id}', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
         Route::get('/user-create-invoice', [InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
         Route::post('/store-multiple', [InvoiceController::class, 'storeMultiple'])->name('invoices.storeMultiple');

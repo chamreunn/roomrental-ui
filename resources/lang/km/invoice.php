@@ -43,7 +43,7 @@ return [
     'date' => 'កាលបរិច្ឆេទ',
     'no' => 'លេខវិក្កយបត្រ',
     'latest_invoice' => 'វិក្កយបត្រចុងក្រោយ',
-    'view_all'=> 'មើលទាំងអស់',
+    'view_all' => 'មើលទាំងអស់',
 
     // Buttons
     'create' => 'បង្កើត',
@@ -90,4 +90,10 @@ return [
     //user invoice
     'save_all' => 'រក្សាទុកទាំងអស់',
     'invoice_update' => 'ធ្វើបច្ចុប្បន្នភាពវិក្កយបត្រ',
+
+    //delete invoice
+    'delete_invoice' => 'លុបវិក្កយបត្រ',
+    'delete_invoice_confirmation' => 'តើ​អ្នកប្រាកដ​ជាចង់​លុប​វិក្កយបត្រ​នេះ​មែនទេ?',
+    'delete_invoice_confirmation_with_id' => 'តើ​អ្នក​ចង់​លុប​វិក្កយបត្រ :item មែនទេ?',
+    'deleted_successfully' => 'លុប​វិក្កយបត្រ​បាន​ជោគជ័យ',
 ];

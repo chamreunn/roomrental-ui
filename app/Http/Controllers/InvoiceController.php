@@ -538,6 +538,35 @@ class InvoiceController extends Controller
             ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.update_failed')]);
     }
 
+    public function destroy(Request $request, $id)
+    {
+        try {
+            // === 1. Call API to delete invoice ===
+            $response = $this->api()->delete("v1/invoices/{$id}");
+
+            // === 2. Handle API response ===
+            if (!empty($response['success']) && $response['success'] === true) {
+                return redirect()
+                    ->route('invoice.index')
+                    ->with('success', __('invoice.deleted_successfully'));
+            }
+
+            return redirect()
+                ->route('invoice.index')
+                ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.delete_failed')]);
+        } catch (\Throwable $e) {
+            // === 3. Handle unexpected errors gracefully ===
+            Log::error('Failed to delete invoice', [
+                'invoice_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('invoice.index')
+                ->withErrors(['error' => __('invoice.delete_failed') . ' - ' . $e->getMessage()]);
+        }
+    }
+
     public function updateStatus(Request $request, $id)
     {
         // ✅ Allowed statuses

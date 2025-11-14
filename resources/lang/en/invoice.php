@@ -43,7 +43,7 @@ return [
     'date' => 'Date',
     'no' => 'Invoice No',
     'latest_invoice' => 'Latest Invoice',
-    'view_all'=> 'View All',
+    'view_all' => 'View All',
 
     // Buttons
     'create' => 'Generate',
@@ -90,4 +90,11 @@ return [
     //user invoice
     'save_all' => 'Save All',
     'invoice_update' => 'Update Invoice',
+
+    //modal delete invoice
+    'delete_invoice' => 'Delete Invoice',
+    'delete_invoice_confirmation' => 'Are you sure you want to delete this invoice?',
+    'delete_invoice_confirmation_with_id' => 'Are you sure you want to delete invoice :item ?',
+    'deleted_successfully' => 'Invoice deleted successfully',
+
 ];
