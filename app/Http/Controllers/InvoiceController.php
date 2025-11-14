@@ -546,9 +546,7 @@ class InvoiceController extends Controller
 
             // === 2. Handle API response ===
             if (!empty($response['success']) && $response['success'] === true) {
-                return redirect()
-                    ->route('invoice.index')
-                    ->with('success', __('invoice.deleted_successfully'));
+                return redirect()->back()->with('success', __('invoice.deleted_successfully'));
             }
 
             return redirect()
