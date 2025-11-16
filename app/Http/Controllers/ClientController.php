@@ -48,6 +48,15 @@ class ClientController extends Controller
 
     public function edit(Request $request, $clientId)
     {
+        $buttons = [
+            [
+                'text' => __('titles.back'),
+                'icon' => 'chevrons-left',
+                'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
+                'url' => route('clients.index'),
+            ],
+        ];
+
         // Fetch client from API
         $response = $this->api()->get('v1/clients', ['id' => $clientId]);
 
@@ -66,7 +75,7 @@ class ClientController extends Controller
 
         $client['gender_mapped'] = $genderMap[$client['gender']] ?? null;
 
-        return view('app.clients.edit', compact('client'));
+        return view('app.clients.edit', compact('client','buttons'));
     }
 
     public function store(Request $request, $roomId)

@@ -152,9 +152,7 @@ class RoomController extends Controller
         // ❌ Handle failure
         return back()
             ->withInput()
-            ->withErrors($apiResponse['errors'] ?? [
-                'error' => $apiResponse['message'] ?? __('room.create_failed'),
-            ]);
+            ->with('error', $apiResponse['errors']['room_name'] ?? __('room.create_failed'));
     }
 
     public function edit(Request $request, $roomId, $locationId)

@@ -3,6 +3,7 @@
 return [
     'login' => 'ចូលប្រព័ន្ធ',
     'dashboard_admin' => 'ផ្ទាំងអ្នកគ្រប់គ្រង',
+
     // Nouns / pretitle
     'admin' => 'អ្នកគ្រប់គ្រង',
     'manager' => 'អ្នកគ្រប់គ្រងតំបន់',
@@ -30,6 +31,7 @@ return [
     'room_type' => 'ប្រភេទបន្ទប់',
     'room_size' => 'ទំហំបន្ទប់',
     'price' => 'តម្លៃ',
+    'booking' => 'ការកក់បន្ទប់',
 
     // Default actions
     'create' => 'បង្កើត',
@@ -46,9 +48,13 @@ return [
     'actions' => 'សកម្មភាព',
     'save_update' => 'ធ្វើបច្ចុប្បន្នភាព',
      //client
-    'client' => 'អតិថិជន',
+    'clients' => 'អតិថិជន',
     'remove' => 'យកចេញ',
+
     //invoice
     'invoice' => 'វិក្កយបត្រ',
     'choose_room' => 'ជ្រើសរើសបន្ទប់',
+
+    //settings
+    'settings' => 'ការកំណត់',
 ];

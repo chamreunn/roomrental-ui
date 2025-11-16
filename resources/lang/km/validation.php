@@ -127,4 +127,7 @@ return [
     'required_water_rate' => 'សូមបញ្ចូលតម្លៃទឹកក្នុងមួយគុប។',
     'new_electric_must_be_greater' => 'ចំនួនអគ្គិសនីថ្មីត្រូវតែធំប៉ុន្មានជាងចំនួនអគ្គិសនីចាស់។',
     'new_water_must_be_greater' => 'ចំនួនទឹកថ្មីត្រូវតែធំប៉ុន្មានជាងចំនួនទឹកចាស់។',
+
+    // 'custom' validation messages
+    'no_permission' => 'អ្នកមិនមានសិទ្ធិចូលប្រើទំព័រនេះទេ។',
 ];

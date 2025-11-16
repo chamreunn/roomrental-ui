@@ -126,4 +126,7 @@ return [
     'required_water_rate' => 'Please enter the water rate.',
     'new_electric_must_be_greater' => 'The new electric reading must be greater than the old reading.',
     'new_water_must_be_greater' => 'The new water reading must be greater than the old reading.',
+
+    // 'custom' validation messages
+    'no_permission' => 'You do not have permission to access this page.',
 ];

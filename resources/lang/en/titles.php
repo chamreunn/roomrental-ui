@@ -29,6 +29,7 @@ return [
     'room_type' => 'Type',
     'room_size' => 'Size',
     'price' => 'Price',
+    'booking' => 'Booking',
 
     // Default actions
     'create' => 'Create',
@@ -44,10 +45,15 @@ return [
     'status' => 'Status',
     'actions' => 'Action',
     'save_update' => 'Save Update',
+
     //client
-    'client' => 'Clents',
+    'clients' => 'Clients',
     'remove' => 'Remove',
+
     //invoice
     'invoice' => 'Invoice',
     'choose_room' => 'Choose Room',
+
+    //settings
+    'settings' => 'Settings',
 ];
