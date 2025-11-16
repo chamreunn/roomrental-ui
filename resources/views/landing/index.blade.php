@@ -242,8 +242,52 @@
     </section>
 
     {{-- ⚓ Footer --}}
-    <footer class="py-4 bg-dark text-white text-center">
-        <p class="mb-0" data-aos="fade-up" data-aos-duration="800">{{ __('landing.footer') }}</p>
-    </footer>
+<footer class="bg-dark text-white pt-5 pb-4">
+    <div class="container">
+
+        <div class="row g-4 align-items-center">
+
+            <!-- 🌍 Map Section -->
+            <div class="col-md-6" data-aos="fade-up" data-aos-duration="800">
+                <h5 class="fw-bold mb-3">📍 Our Location</h5>
+
+                <div class="rounded overflow-hidden shadow" style="height: 260px;">
+                    <iframe
+                        src="https://www.google.com/maps?q=YOUR_LAT,YOUR_LNG&hl=en&z=16&output=embed"
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+
+            <!-- 📞 Contact Section -->
+            <div class="col-md-6" data-aos="fade-up" data-aos-duration="800" data-aos-delay="150">
+                <h5 class="fw-bold mb-3 text-md-end">Contact Us</h5>
+
+                <div class="text-md-end">
+                    <p class="mb-2 fs-5">📞 +1 234 567 890</p>
+                    <p class="mb-2 fs-5">📧 renthome@yourmail.com</p>
+                    <p class="mb-2 fs-5">🏠 Street name, City, Country</p>
+
+                    <!-- Social Icons -->
+                    <div class="mt-3">
+                        <a href="#" class="text-white me-3 fs-4"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white me-3 fs-4"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="border-light mt-4">
+
+        <!-- Footer bottom -->
+        <div class="text-center pt-2">
+            <p class="mb-0">© {{ date('Y') }} Your Home Rental. All rights reserved.</p>
+        </div>
+
+    </div>
+</footer>
+
 
 @endsection

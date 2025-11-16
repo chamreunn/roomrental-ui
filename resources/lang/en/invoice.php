@@ -13,6 +13,7 @@ return [
     'contact' => 'Contact',
     'room_detail' => 'Room',
     'back' => 'Back',
+    'details' => 'Details',
 
     // Input labels
     'month' => 'Month',

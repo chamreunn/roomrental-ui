@@ -10,10 +10,10 @@
                 <li class="nav-item"><a class="nav-link active" href="#home">{{ __('landing.nav.home') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="#features">{{ __('landing.nav.features') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="#rooms">{{ __('landing.nav.rooms') }}</a></li>
-                <li class="nav-item"><a class="nav-link" href="#promotions">Promotions</a></li>
+                {{-- <li class="nav-item"><a class="nav-link" href="#promotions">Promotions</a></li> --}}
                 <li class="nav-item"><a class="nav-link" href="#aboutus">{{ __('landing.nav.aboutus') }}</a></li>
-                <li class="nav-item"><a class="nav-link"
-                        href="#careers">{{ __('landing.nav.careers') ?? 'Careers' }}</a></li>
+                {{-- <li class="nav-item"><a class="nav-link"
+                        href="#careers">{{ __('landing.nav.careers') ?? 'Careers' }}</a></li> --}}
                 <li class="nav-item"><a class="nav-link" href="#contact">{{ __('landing.nav.contact') }}</a></li>
                 <li class="nav-item">
                     <a class="btn btn-primary ms-lg-3" href="{{ route('login') }}">{{ __('landing.nav.login') }}</a>

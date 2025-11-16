@@ -57,10 +57,10 @@
                         </button>
                     </div>
 
-                    <div class="hr-text">ឬ</div>
+                    {{-- <div class="hr-text">ឬ</div>
                     <div class="col-12">
                         <a href="#" class="btn w-100">ចូលប្រើប្រាស់ជាមួយគណនី Telegram</a>
-                    </div>
+                    </div> --}}
 
                 </div>
             </form>

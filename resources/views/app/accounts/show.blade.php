@@ -70,7 +70,7 @@
                                 <label for="dob" class="form-label required">{{ __('account.date_of_birth') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="calendar-week" /></span>
-                                    <input type="text" id="dob" class="form-control datepicker" name="dob"
+                                    <input type="text" id="dob" class="form-control dobpicker" name="dob"
                                         value="{{ old('dob', \Carbon\Carbon::parse($user['date_of_birth'] ?? '')->format('d-m-Y')) }}"
                                         readonly>
                                 </div>

@@ -144,7 +144,7 @@
                             <form method="POST" action="{{ route('invoice.store') }}">
                                 @csrf
                                 @foreach ($preview as $key => $value)
-                                    <input type="text" name="{{ $key }}" value="{{ $value }}">
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                                 @endforeach
                                 <input type="hidden" name="room_id" value="{{ $room['id'] }}">
                                 <button type="submit" class="btn btn-success">
@@ -216,5 +216,5 @@
             </div>
         </div>
     </div>
-    
+
 @endsection

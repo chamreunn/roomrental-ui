@@ -13,6 +13,7 @@ return [
     'contact' => 'ទំនាក់ទំនង',
     'room_detail' => 'បន្ទប់',
     'back' => 'ត្រឡប់ក្រោយ',
+    'details' => 'វិក្កយបត្រលម្អិត',
 
     // Input labels
     'month' => 'ខែ',
