@@ -437,8 +437,15 @@ class RoomController extends Controller
         try {
             // ✅ Send PATCH request to your API
             $apiResponse = $this->api()
-                ->withHeaders(['Location-Id' => $locationId])
-                ->post("v1/rooms/{$roomId}/status", $payload);
+                ->post(
+                    "v1/rooms/{$roomId}/status",
+                    $payload,
+                    token: null,
+                    asForm: false,
+                    files: [],
+                    fileField: 'documents[]',
+                    moreHeaders: ['Location-Id' => $locationId]
+                );
 
             // ✅ Check for success flag
             if (($apiResponse['status'] ?? '') === 'success' || ($apiResponse['success'] ?? false)) {
