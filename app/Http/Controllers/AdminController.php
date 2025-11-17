@@ -105,7 +105,7 @@ class AdminController extends Controller
             ->groupBy(fn($client) => \Carbon\Carbon::parse($client['start_rental_date'])->format('Y-m-d'))
             ->map->count();
 
-            dd($groupedRooms);
+            // dd($groupedRooms);
 
         // Pass to view
         return view('admin.dashboard', compact(
