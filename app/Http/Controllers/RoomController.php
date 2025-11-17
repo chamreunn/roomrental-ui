@@ -114,7 +114,7 @@ class RoomController extends Controller
         $roomtypeResponse = $this->api()->get("v1/room-types");
         $roomtypes = $roomtypeResponse['room_types']['data'] ?? null;
 
-        return view('app.rooms.create', compact('buttons', 'Location-Id', 'roomtypes'));
+        return view('app.rooms.create', compact('buttons', 'locationId', 'roomtypes'));
     }
 
     public function store(Request $request, $locationId)

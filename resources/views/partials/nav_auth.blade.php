@@ -22,30 +22,23 @@
                     </a>
                 </li>
                 {{-- Language Switch --}}
-                <li class="nav-item dropdown ms-3">
-                    <a class="nav-link d-flex align-items-center" data-bs-toggle="dropdown" href="#">
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown">
                         @if (app()->getLocale() == 'en')
-                            <span class="flag flag-country-us me-2" style="width: 20px; height: 18px;"></span>
-                            English
+                            <span class="flag flag-country-us me-2" style="width: 20px; height: 18px;"></span> English
                         @else
-                            <span class="flag flag-country-kh me-2" style="width: 20px; height: 18px;"></span>
-                            ខ្មែរ
+                            <span class="flag flag-country-kh me-2" style="width: 20px; height: 18px;"></span> ខ្មែរ
                         @endif
                     </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="{{ url('lang/en') }}">
-                                <span class="flag flag-country-us" style="width: 20px; height: 18px;"></span>
-                                English
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="{{ url('lang/km') }}">
-                                <span class="flag flag-country-kh" style="width: 20px; height: 18px;"></span> ខ្មែរ
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                        <a class="dropdown-item d-flex align-items-center" href="{{ url('lang/en') }}">
+                            <span class="flag flag-country-us me-2" style="width: 20px; height: 18px;"></span> English
+                        </a>
+                        <a class="dropdown-item d-flex align-items-center" href="{{ url('lang/km') }}">
+                            <span class="flag flag-country-kh me-2" style="width: 20px; height: 18px;"></span> ខ្មែរ
+                        </a>
+                    </div>
+                </div>
                 <li class="nav-item">
                     <a class="btn btn-primary ms-lg-3" href=".">{{ __('landing.nav.home') }}</a>
                 </li>
