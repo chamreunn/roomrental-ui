@@ -227,7 +227,7 @@ class InvoiceController extends Controller
         ];
 
         $response = $this->api()
-            ->withHeaders(['location_id' => $locationId])
+            ->withHeaders(['Location-Id' => $locationId])
             ->get('v1/rooms/' . $roomId);
 
         $room = $response['room'];
@@ -282,7 +282,7 @@ class InvoiceController extends Controller
 
         // === 3. Get room and clients from API ===
         $response = $this->api()
-            ->withHeaders(['location_id' => $locationId])
+            ->withHeaders(['Location-Id' => $locationId])
             ->get('v1/rooms/' . $roomId);
 
         $room = $response['room'];
@@ -624,7 +624,7 @@ class InvoiceController extends Controller
             $colors = ['primary', 'success', 'warning', 'info', 'danger', 'purple', 'teal', 'orange'];
 
             $rooms = $this->api()
-                ->withHeaders(['location_id' => $firstLocationId])
+                ->withHeaders(['Location-Id' => $firstLocationId])
                 ->get('v1/rooms', $request->query())['rooms']['data'] ?? [];
 
             return view('app.invoices.user-create-invoice', compact('rooms'));
