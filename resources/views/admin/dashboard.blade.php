@@ -153,6 +153,10 @@
             </div>
         </div>
 
+        <pre>
+            {{ print_r($groupedRooms) }}
+        </pre>
+
         <div class="col-12">
             @foreach ($groupedRooms as $locationName => $roomTypes)
                 <div class="mb-4">
