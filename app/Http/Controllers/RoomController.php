@@ -43,7 +43,7 @@ class RoomController extends Controller
 
             // ✅ Correct API call (header is the 4th argument)
             $response = $this->api()->get('v1/rooms', $request->query(), null, [
-                'locationId' => $locationId,
+                'Location-Id' => $locationId,
             ]);
 
             // ✅ Extract rooms data correctly
@@ -87,7 +87,7 @@ class RoomController extends Controller
             Log::error('Room fetch failed: ' . $e->getMessage());
         }
 
-        return view('app.rooms.room', compact('buttons', 'rooms', 'locationId', 'colors'));
+        return view('app.rooms.room', compact('buttons', 'rooms', 'Location-Id', 'colors'));
     }
 
     public function location(Request $request)
@@ -114,7 +114,7 @@ class RoomController extends Controller
         $roomtypeResponse = $this->api()->get("v1/room-types");
         $roomtypes = $roomtypeResponse['room_types']['data'] ?? null;
 
-        return view('app.rooms.create', compact('buttons', 'locationId', 'roomtypes'));
+        return view('app.rooms.create', compact('buttons', 'Location-Id', 'roomtypes'));
     }
 
     public function store(Request $request, $locationId)
@@ -140,7 +140,7 @@ class RoomController extends Controller
         ];
 
         // ✅ Send API request with locationId in header
-        $apiResponse = $this->api()->withHeaders(['locationId' => $locationId])->post('v1/rooms', $payload);
+        $apiResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->post('v1/rooms', $payload);
 
         // ✅ Handle success
         if (($apiResponse['status'] ?? '') === 'success') {
@@ -172,10 +172,10 @@ class RoomController extends Controller
         $roomtypeResponse = $this->api()->get("v1/room-types");
         $roomtypes = $roomtypeResponse['room_types']['data'] ?? null;
 
-        $roomResponse = $this->api()->withHeaders(['locationId' => $locationId])->get("v1/rooms/{$roomId}");
+        $roomResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->get("v1/rooms/{$roomId}");
         $room = $roomResponse['room'];
 
-        return view('app.rooms.edit', compact('buttons', 'locationId', 'roomtypes', 'room', 'color'));
+        return view('app.rooms.edit', compact('buttons', 'Location-Id', 'roomtypes', 'room', 'color'));
     }
 
     public function update(Request $request, $roomId, $locationId)
@@ -220,7 +220,7 @@ class RoomController extends Controller
 
         try {
             // ✅ Send to API (assuming your helper $this->api() is a wrapper for HTTP client)
-            $apiResponse = $this->api()->withHeaders(['locationId' => $locationId])->post("v1/rooms/{$roomId}", $payload);
+            $apiResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->post("v1/rooms/{$roomId}", $payload);
 
             if (($apiResponse['status'] ?? '') === 'success') {
                 return redirect()->back()->with('success', __('room.updated_successfully'));
@@ -253,7 +253,7 @@ class RoomController extends Controller
 
         // ✅ Fetch room with invoices + clients
         $roomResponse = $this->api()
-            ->withHeaders(['locationId' => $locationId])
+            ->withHeaders(['Location-Id' => $locationId])
             ->get("v1/rooms/{$roomId}");
 
         $room = $roomResponse['room'] ?? null;
@@ -345,7 +345,7 @@ class RoomController extends Controller
     {
         try {
             // ✅ Call API DELETE endpoint
-            $apiResponse = $this->api()->withHeaders(['locationId' => $locationId])->delete("v1/rooms/{$id}");
+            $apiResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->delete("v1/rooms/{$id}");
 
             // ✅ Handle success
             if (($apiResponse['status'] ?? '') === 'success') {
@@ -369,7 +369,7 @@ class RoomController extends Controller
 
         try {
             foreach ($roomIds as $id) {
-                $this->api()->withHeaders(['locationId' => $locationId])->delete("v1/rooms/{$id}");
+                $this->api()->withHeaders(['Location-Id' => $locationId])->delete("v1/rooms/{$id}");
             }
 
             return back()->with('success', __('room.deleted_successfully'));
@@ -392,7 +392,7 @@ class RoomController extends Controller
             ],
         ];
 
-        $roomResponse = $this->api()->withHeaders(['locationId' => $locationId])->get("v1/rooms/{$roomId}");
+        $roomResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->get("v1/rooms/{$roomId}");
         $room = $roomResponse['room'];
 
         $roomstatus = RoomStatus::getStatus($room['status']);
@@ -420,7 +420,7 @@ class RoomController extends Controller
         try {
             // ✅ Send PATCH request to your API
             $apiResponse = $this->api()
-                ->withHeaders(['locationId' => $locationId])
+                ->withHeaders(['Location-Id' => $locationId])
                 ->post("v1/rooms/{$roomId}/status", $payload);
 
             // ✅ Check for success flag
