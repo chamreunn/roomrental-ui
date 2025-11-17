@@ -228,7 +228,16 @@ class RoomController extends Controller
 
         try {
             // ✅ Send to API (assuming your helper $this->api() is a wrapper for HTTP client)
-            $apiResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->post("v1/rooms/{$roomId}", $payload);
+            $apiResponse = $this->api()
+                ->post(
+                    "v1/rooms/{$roomId}",
+                    $payload,
+                    token: null,
+                    asForm: false,
+                    files: [],
+                    fileField: 'documents[]',
+                    moreHeaders: ['Location-Id' => $locationId]
+                );
 
             if (($apiResponse['status'] ?? '') === 'success') {
                 return redirect()->back()->with('success', __('room.updated_successfully'));
