@@ -48,6 +48,7 @@ return [
     'rental_expired' => "This client's rental has already expired.",
     'rental_ending'  => "This client's rental will end in :days day|This client's rental will end in :days days",
     'rental_active'  => "This client's rental is still active.",
+    'created_successfully'  => 'Created Successfully.',
 
      //user invoice
     'select_room' => 'Select Rooms',

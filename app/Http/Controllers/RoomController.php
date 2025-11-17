@@ -87,7 +87,7 @@ class RoomController extends Controller
             Log::error('Room fetch failed: ' . $e->getMessage());
         }
 
-        return view('app.rooms.room', compact('buttons', 'rooms', 'Location-Id', 'colors'));
+        return view('app.rooms.room', compact('buttons', 'rooms', 'locationId', 'colors'));
     }
 
     public function location(Request $request)
@@ -140,7 +140,15 @@ class RoomController extends Controller
         ];
 
         // ✅ Send API request with locationId in header
-        $apiResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->post('v1/rooms', $payload);
+        $apiResponse = $this->api()->post(
+            'v1/rooms',
+            $payload,
+            token: null,
+            asForm: false,
+            files: [],
+            fileField: 'documents[]',
+            moreHeaders: ['Location-Id' => $locationId]
+        );
 
         // ✅ Handle success
         if (($apiResponse['status'] ?? '') === 'success') {
