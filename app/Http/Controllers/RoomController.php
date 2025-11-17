@@ -139,8 +139,12 @@ class RoomController extends Controller
             'updated_by'    => Session::get('user')['id'] ?? null,
         ];
 
+        // dd($locationId);
+
         // ✅ Send API request with locationId in header
-        $apiResponse = $this->api()->withHeaders(['location_id' => $locationId])->post('v1/rooms', $payload);
+        $apiResponse = $this->api()->withHeaders(['location_id' => $locationId])->post('v1/rooms', $payload,);
+
+        // dd($apiResponse);
 
         // ✅ Handle success
         if (($apiResponse['status'] ?? '') === 'success') {

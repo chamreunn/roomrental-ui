@@ -117,8 +117,11 @@ class ApiService
 
         $http = $this->getHttpClient($token);
 
-        if (!empty($moreHeaders)) {
-            $http = $http->withHeaders($moreHeaders);
+        // Merge headers from chained withHeaders() and direct headers
+        $mergedHeaders = array_merge($this->extraHeaders, $moreHeaders);
+
+        if (!empty($mergedHeaders)) {
+            $http = $http->withHeaders($mergedHeaders);
         }
 
         // Attach files
