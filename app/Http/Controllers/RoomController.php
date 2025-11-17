@@ -183,7 +183,7 @@ class RoomController extends Controller
         $roomResponse = $this->api()->withHeaders(['Location-Id' => $locationId])->get("v1/rooms/{$roomId}");
         $room = $roomResponse['room'];
 
-        return view('app.rooms.edit', compact('buttons', 'Location-Id', 'roomtypes', 'room', 'color'));
+        return view('app.rooms.edit', compact('buttons', 'locationId', 'roomtypes', 'room', 'color'));
     }
 
     public function update(Request $request, $roomId, $locationId)
