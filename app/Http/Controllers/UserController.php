@@ -40,9 +40,7 @@ class UserController extends Controller
             $query['location_id'] = $locationId;
 
             // Fetch rooms for this location
-            $rooms = $this->api
-                ->withHeaders(['location_id' => $locationId])
-                ->get('v1/rooms', $query)['rooms']['data'] ?? [];
+            $rooms = $this->api->get('v1/rooms', $query,null,['Location-Id' => $locationId])['rooms']['data'] ?? [];
 
             // Count per location
             $locationCounts[$locationName] = count($rooms);
