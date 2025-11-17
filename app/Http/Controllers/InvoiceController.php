@@ -169,7 +169,7 @@ class InvoiceController extends Controller
 
             // ✅ Correct API call (header is the 4th argument)
             $response = $this->api()->get('v1/rooms', $request->query(), null, [
-                'location_id' => $locationId,
+                'Location-Id' => $locationId,
             ]);
 
             // ✅ Extract rooms data correctly
