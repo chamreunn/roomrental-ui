@@ -35,7 +35,7 @@ class AdminController extends Controller
             // Fetch rooms for this location
             $rooms = $this->api->get('v1/rooms', $query,null,['Location-Id' => $locationId])['rooms']['data'] ?? [];
 
-                dd($rooms);
+                // dd($rooms);
 
             // Count per location
             $locationCounts[$locationName] = count($rooms);
