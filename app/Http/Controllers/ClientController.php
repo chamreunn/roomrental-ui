@@ -20,20 +20,29 @@ class ClientController extends Controller
             $response = $this->api()->get('v1/clients');
             $data = $response['clients'] ?? [];
 
-            // ✅ Safely get data list
+            // Clients list
             $clientsArray = $data['data'] ?? [];
             $total = $data['total'] ?? count($clientsArray);
 
-            // ✅ Transform each room entry
+            // Transform & make room safe
             $dataCollection = collect($clientsArray)->transform(function ($item) {
+
                 $item['status_badge'] = Active::getStatus($item['status']);
+
+                // Ensure room always exists (avoid null errors)
+                $item['room'] = $item['room'] ?? [
+                    'id' => null,
+                    'location_id' => null,
+                    'building_name' => '-',
+                    'room_name' => '-',
+                ];
 
                 return $item;
             });
 
-            // ✅ Create pagination
+            // Pagination
             $clients = new LengthAwarePaginator(
-                collect($dataCollection),
+                $dataCollection,
                 $total,
                 $perPage,
                 $currentPage,
@@ -75,7 +84,7 @@ class ClientController extends Controller
 
         $client['gender_mapped'] = $genderMap[$client['gender']] ?? null;
 
-        return view('app.clients.edit', compact('client','buttons'));
+        return view('app.clients.edit', compact('client', 'buttons'));
     }
 
     public function store(Request $request, $roomId)

@@ -366,7 +366,7 @@ class RoomController extends Controller
 
             // ✅ Handle success
             if (($apiResponse['status'] ?? '') === 'success') {
-                return redirect()->back()->with('success', __('room.deleted_successfully'));
+                return redirect()->route('room.index')->with('success', __('room.deleted_successfully'));
             }
 
             // ❌ Handle failure

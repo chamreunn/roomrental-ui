@@ -23,7 +23,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="avatar avatar-sm"
-                                        style="background-image: url({{ asset(apiBaseUrl() . $client['client_image'] ?? 'imgs/default-avatar.png') }})">
+                                        style="background-image: url({{ asset(apiBaseUrl() . ($client['client_image'] ?? 'imgs/default-avatar.png')) }})">
                                     </span>
                                     <div class="mx-2">
                                         <div class="text-primary fw-bold">{{ ucfirst($client['username'] ?? '-') }}</div>
@@ -31,33 +31,45 @@
                                     </div>
                                 </div>
                             </td>
+
                             <td>{{ $client['gender'] ?? '-' }}</td>
                             <td>{{ $client['phone_number'] ?? '-' }}</td>
+
                             <td>
-                                {{ $client['room']['building_name'] ?? '' }} /
-                                {{ $client['room']['room_name'] ?? '' }}
+                                {{ $client['room']['building_name'] ?? '-' }} /
+                                {{ $client['room']['room_name'] ?? '-' }}
                             </td>
+
                             <td>{{ $client['start_rental_date'] ?? '-' }}</td>
                             <td>{{ $client['end_rental_date'] ?? '-' }}</td>
+
                             <td>
-                                <span class="{{ $client['status_badge']['badge'] ?? '-' }}">
-                                    {{ __($client['status_badge']['name']) }}
+                                <span class="{{ $client['status_badge']['badge'] ?? '' }}">
+                                    {{ __($client['status_badge']['name'] ?? '-') }}
                                 </span>
                             </td>
+
                             <td class="text-end">
-                                <a href="{{ route('room.show', [$client['room']['id'], $client['room']['location_id']]) }}"
-                                    class="btn btn-sm btn-info">
-                                    <x-icon name="eye" class="me-0" />
-                                </a>
+
+                                {{-- Only show room button if room exists --}}
+                                @if(!empty($client['room']['id']))
+                                    <a href="{{ route('room.show', [$client['room']['id'], $client['room']['location_id']]) }}"
+                                        class="btn btn-sm btn-info">
+                                        <x-icon name="eye" class="me-0" />
+                                    </a>
+                                @endif
+
                                 <a href="{{ route('clients.edit', $client['id']) }}" class="btn btn-sm btn-warning">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
+
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="8" class="text-center text-muted">
-                                {{ __('client.no_clients_found') }}
+                                <x-empty-state title="{{ __('cash_transaction.no_data') }}"
+                                    message="{{ __('cash_transaction.no_data') }}" svg="svgs/no_result.svg" width="450px" />
                             </td>
                         </tr>
                     @endforelse
