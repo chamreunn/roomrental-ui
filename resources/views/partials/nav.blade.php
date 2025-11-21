@@ -63,7 +63,7 @@
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown">
                     <span class="avatar avatar-sm"
-                        style="background-image: url({{ asset($authUser['profile_picture']) }})"></span>
+                        style="background-image: url({{ asset(api_image($authUser['profile_picture'])) }})"></span>
                     <div class="d-none d-xl-block ps-2">
                         <div class="text-uppercase fw-bolder text-primary">{{ $authUser['name'] }}</div>
                         <div class="mt-1 small text-secondary">{{ ucfirst($authUser['role']) }}</div>
