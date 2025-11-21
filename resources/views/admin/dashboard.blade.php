@@ -52,7 +52,7 @@
                                         </span>
                                     </div>
                                     <div class="col">
-                                        <div class="font-weight-medium">បន្ទប់{{ __($status['name']) }}</div>
+                                        <div class="font-weight-medium">{{ __($status['name']) }}</div>
                                         <div class="text-secondary">
                                             {{ $statusCounts[$statusKey] ?? 0 }}
                                             {{ strtolower(__($status['name'])) }}

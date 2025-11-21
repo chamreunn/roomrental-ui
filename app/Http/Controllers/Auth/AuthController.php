@@ -50,8 +50,8 @@ class AuthController extends Controller
                     'phone_number' => $user['phone_number'],
                     'address' => $user['address'],
                     'date_of_birth' => $user['date_of_birth'],
-                    'profile_picture' => $baseApiUrl . '/' . ltrim($user['profile_picture'], '/'),
-                    // ✅ Store user locations
+                    'profile_picture' => api_image($user['profile_picture']),
+
                     'user_locations' => $user['user_locations'] ?? [],
                 ]);
 

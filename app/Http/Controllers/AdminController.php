@@ -97,7 +97,7 @@ class AdminController extends Controller
 
         $clients = collect($recentClients)->map(function ($client) {
             $client['clientstatus'] = Active::getStatus($client['status']);
-            $client['image'] = ($client['client_image'] ? apiBaseUrl() . $client['client_image'] : asset('images/default-avatar.png'));
+            $client['image'] = api_image($client['client_image']);
             return $client;
         });
 

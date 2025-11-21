@@ -23,7 +23,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="avatar avatar-sm"
-                                        style="background-image: url({{ asset(apiBaseUrl() . ($client['client_image'] ?? 'imgs/default-avatar.png')) }})">
+                                        style="background-image: url({{ asset(api_image($client['image'])) }})">
                                     </span>
                                     <div class="mx-2">
                                         <div class="text-primary fw-bold">{{ ucfirst($client['username'] ?? '-') }}</div>

@@ -31,7 +31,7 @@ class AccountController extends Controller
 
             $alldatas = collect($paginatedData['data'] ?? [])->transform(function ($item) {
 
-                $item['user_profile'] = apiBaseUrl() . '/' . ltrim($item['profile_picture'], '/');
+                $item['user_profile'] = api_image($item['profile_picture']);
                 $item['role_badge'] = AbilitiesStatus::getStatus($item['role']);
 
                 return $item;
