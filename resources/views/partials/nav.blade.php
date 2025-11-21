@@ -34,8 +34,9 @@
                 </div>
                 <!-- Settings -->
                 <div class="nav-item btn-animate-icon btn-animate-icon-rotate">
-                    <a href="{{ route('settings.index') }}" class="nav-link px-0 {{ active_class('settings.index') }}" data-bs-toggle="tooltip" data-bs-placement="bottom"
-                        aria-label="{{ __('nav.settings') }}" data-bs-original-title="{{ __('nav.settings') }}">
+                    <a href="{{ route('settings.index') }}" class="nav-link px-0 {{ active_class('settings.index') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" aria-label="{{ __('nav.settings') }}"
+                        data-bs-original-title="{{ __('nav.settings') }}">
                         <x-icon name="settings" />
                     </a>
                 </div>
@@ -63,7 +64,7 @@
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown">
                     <span class="avatar avatar-sm"
-                        style="background-image: url({{ asset(api_image($authUser['profile_picture'])) }})"></span>
+                        style="background-image: url('{{ $authUser['profile_picture'] }}')"></span>
                     <div class="d-none d-xl-block ps-2">
                         <div class="text-uppercase fw-bolder text-primary">{{ $authUser['name'] }}</div>
                         <div class="mt-1 small text-secondary">{{ ucfirst($authUser['role']) }}</div>

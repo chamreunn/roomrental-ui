@@ -40,7 +40,6 @@ class AuthController extends Controller
 
                 Session::put('api_token', $token);
 
-                $baseApiUrl = apiBaseUrl();
                 Session::put('user', [
                     'id' => $user['id'],
                     'role' => $user['role'],
@@ -50,7 +49,8 @@ class AuthController extends Controller
                     'phone_number' => $user['phone_number'],
                     'address' => $user['address'],
                     'date_of_birth' => $user['date_of_birth'],
-                    'profile_picture' => $user['profile_picture'],
+                    // IMPORTANT: process the image BEFORE storing it!
+                    'profile_picture' => api_image($user['profile_picture']),
 
                     'user_locations' => $user['user_locations'] ?? [],
                 ]);

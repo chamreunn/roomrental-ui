@@ -1,53 +1,53 @@
-// Fonts
+// ========================================================
+// Google Fonts
+// ========================================================
 @charset "UTF-8";
 
-// Google Fonts
-// Fonts
-@charset "UTF-8";
 @import url("https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Noto Sans Khmer:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Koulen:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Freehand:wght@400;700&display=swap");
-/*!
- * Tabler v1.2.0 (https://tabler.io)
- * Copyright 2018-2025 The Tabler Authors
- * Copyright 2018-2025 codecalm.net Paweł Kuna
- * Licensed under MIT (https://github.com/tabler/tabler/blob/master/LICENSE)
- */
+@import url("https://fonts.googleapis.com/css2?family=Freehand:wght@400&display=swap");
+
+// ========================================================
+// Local Khmer Fonts
+// ========================================================
+
 @font-face {
     font-family: "khmer";
-    src: url("../../public/fonts/siemreap.ttf") format("truetype");
+    src: url("/fonts/siemreap.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: "khmer";
-    src: url("../../public/fonts/Muol-Light.ttf") format("truetype");
+    src: url("/fonts/Muol-Light.ttf") format("truetype");
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: "khmer-mef";
-    src: url("../../public/fonts/mef1.ttf") format("truetype");
+    src: url("/fonts/mef1.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: "khmer-mef";
-    src: url("../../public/fonts/mef2.ttf") format("truetype");
+    src: url("/fonts/mef2.ttf") format("truetype");
     font-weight: bold;
     font-style: normal;
 }
 
 @font-face {
     font-family: "Tacteing";
-    src: url("../../public/fonts/Tacteing.TTF") format("truetype");
+    src: url("/fonts/Tacteing.TTF") format("truetype");
 }
 
+// ========================================================
 // Tabler SCSS
+// ========================================================
 @import "@tabler/core/scss/tabler";
 @import "@tabler/core/scss/tabler-vendors";
 @import "@tabler/core/scss/tabler-themes";
@@ -57,51 +57,65 @@
 @import "@tabler/core/scss/tabler-props";
 @import "@tabler/core/scss/tabler-socials";
 
-// Tabler Tom Select SCSS
-/* Tom Select precompiled CSS first */
+// Tom Select (Tabler Library)
 @import "@tabler/core/dist/libs/tom-select/dist/css/tom-select.bootstrap5.min";
 
-// AOS Animate On Scroll
+// AOS Animate on Scroll
 @import "aos/dist/aos.css";
 
-// Custom overrides
-html[data-bs-theme-font="khmer"] body {
-    font-family: "khmer", sans-serif;
-}
-html[data-bs-theme-font="battambang"] body {
-    font-family: "Battambang", sans-serif;
-}
-html[data-bs-theme-font="noto-sans-khmer"] body {
-    font-family: "Noto Sans Khmer", sans-serif;
-}
-html[data-bs-theme-font="koulen"] body {
-    font-family: "Koulen", sans-serif;
-}
-html[data-bs-theme-font="freehand"] body {
-    font-family: "Freehand", sans-serif;
+// ========================================================
+// Font Theme Switching
+// ========================================================
+
+// Body font based on attribute
+html[data-bs-theme-font="khmer"] body { font-family: "khmer", sans-serif; }
+html[data-bs-theme-font="khmer-mef"] body { font-family: "khmer-mef", sans-serif; }
+html[data-bs-theme-font="battambang"] body { font-family: "Battambang", sans-serif; }
+html[data-bs-theme-font="noto-sans-khmer"] body { font-family: "Noto Sans Khmer", sans-serif; }
+html[data-bs-theme-font="koulen"] body { font-family: "Koulen", sans-serif; }
+html[data-bs-theme-font="freehand"] body { font-family: "Freehand", sans-serif; }
+
+// ========================================================
+// FIX: Apply selected font to buttons
+// ========================================================
+
+// Buttons inherit the body font
+button, .btn, input, select, textarea {
+    font-family: inherit !important;
 }
 
-// Apply custom font
-@import "@tabler/core/scss/tabler";
-@import "@tabler/core/scss/tabler-themes";
+// Ensure selected font also applies to buttons when switching
+html[data-bs-theme-font="khmer"] .btn,
+html[data-bs-theme-font="khmer"] button { font-family: "khmer", sans-serif !important; }
 
-// Custom font selection
-html[data-bs-theme-font="khmer"] { body { font-family: "khmer", sans-serif; } }
-html[data-bs-theme-font="khmer-mef"] { body { font-family: "khmer-mef", sans-serif; } }
-html[data-bs-theme-font="battambang"] { body { font-family: "Battambang", sans-serif; } }
-html[data-bs-theme-font="noto-sans-khmer"] { body { font-family: "Noto Sans Khmer", sans-serif; } }
-html[data-bs-theme-font="koulen"] { body { font-family: "Koulen", sans-serif; } }
-html[data-bs-theme-font="freehand"] { body { font-family: "Freehand", sans-serif; } }
+html[data-bs-theme-font="khmer-mef"] .btn,
+html[data-bs-theme-font="khmer-mef"] button { font-family: "khmer-mef", sans-serif !important; }
 
-// Tabler theme-primary mapping
+html[data-bs-theme-font="battambang"] .btn,
+html[data-bs-theme-font="battambang"] button { font-family: "Battambang", sans-serif !important; }
+
+html[data-bs-theme-font="noto-sans-khmer"] .btn,
+html[data-bs-theme-font="noto-sans-khmer"] button { font-family: "Noto Sans Khmer", sans-serif !important; }
+
+html[data-bs-theme-font="koulen"] .btn,
+html[data-bs-theme-font="koulen"] button { font-family: "Koulen", sans-serif !important; }
+
+html[data-bs-theme-font="freehand"] .btn,
+html[data-bs-theme-font="freehand"] button { font-family: "Freehand", sans-serif !important; }
+
+// ========================================================
+// Tabler Theme Color Mapping
+// ========================================================
 html[data-bs-theme-primary="blue"] { --tblr-primary: var(--tblr-blue); }
 html[data-bs-theme-primary="red"] { --tblr-primary: var(--tblr-red); }
 html[data-bs-theme-primary="green"] { --tblr-primary: var(--tblr-green); }
-// add other colors here…
+// add more if needed...
 
-// Tabler theme-radius mapping
-html[data-bs-theme-radius="0"] { --tblr-radius: 0rem; }
+// ========================================================
+// Border Radius Settings
+// ========================================================
+html[data-bs-theme-radius="0"]   { --tblr-radius: 0rem; }
 html[data-bs-theme-radius="0.5"] { --tblr-radius: 0.125rem; }
-html[data-bs-theme-radius="1"] { --tblr-radius: 0.25rem; }
+html[data-bs-theme-radius="1"]   { --tblr-radius: 0.25rem; }
 html[data-bs-theme-radius="1.5"] { --tblr-radius: 0.375rem; }
-html[data-bs-theme-radius="2"] { --tblr-radius: 0.5rem; }
+html[data-bs-theme-radius="2"]   { --tblr-radius: 0.5rem; }
