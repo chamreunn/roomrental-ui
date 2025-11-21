@@ -23,4 +23,11 @@ return [
     'language_hint' => 'Select your preferred language.',
 
     'reset' => 'Reset to Default',
+
+    'font_size' => 'Font Size',
+    'font_size_hint' => 'Adjust font size (px)',
+    'line_height' => 'Line Height',
+    'line_height_hint' => 'Adjust line spacing',
+    'sidebar_width' => 'Sidebar Width',
+    'sidebar_width_hint' => 'Adjust sidebar width (% of viewport)',
 ];
