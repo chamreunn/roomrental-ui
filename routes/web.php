@@ -47,19 +47,6 @@ Route::middleware('auth.session')->get('/logout', [AuthController::class, 'logou
 
 // 🧩 Admin&Manager Routes
 Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
-    // for account usable
-    Route::get('/accounts', [AccountController::class, 'index'])->name('account.index');
-    Route::get('/accounts/create', [AccountController::class, 'create'])->name('account.create');
-    Route::post('/accounts/store', [AccountController::class, 'store'])->name('account.store');
-    Route::get('/accounts/show/{id}', [AccountController::class, 'show'])->name('account.show');
-    Route::patch('accounts/{id}', [AccountController::class, 'update'])->name('account.update');
-    // for locations
-    Route::get('/locations', [LocationController::class, 'index'])->name('location.index');
-    Route::get('/locations/create', [LocationController::class, 'create'])->name('location.create');
-    Route::get('/locations/edit/{id}', [LocationController::class, 'edit'])->name('location.edit');
-    Route::patch('locations/{id}', [LocationController::class, 'update'])->name('location.update');
-    Route::post('/locations/store', [LocationController::class, 'store'])->name('location.store');
-    Route::delete('/locations/destroy/{id}', [LocationController::class, 'destroy'])->name('location.destroy');
     // for user location
     Route::get('/user_locations', [UserLocationController::class, 'index'])->name('user_location.index');
     // for room type
@@ -107,10 +94,28 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
 // 🧩 Admin Routes
 Route::middleware(['auth.session', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('dashboard.admin');
+    // for account usable
+    Route::get('/accounts', [AccountController::class, 'index'])->name('account.index');
+    Route::get('/accounts/create', [AccountController::class, 'create'])->name('account.create');
+    Route::post('/accounts/store', [AccountController::class, 'store'])->name('account.store');
+    Route::get('/accounts/show/{id}', [AccountController::class, 'show'])->name('account.show');
+    Route::patch('accounts/{id}', [AccountController::class, 'update'])->name('account.update');
+    // for locations
+    Route::get('/locations', [LocationController::class, 'index'])->name('location.index');
+    Route::get('/locations/create', [LocationController::class, 'create'])->name('location.create');
+    Route::get('/locations/edit/{id}', [LocationController::class, 'edit'])->name('location.edit');
+    Route::patch('locations/{id}', [LocationController::class, 'update'])->name('location.update');
+    Route::post('/locations/store', [LocationController::class, 'store'])->name('location.store');
+    Route::delete('/locations/destroy/{id}', [LocationController::class, 'destroy'])->name('location.destroy');
 });
 
 // 🧩 Manager Routes
 Route::middleware(['auth.session', 'role:manager'])->group(function () {
+    Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('dashboard.manager');
+});
+
+// 🧩 Manager Routes
+Route::middleware(['auth.session', 'role:user'])->group(function () {
     Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('dashboard.manager');
 });
 
@@ -120,7 +125,7 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::get('/rooms/show/{room_id}/{location_id}', [RoomController::class, 'show'])->name('room.show');
     Route::get('/rooms/booking/{room_id}/{location_id}', [RoomController::class, 'booking'])->name('room.booking');
     Route::patch('/rooms/{room_id}/{location_id}', [RoomController::class, 'updateStatus'])->name('room.update-status');
-     // For clients
+    // For clients
     Route::get('/clients/index', [ClientController::class, 'index'])->name('clients.index');
     Route::get('/clients/edit/{id}', [ClientController::class, 'edit'])->name('clients.edit');
     Route::patch('/clients/update/{id}/{room_id}', [ClientController::class, 'update'])->name('clients.update');
@@ -128,6 +133,13 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::patch('/client/update-status/{id}/{inactive}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
     //settings
     Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
+    //for cash transaction
+    Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+    Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+    Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+    Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
+    Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+    Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
 
     // Invoice for user
     Route::prefix('invoices')->group(function () {

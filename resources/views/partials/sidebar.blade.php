@@ -214,7 +214,7 @@
                     </a>
                 </li>
 
-                @if(userRole() != 'user')
+                @if(userRole() == 'admin')
                     <!-- Accounts -->
                     <li class="nav-item dropdown {{ active_class('account.*') }}">
                         <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class('account.*') }}"
@@ -387,6 +387,124 @@
                     </li>
                 @endif
 
+                @if(userRole() == 'manager')
+
+                    <!-- Room Type -->
+                    <li class="nav-item dropdown {{ active_class(['roomtype.*']) }}">
+                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['roomtype.*']) }}"
+                            href="#navbar-room-type" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <x-icon name="tag" />
+                            </span>
+                            <span class="nav-link-title">{{ __('sidebar.room_type') }}</span>
+                        </a>
+                        <div class="dropdown-menu {{ active_class(['roomtype.*'], '', true) }}">
+                            <div class="dropdown-menu-columns">
+                                <div class="dropdown-menu-column">
+                                    <a class="dropdown-item {{ active_class('roomtype.create') }}"
+                                        href="{{ route('roomtype.create') }}">
+                                        {{ __('sidebar.create_room_type') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class('roomtype.index') }}"
+                                        href="{{ route('roomtype.index') }}">
+                                        {{ __('sidebar.room_type_list') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Room -->
+                    <li class="nav-item dropdown {{ active_class(['room.*']) }}">
+                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['room.*']) }}"
+                            href="#navbar-room" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <x-icon name="door" />
+                            </span>
+                            <span class="nav-link-title">{{ __('sidebar.room') }}</span>
+                        </a>
+                        <div class="dropdown-menu {{ active_class(['room.*'], '', true) }}">
+                            <div class="dropdown-menu-columns">
+                                <div class="dropdown-menu-column">
+                                    <a class="dropdown-item {{ active_class(['room.choose_location', 'room.create_room']) }}"
+                                        href="{{ route('room.choose_location') }}">
+                                        {{ __('sidebar.create_room') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class(['room.index', 'room.room_list', 'room.show']) }}"
+                                        href="{{ route('room.index') }}">
+                                        {{ __('sidebar.room_list') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Clients -->
+                    <li class="nav-item {{ active_class('clients.*', 'active') }}">
+                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.index') }}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <x-icon name="users" />
+                            </span>
+                            <span class="nav-link-title">{{ __('sidebar.client') }}</span>
+                        </a>
+                    </li>
+
+                    <!-- Invoice -->
+                    <li class="nav-item dropdown {{ active_class(['invoice.*', 'invoices*']) }}">
+                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['invoice.*', 'invoices*']) }}"
+                            href="#navbar-invoice" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <x-icon name="invoice" />
+                            </span>
+                            <span class="nav-link-title">{{ __('sidebar.invoice') }}</span>
+                        </a>
+                        <div class="dropdown-menu {{ active_class(['invoice.*', 'invoices*'], '', true) }}">
+                            <div class="dropdown-menu-columns">
+                                <div class="dropdown-menu-column">
+                                    <a class="dropdown-item {{ active_class(['invoice.choose_location', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
+                                        href="{{ route('invoice.choose_location') }}">
+                                        {{ __('sidebar.create_invoice') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class(['invoice.index', 'invoice.invoice_list', 'invoice.show']) }}"
+                                        href="{{ route('invoice.index') }}">
+                                        {{ __('sidebar.invoice_list') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Cash Transaction Income & Expense -->
+                    <li class="nav-item dropdown {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}">
+                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}"
+                            href="#navbar-cash_transaction" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <x-icon name="cash-register" />
+                            </span>
+                            <span class="nav-link-title">{{ __('sidebar.cash_transaction') }}</span>
+                        </a>
+                        <div
+                            class="dropdown-menu {{ active_class(['cash_transaction.*', 'income.*', 'expense*'], '', true) }}">
+                            <div class="dropdown-menu-columns">
+                                <div class="dropdown-menu-column">
+                                    <a class="dropdown-item {{ active_class(['cash_transaction.choose_location', 'cash_transaction.create']) }}"
+                                        href="{{ route('cash_transaction.choose_location') }}">
+                                        {{ __('sidebar.create_cash_transaction') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class(['income.index', 'income.list']) }}"
+                                        href="{{ route('income.index') }}">
+                                        {{ __('sidebar.income.index') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class(['expense.index', 'expense.list']) }}"
+                                        href="{{ route('expense.index') }}">
+                                        {{ __('sidebar.expense.index') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                @endif
+
                 @if(userRole() == 'user')
                     <!-- Clients -->
                     <li class="nav-item {{ active_class('clients.*', 'active') }}">
@@ -421,6 +539,36 @@
                             </div>
                         </div>
                     </li>
+
+                    <!-- Cash Transaction Income & Expense -->
+                    {{-- <li class="nav-item dropdown {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}">
+                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}"
+                            href="#navbar-cash_transaction" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <x-icon name="cash-register" />
+                            </span>
+                            <span class="nav-link-title">{{ __('sidebar.cash_transaction') }}</span>
+                        </a>
+                        <div
+                            class="dropdown-menu {{ active_class(['cash_transaction.*', 'income.*', 'expense*'], '', true) }}">
+                            <div class="dropdown-menu-columns">
+                                <div class="dropdown-menu-column">
+                                    <a class="dropdown-item {{ active_class(['cash_transaction.choose_location', 'cash_transaction.create']) }}"
+                                        href="{{ route('cash_transaction.choose_location') }}">
+                                        {{ __('sidebar.create_cash_transaction') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class(['income.index', 'income.list']) }}"
+                                        href="{{ route('income.index') }}">
+                                        {{ __('sidebar.income.index') }}
+                                    </a>
+                                    <a class="dropdown-item {{ active_class(['expense.index', 'expense.list']) }}"
+                                        href="{{ route('expense.index') }}">
+                                        {{ __('sidebar.expense.index') }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li> --}}
                 @endif
             </ul>
         </div>

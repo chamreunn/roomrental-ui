@@ -10,6 +10,7 @@ use Illuminate\Http\Client\ConnectionException;
 class ApiService
 {
     use HandlesApiToken;
+    protected ApiService $api;
 
     protected $baseUrl;
     protected $verifySsl;
@@ -38,23 +39,23 @@ class ApiService
      * Build HTTP client
      * ----------------------------------------------------------- */
     protected function getHttpClient($token = null)
-{
-    // base headers
-    $headers = ['App_key' => config('custom.hrms_key')];
+    {
+        // base headers
+        $headers = ['App_key' => config('custom.hrms_key')];
 
-    // merge default headers + custom chained headers
-    $merged = array_merge($headers, $this->extraHeaders);
+        // merge default headers + custom chained headers
+        $merged = array_merge($headers, $this->extraHeaders);
 
-    $client = Http::withOptions([
-        'verify' => $this->verifySsl,
-    ])->withHeaders($merged);
+        $client = Http::withOptions([
+            'verify' => $this->verifySsl,
+        ])->withHeaders($merged);
 
-    if ($token) {
-        $client = $client->withToken($token);
+        if ($token) {
+            $client = $client->withToken($token);
+        }
+
+        return $client->timeout(15)->retry(3, 200);
     }
-
-    return $client->timeout(15)->retry(3, 200);
-}
 
 
     /* -----------------------------------------------------------
@@ -102,43 +103,43 @@ class ApiService
      * POST (fixed)
      * ----------------------------------------------------------- */
     public function post(
-    string $endpoint,
-    array $data = [],
-    $token = null,
-    bool $asForm = false,
-    $files = [],
-    string $fileField = 'documents[]',
-    array $moreHeaders = []
-) {
-    $url   = $this->buildUrl($endpoint);
-    $token = $token ?? $this->getApiToken();
+        string $endpoint,
+        array $data = [],
+        $token = null,
+        bool $asForm = false,
+        $files = [],
+        string $fileField = 'documents[]',
+        array $moreHeaders = []
+    ) {
+        $url   = $this->buildUrl($endpoint);
+        $token = $token ?? $this->getApiToken();
 
-    $http = $this->getHttpClient($token);
+        $http = $this->getHttpClient($token);
 
-    // merge: withHeaders() headers + direct headers
-    $mergedHeaders = array_merge($this->extraHeaders, $moreHeaders);
+        // merge: withHeaders() headers + direct headers
+        $mergedHeaders = array_merge($this->extraHeaders, $moreHeaders);
 
-    if (!empty($mergedHeaders)) {
-        $http = $http->withHeaders($mergedHeaders);
-    }
-
-    $files = is_array($files) ? $files : [$files];
-    foreach ($files as $file) {
-        if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-            $http = $http->attach(
-                $fileField,
-                file_get_contents($file->getRealPath()),
-                $file->getClientOriginalName()
-            );
+        if (!empty($mergedHeaders)) {
+            $http = $http->withHeaders($mergedHeaders);
         }
+
+        $files = is_array($files) ? $files : [$files];
+        foreach ($files as $file) {
+            if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                $http = $http->attach(
+                    $fileField,
+                    file_get_contents($file->getRealPath()),
+                    $file->getClientOriginalName()
+                );
+            }
+        }
+
+        $response = (!empty($files) || $asForm)
+            ? $http->asMultipart()->post($url, $data)
+            : $http->post($url, $data);
+
+        return $this->handleAuthAndResponse('post', func_get_args(), $response);
     }
-
-    $response = (!empty($files) || $asForm)
-        ? $http->asMultipart()->post($url, $data)
-        : $http->post($url, $data);
-
-    return $this->handleAuthAndResponse('post', func_get_args(), $response);
-}
 
     /* -----------------------------------------------------------
      * PATCH (fixed — real PATCH instead of PUT)

@@ -90,6 +90,12 @@
                                     <span class="input-group-text"><x-icon name="lock" /></span>
                                     <input type="password" id="password" class="form-control" name="password"
                                         placeholder="{{ __('account.password') }}">
+                                        <span class="input-group-text">
+                                <a href="javascript:void(0)" id="passwordToggle" class="link-secondary"
+                                    data-bs-toggle="tooltip" aria-label="Show password">
+                                    <x-icon name="eye" />
+                                </a>
+                            </span>
                                 </div>
                                 @error('password')
                                     <div class="text-red mt-1">{{ $message }}</div>
@@ -191,6 +197,24 @@
                 reader.onload = e => avatarPreview.src = e.target.result;
                 reader.readAsDataURL(file);
             }
+        });
+    </script>
+
+    <script>
+        document.getElementById('passwordToggle').addEventListener('click', function () {
+            const passwordField = document.getElementById('password');
+            const isVisible = passwordField.type === 'text';
+
+            // Toggle input type
+            passwordField.type = isVisible ? 'password' : 'text';
+
+            // Swap icon
+            this.innerHTML = isVisible
+                ? `<x-icon name="eye" />`
+                : `<x-icon name="eye-off" />`;
+
+            // Update tooltip
+            this.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
         });
     </script>
 @endpush

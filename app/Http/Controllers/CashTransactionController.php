@@ -93,12 +93,20 @@ class CashTransactionController extends Controller
                 'description' => $transaction['description'] ?? null,
             ];
 
-            // dd($payload);
-
             try {
-                $response = $this->api()
-                    ->withHeaders(['location_id' => $location_id])
-                    ->post("v1/cash-transactions", $payload);
+                // $response = $this->api()
+                //     ->withHeaders(['location_id' => $location_id])
+                //     ->post("v1/cash-transactions", $payload);
+
+                $response = $this->api()->post(
+                    'v1/cash-transactions',
+                    $payload,
+                    token: null,
+                    asForm: false,
+                    files: [],
+                    fileField: 'documents[]',
+                    moreHeaders: ['Location-Id' => $location_id]
+                );
 
                 if (!empty($response['success']) && $response['success'] === true) {
                     $successCount++;
