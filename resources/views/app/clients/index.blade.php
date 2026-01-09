@@ -23,8 +23,9 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="avatar avatar-sm"
-                                        style="background-image: url({{ asset(api_image($client['image'])) }})">
+                                        style="background-image: url('{{ api_image($client['image'] ?? null) }}')">
                                     </span>
+
                                     <div class="mx-2">
                                         <div class="text-primary fw-bold">{{ ucfirst($client['username'] ?? '-') }}</div>
                                         <span class="text-muted">{{ $client['email'] ?? '-' }}</span>
@@ -89,4 +90,5 @@
             </div>
         </div>
     </div>
+
 @endsection

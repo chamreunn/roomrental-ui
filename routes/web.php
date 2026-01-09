@@ -13,8 +13,12 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomtypeController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserCashTransactionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserExpenseController;
+use App\Http\Controllers\UserIncomeController;
 use App\Http\Controllers\UserLocationController;
+use App\Models\User;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -114,9 +118,21 @@ Route::middleware(['auth.session', 'role:manager'])->group(function () {
     Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('dashboard.manager');
 });
 
-// 🧩 Manager Routes
+// 🧩 User Routes
 Route::middleware(['auth.session', 'role:user'])->group(function () {
-    Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('dashboard.manager');
+    Route::prefix('user')->group(function () {
+        // user cash transaction
+        Route::get('/cash-transaction/create', [UserCashTransactionController::class, 'create'])->name('user_cash_transaction.create');
+        Route::post('/cash-transaction/add', [UserCashTransactionController::class, 'addTemporary'])->name('user_cash_transaction.add_temp');
+        Route::delete('/cash-transactions/{location_id}/remove/{index}', [UserCashTransactionController::class, 'removeTemporary'])->name('user_cash_transaction.removeTemporary');
+        Route::post('/cash-transaction/store', [UserCashTransactionController::class, 'store'])->name('user_cash_transaction.store');
+        //income
+        Route::get('/income/choose-location', [UserIncomeController::class, 'index'])->name('user_income.index');
+        Route::get('/income/choose-location/{id}', [UserIncomeController::class, 'list'])->name('user_income.list');
+        //expense
+        Route::get('/expense/choose-location', [UserExpenseController::class, 'index'])->name('user_expense.index');
+        Route::get('/expense/choose-location/{id}', [UserExpenseController::class, 'list'])->name('user_expense.list');
+    });
 });
 
 // 🧩 User Routes

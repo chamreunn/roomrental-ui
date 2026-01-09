@@ -42,6 +42,7 @@ return [
     'income_list' => 'បញ្ជីចំណូល',
     'expense_list' => 'បញ្ជីចំណាយ',
     'no_data' => 'មិនមានទិន្នន័យ។',
+
     //filter
     'from_date' => 'ពីកាលបរិច្ឆេទ',
     'to_date' => 'ដល់កាលបរិច្ឆេទ',
@@ -49,4 +50,8 @@ return [
     'search_category' => 'ស្វែងរកប្រភេទ...',
     'filter' => 'ស្វែងរក',
     'reset' => 'សម្អាត',
+
+    'select' => 'សូមជ្រើសរើស',
+    'location' => 'ទីតាំង',
+    'select_location' => 'ជ្រើសរើសទីតាំង',
 ];

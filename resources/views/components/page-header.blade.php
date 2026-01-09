@@ -2,7 +2,7 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <div class="page-pretitle">{{ $pretitle }}</div>
+                <div class="page-pretitle mb-2">{{ $pretitle }}</div>
                 <h2 class="page-title">{{ $title }}</h2>
             </div>
 

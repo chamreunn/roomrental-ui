@@ -56,4 +56,14 @@ return [
 
     //settings
     'settings' => 'Settings',
+    'list' => 'List',
+
+    'user_cash_transaction' => 'User Cash Transaction',
+    'user_cash_transaction_create' => 'Create User Cash Transaction',
+    'user_income' => 'User Income',
+    'user_expense' => 'User Expense',
+    'user_income_index' => 'Create User Income',
+    'user_expense_index' => 'Create User Expense',
+    'user_income_list' => 'User Income List',
+    'user_expense_list' => 'User Expense List',
 ];

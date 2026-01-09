@@ -541,34 +541,34 @@
                     </li>
 
                     <!-- Cash Transaction Income & Expense -->
-                    {{-- <li class="nav-item dropdown {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}">
-                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}"
-                            href="#navbar-cash_transaction" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                    <li class="nav-item dropdown {{ active_class(['user_cash_transaction.*', 'user_income.*', 'user_expense.*']) }}">
+                        <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['user_cash_transaction.*', 'income.*', 'expense*']) }}"
+                            href="#navbar-user_cash_transaction" data-bs-toggle="dropdown" data-bs-auto-close="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <x-icon name="cash-register" />
                             </span>
                             <span class="nav-link-title">{{ __('sidebar.cash_transaction') }}</span>
                         </a>
                         <div
-                            class="dropdown-menu {{ active_class(['cash_transaction.*', 'income.*', 'expense*'], '', true) }}">
+                            class="dropdown-menu {{ active_class(['user_cash_transaction.*', 'user_income.*', 'user_expense.*'], '', true) }}">
                             <div class="dropdown-menu-columns">
                                 <div class="dropdown-menu-column">
-                                    <a class="dropdown-item {{ active_class(['cash_transaction.choose_location', 'cash_transaction.create']) }}"
-                                        href="{{ route('cash_transaction.choose_location') }}">
+                                    <a class="dropdown-item {{ active_class(['user_cash_transaction.choose_location', 'user_cash_transaction.create']) }}"
+                                        href="{{ route('user_cash_transaction.create') }}">
                                         {{ __('sidebar.create_cash_transaction') }}
                                     </a>
-                                    <a class="dropdown-item {{ active_class(['income.index', 'income.list']) }}"
-                                        href="{{ route('income.index') }}">
+                                    <a class="dropdown-item {{ active_class(['user_income.index', 'user_income.list']) }}"
+                                        href="{{ route('user_income.index') }}">
                                         {{ __('sidebar.income.index') }}
                                     </a>
-                                    <a class="dropdown-item {{ active_class(['expense.index', 'expense.list']) }}"
-                                        href="{{ route('expense.index') }}">
+                                    <a class="dropdown-item {{ active_class(['user_expense.index', 'user_expense.list']) }}"
+                                        href="{{ route('user_expense.index') }}">
                                         {{ __('sidebar.expense.index') }}
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    </li> --}}
+                    </li>
                 @endif
             </ul>
         </div>

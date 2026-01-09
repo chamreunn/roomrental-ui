@@ -48,4 +48,8 @@ return [
     'search_category' => 'Search category...',
     'filter' => 'Filter',
     'reset' => 'Reset',
+
+    'select' => 'Please Select',
+    'location' => 'Location',
+    'select_location' => 'Select Location',
 ];
