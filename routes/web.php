@@ -71,14 +71,14 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::delete('/rooms/destroy/{room_id}/{location_id}', [RoomController::class, 'destroy'])->name('room.destroy');
     Route::delete('/rooms/multi/{location_id}', [RoomController::class, 'multiDestroy'])->name('room.multi_destroy');
     // for invoice
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('/invoices/show-locations/{locationId}', [InvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('/invoices/show-locations', [InvoiceController::class, 'showLocation'])->name('invoice.show_locations');
     // invoice for admin
     Route::get('/invoices/create/{room_id}/{location_id}', [InvoiceController::class, 'create'])->name('invoice.create');
     Route::get('/invoices/choose-location', [InvoiceController::class, 'chooseLocation'])->name('invoice.choose_location');
     Route::get('/invoices/choose-room/{id}', [InvoiceController::class, 'chooseRoom'])->name('invoice.choose_room');
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
-    Route::get('/invoices/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
     //cash transaction
     Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
     Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
@@ -142,11 +142,15 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::get('/rooms/booking/{room_id}/{location_id}', [RoomController::class, 'booking'])->name('room.booking');
     Route::patch('/rooms/{room_id}/{location_id}', [RoomController::class, 'updateStatus'])->name('room.update-status');
     // For clients
+    // for user
+    Route::get('/clients/choose-locations', [ClientController::class, 'chooseLocation'])->name('clients.choose_location');
+
+    Route::get('/clients/choose-locations/{locationId}', [ClientController::class, 'clients'])->name('clients.clients');
     Route::get('/clients/index', [ClientController::class, 'index'])->name('clients.index');
-    Route::get('/clients/edit/{id}', [ClientController::class, 'edit'])->name('clients.edit');
-    Route::patch('/clients/update/{id}/{room_id}', [ClientController::class, 'update'])->name('clients.update');
-    Route::post('/client/store/{id}', [ClientController::class, 'store'])->name('client.store');
-    Route::patch('/client/update-status/{id}/{inactive}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
+    Route::get('/clients/edit/{id}/{locationId}', [ClientController::class, 'edit'])->name('clients.edit');
+    Route::patch('/clients/update/{id}/{room_id}/{locationId}', [ClientController::class, 'update'])->name('clients.update');
+    Route::post('/clients/store/{id}/{locationId}', [ClientController::class, 'store'])->name('client.store');
+    Route::patch('/clients/update-status/{id}/{inactive}/{locationId}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
     //settings
     Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
     //for cash transaction
@@ -159,13 +163,16 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
 
     // Invoice for user
     Route::prefix('invoices')->group(function () {
-        Route::get('/invoice_index', [InvoiceController::class, 'userIndex'])->name('invoice.user_index');
+        Route::get('/choose-locations/{location}',[InvoiceController::class, 'userIndex'])->name('invoice.user_index');
+        Route::get('/show/{id}/{locationId}', [InvoiceController::class, 'show'])->name('invoice.show');
+        Route::get('/choose-locations', [InvoiceController::class, 'userIndexChooseLocation'])->name('invoice.user_chooselocation');
         Route::get('/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
-        Route::get('/edit/{id}', [InvoiceController::class, 'edit'])->name('invoice.edit');
-        Route::patch('/update/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
-        Route::delete('/destroy/{id}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
-        Route::patch('/updateStatus/{id}', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
-        Route::get('/user-create-invoice', [InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
-        Route::post('/store-multiple', [InvoiceController::class, 'storeMultiple'])->name('invoices.storeMultiple');
+        Route::get('/edit/{id}/{locationId}', [InvoiceController::class, 'edit'])->name('invoice.edit');
+        Route::patch('/update/{id}/{locationId}', [InvoiceController::class, 'update'])->name('invoice.update');
+        Route::delete('/destroy/{id}/{locationId}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
+        Route::patch('/updateStatus/{id}/{locationId}', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
+        Route::get('/user-create-invoice/{location}',[InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
+        Route::post('/user-create-invoice/{location}/store-multiple', [InvoiceController::class, 'storeMultiple'])->name('invoices.storeMultiple');
+        Route::get('/create-invoice/choose-locations',[InvoiceController::class, 'userChooseLocation'])->name('invoice.user_choose_location');
     });
 });

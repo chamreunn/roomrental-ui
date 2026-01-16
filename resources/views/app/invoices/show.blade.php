@@ -135,11 +135,10 @@
                 <button type="button" class="btn btn-outline-primary" onclick="window.print()">
                     <x-icon name="printer" /> {{ __('invoice.print') }}
                 </button>
-                <a href="{{ route('invoice.index') }}" class="btn btn-secondary">
+                <a href="{{ route('invoice.user_index', $locationId) }}" class="btn btn-secondary">
                     {{ __('invoice.back') }}
                 </a>
             </div>
         </div>
     </div>
-
 @endsection

@@ -58,9 +58,10 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">{{__('tenant.information')}}</h3>
+                            <h3 class="card-title">{{ __('tenant.information') }}</h3>
                         </div>
-                        <form action="{{ route('client.store', $room['id']) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('client.store', ['id' => $room['id'], 'locationId' => $locationId]) }}"
+                            method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="card-body d-flex align-items-center justify-content-center">
                                 <div class="col-lg-4">
@@ -145,10 +146,12 @@
                                                                 <select name="gender" class="form-select tom-select">
                                                                     <option value="">{{ __('tenant.select_option') }}
                                                                     </option>
-                                                                    <option value="f" {{ old('gender') === 'f' ? 'selected' : '' }}>
+                                                                    <option value="f"
+                                                                        {{ old('gender') === 'f' ? 'selected' : '' }}>
                                                                         {{ __('tenant.female') }}
                                                                     </option>
-                                                                    <option value="m" {{ old('gender') === 'm' ? 'selected' : '' }}>
+                                                                    <option value="m"
+                                                                        {{ old('gender') === 'm' ? 'selected' : '' }}>
                                                                         {{ __('tenant.male') }}
                                                                     </option>
                                                                 </select>
@@ -172,8 +175,8 @@
                                                                 <span class="input-group-text">
                                                                     <x-icon name="phone" />
                                                                 </span>
-                                                                <input type="text" name="phone_number" class="form-control"
-                                                                    autocomplete="off"
+                                                                <input type="text" name="phone_number"
+                                                                    class="form-control" autocomplete="off"
                                                                     placeholder="{{ __('tenant.phone_number_placeholder') }}"
                                                                     value="{{ old('phone_number') }}">
                                                             </div>
@@ -202,13 +205,14 @@
 
                                                         {{-- National ID --}}
                                                         <div class="col-lg-4">
-                                                            <label class="form-label">{{ __('tenant.national_id') }}</label>
+                                                            <label
+                                                                class="form-label">{{ __('tenant.national_id') }}</label>
                                                             <div class="input-group">
                                                                 <span class="input-group-text">
                                                                     <x-icon name="id" />
                                                                 </span>
-                                                                <input type="text" name="national_id" class="form-control"
-                                                                    autocomplete="off"
+                                                                <input type="text" name="national_id"
+                                                                    class="form-control" autocomplete="off"
                                                                     placeholder="{{ __('tenant.national_id_placeholder') }}"
                                                                     value="{{ old('national_id') }}">
                                                             </div>
@@ -229,8 +233,8 @@
                                                                 <span class="input-group-text">
                                                                     <x-icon name="e-passport" />
                                                                 </span>
-                                                                <input type="text" name="passport" class="form-control"
-                                                                    autocomplete="off"
+                                                                <input type="text" name="passport"
+                                                                    class="form-control" autocomplete="off"
                                                                     placeholder="{{ __('tenant.passport_placeholder') }}"
                                                                     value="{{ old('passport') }}">
                                                             </div>
@@ -281,8 +285,7 @@
                                                         <span class="input-group-text">
                                                             <x-icon name="map-pin" />
                                                         </span>
-                                                        <textarea name="address" class="form-control"
-                                                            placeholder="{{ __('tenant.address_placeholder') }}">{{ old('address') }}</textarea>
+                                                        <textarea name="address" class="form-control" placeholder="{{ __('tenant.address_placeholder') }}">{{ old('address') }}</textarea>
                                                     </div>
                                                     @error('address')
                                                         <div class="text-danger mt-1">{{ $message }}</div>
@@ -295,8 +298,7 @@
                                                         <span class="input-group-text">
                                                             <x-icon name="file-text" />
                                                         </span>
-                                                        <textarea name="description" class="form-control"
-                                                            placeholder="{{ __('tenant.description_placeholder') }}">{{ old('description') }}</textarea>
+                                                        <textarea name="description" class="form-control" placeholder="{{ __('tenant.description_placeholder') }}">{{ old('description') }}</textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -309,10 +311,10 @@
                                     <div class="col">
                                         <button type="submit"
                                             class="btn btn-primary btn-animate-icon btn-animate-icon-rotate">
-                                            {{__('tenant.save')}}
+                                            {{ __('tenant.save') }}
                                             <x-icon name="plus" class="icon-end" />
                                         </button>
-                                        <a href="{{ dashboardRoute() }}" class="btn">{{__('tenant.cancel')}}</a>
+                                        <a href="{{ dashboardRoute() }}" class="btn">{{ __('tenant.cancel') }}</a>
                                     </div>
                                 </div>
                             </div>
@@ -340,7 +342,7 @@
         avatarPreview.addEventListener('click', () => avatarInput.click());
 
         // Preview selected image
-        avatarInput.addEventListener('change', function (event) {
+        avatarInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();

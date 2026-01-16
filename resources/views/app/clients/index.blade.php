@@ -60,7 +60,7 @@
                                     </a>
                                 @endif
 
-                                <a href="{{ route('clients.edit', $client['id']) }}" class="btn btn-sm btn-warning">
+                                <a href="{{ route('clients.edit', [$client['id'], $client['room']['location_id']]) }}" class="btn btn-sm btn-warning">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
 

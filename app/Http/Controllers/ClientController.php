@@ -2,15 +2,70 @@
 
 namespace App\Http\Controllers;
 
-use App\Enum\Active;
-use Carbon\Carbon;
 use Exception;
+use Carbon\Carbon;
+use App\Enum\Active;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ClientController extends Controller
 {
+    public function chooseLocation()
+    {
+        $locations = collect(Session::get('user.user_locations', []))
+            ->pluck('location')
+            ->values()
+            ->toArray();
+
+        return view('app.clients.choose-location', compact('locations'));
+    }
+
+    public function clients(Request $request, $locationId)
+    {
+        try {
+            $perPage = $request->query('per_page', 10);
+            $currentPage = $request->query('page', 1);
+
+            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get('v1/clients');
+            $data = $response['clients'] ?? [];
+
+            // Clients list
+            $clientsArray = $data['data'] ?? [];
+            $total = $data['total'] ?? count($clientsArray);
+
+            // Transform & make room safe
+            $dataCollection = collect($clientsArray)->transform(function ($item) {
+
+                $item['status_badge'] = Active::getStatus($item['status']);
+
+                // Ensure room always exists (avoid null errors)
+                $item['room'] = $item['room'] ?? [
+                    'id' => null,
+                    'location_id' => null,
+                    'building_name' => '-',
+                    'room_name' => '-',
+                ];
+
+                return $item;
+            });
+
+            // Pagination
+            $clients = new LengthAwarePaginator(
+                $dataCollection,
+                $total,
+                $perPage,
+                $currentPage,
+                ['path' => url()->current(), 'query' => $request->query()]
+            );
+        } catch (Exception $e) {
+            $clients = new LengthAwarePaginator([], 0, 10);
+        }
+
+        return view('app.clients.index', compact('clients'));
+    }
+
     public function index(Request $request)
     {
         try {
@@ -55,7 +110,7 @@ class ClientController extends Controller
         return view('app.clients.index', compact('clients'));
     }
 
-    public function edit(Request $request, $clientId)
+    public function edit(Request $request, $clientId, $locationId)
     {
         $buttons = [
             [
@@ -67,9 +122,10 @@ class ClientController extends Controller
         ];
 
         // Fetch client from API
-        $response = $this->api()->get('v1/clients', ['id' => $clientId]);
+        $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get('v1/clients/' . $clientId);
 
-        $client = $response['clients']['data'][0] ?? null;
+        $client = $response['client'] ?? null;
+        // dd($client);
 
         if (!$client) {
             return redirect()->route('clients.index')
@@ -84,14 +140,15 @@ class ClientController extends Controller
 
         $client['gender_mapped'] = $genderMap[$client['gender']] ?? null;
 
-        return view('app.clients.edit', compact('client', 'buttons'));
+        return view('app.clients.edit', compact('client', 'buttons', 'locationId'));
     }
 
-    public function store(Request $request, $roomId)
+    public function store(Request $request, $roomId, $locationId)
     {
+        // 1️⃣ Validate input
         $validated = $request->validate([
             'username'          => 'required|string|max:100',
-            'gender'            => 'required|string|in:m,f',
+            'gender'            => 'required|in:m,f',
             'phone_number'      => 'required|string|max:20',
             'email'             => 'nullable|email|max:100',
             'dob'               => 'required|date_format:d-m-Y',
@@ -100,21 +157,21 @@ class ClientController extends Controller
             'address'           => 'required|string|max:255',
             'image'             => 'nullable|image|max:2048',
             'start_rental_date' => 'required|date',
-            'end_rental_date'   => 'nullable|date',
+            'end_rental_date'   => 'nullable|date|after_or_equal:start_rental_date',
             'description'       => 'nullable|string|max:255',
         ]);
 
         try {
-            // ✅ Convert dates to correct format
+            // 2️⃣ Normalize dates
             $dob = Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
-            $startDate = $validated['start_rental_date']
-                ? Carbon::parse($validated['start_rental_date'])->format('Y-m-d')
-                : now()->format('Y-m-d');
-            $endDate = $validated['end_rental_date']
+
+            $startDate = Carbon::parse($validated['start_rental_date'])->format('Y-m-d');
+
+            $endDate = !empty($validated['end_rental_date'])
                 ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d')
                 : null;
 
-            // ✅ Prepare payload
+            // 3️⃣ Prepare payload
             $payload = [
                 'created_by'        => Session::get('user.id'),
                 'updated_by'        => Session::get('user.id'),
@@ -132,30 +189,49 @@ class ClientController extends Controller
                 'description'       => $validated['description'] ?? null,
             ];
 
-            // ✅ Send to API (multipart)
+            // 4️⃣ File handling
+            $files = $request->hasFile('image')
+                ? [$request->file('image')]
+                : [];
+
+            // 5️⃣ API call (multipart + Location-Id header)
             $response = $this->api()->post(
                 'v1/clients',
                 $payload,
-                null,                      // token
-                true,                      // as multipart/form-data
-                $request->hasFile('image') ? [$request->file('image')] : [], // ✅ file array
-                'client_image'             // ✅ API field name for file
+                token: null,
+                asForm: true,
+                files: $files,
+                fileField: 'client_image',
+                moreHeaders: ['Location-Id' => $locationId]
             );
 
-            if (($response['status'] ?? '') === 'success') {
-                return redirect()->route(dashboardRoute())
+            // 6️⃣ Handle response
+            if (!empty($response['success']) && $response['success'] === true) {
+                return redirect()
+                    ->route('clients.index')
                     ->with('success', __('messages.rental_success'));
             }
 
-            return back()->withErrors([
-                'api' => 'API returned: ' . json_encode($response),
-            ])->withInput();
+            return back()
+                ->withErrors([
+                    'api' => $response['message'] ?? __('messages.rental_failed'),
+                ])
+                ->withInput();
         } catch (\Throwable $e) {
-            return back()->withErrors(['api' => $e->getMessage()])->withInput();
+            Log::error('Client store failed', [
+                'error' => $e->getMessage(),
+                'room_id' => $roomId,
+                'location_id' => $locationId,
+            ]);
+
+            return back()
+                ->withErrors(['api' => $e->getMessage()])
+                ->withInput();
         }
     }
 
-    public function update(Request $request, $clientId, $roomId)
+
+    public function update(Request $request, $clientId, $roomId,$locationId)
     {
         $validated = $request->validate([
             'username'          => 'required|string|max:100',
@@ -220,7 +296,8 @@ class ClientController extends Controller
                 null,
                 $isMultipart,
                 $files,
-                'client_image'
+                'client_image',
+                moreHeaders: ['Location-Id' => $locationId]
             );
 
             if (($response['status'] ?? '') === 'success') {
@@ -235,11 +312,11 @@ class ClientController extends Controller
         }
     }
 
-    public function updateClientStatus($clientId, $status)
+    public function updateClientStatus($clientId, $status, $locationId)
     {
         try {
             // Send PATCH request to update client status
-            $response = $this->api()->post("v1/clients/{$clientId}/status", [
+            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->patch("v1/clients/{$clientId}/status", [
                 '_method' => 'PATCH',
                 'updated_by' => session('user.id'),
                 'status' => $status,

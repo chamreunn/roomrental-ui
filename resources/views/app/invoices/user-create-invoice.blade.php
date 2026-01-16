@@ -10,8 +10,9 @@
                     <label for="roomId" class="form-label required">{{ __('room.select_room') }}</label>
                     <select name="roomId[]" id="roomId" class="form-select" multiple>
                         <option value="">{{ __('room.please_select_rooms') }}</option>
-                        @foreach($rooms as $room)
-                            <option value="{{ $room['id'] }}" data-room='@json($room)' @if(is_array(old('room_id')) && in_array($room['id'], old('room_id'))) selected @endif>
+                        @foreach ($rooms as $room)
+                            <option value="{{ $room['id'] }}" data-room='@json($room)'
+                                @if (is_array(old('room_id')) && in_array($room['id'], old('room_id'))) selected @endif>
                                 {{ $room['room_name'] }}
                             </option>
                         @endforeach
@@ -21,13 +22,14 @@
         </div>
 
         {{-- ===== Multi-Form Container ===== --}}
-        <div class="col-12 d-print-none" id="invoiceContainer" @if(old('room_id')) style="display:block;" @else
+        <div class="col-12 d-print-none" id="invoiceContainer"
+            @if (old('room_id')) style="display:block;" @else
         style="display:none;" @endif>
-            <form id="multiInvoiceForm" action="{{ route('invoices.storeMultiple') }}" method="POST">
+            <form id="multiInvoiceForm" action="{{ route('invoices.storeMultiple', $locationId) }}" method="POST">
                 @csrf
                 <div id="formFieldsContainer">
-                    @if(old('room_id'))
-                        @foreach(old('room_id') as $i => $roomId)
+                    @if (old('room_id'))
+                        @foreach (old('room_id') as $i => $roomId)
                             @php
                                 $room = collect($rooms)->firstWhere('id', $roomId);
                                 $fields = [
@@ -38,14 +40,15 @@
                                     'old_water',
                                     'new_water',
                                     'water_rate',
-                                    'other_charge'
+                                    'other_charge',
                                 ];
                             @endphp
 
                             <div class="card mb-3 room-invoice-card">
                                 <div class="card-body">
                                     <h4 class="fw-bold mb-3 room-name">
-                                        {{ $room['room_name'] ?? 'Unknown Room' }} — {{ $room['location']['location_name'] ?? '' }}
+                                        {{ $room['room_name'] ?? 'Unknown Room' }} —
+                                        {{ $room['location']['location_name'] ?? '' }}
                                     </h4>
                                     <input type="hidden" name="room_id[]" value="{{ $roomId }}">
 
@@ -57,11 +60,15 @@
                                                 </label>
 
                                                 @if ($field === 'month')
-                                                    <input type="text" name="month[]" class="form-control datepicker value=" {{ old("
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                            month.$i") }}" placeholder="{{ __('invoice.select_month') }}" autocomplete="off">
+                                                    <input type="text" name="month[]"
+                                                        class="form-control datepicker value="
+                                                        {{ old("
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    month.$i") }}"
+                                                        placeholder="{{ __('invoice.select_month') }}" autocomplete="off">
                                                 @else
-                                                                <input type="number" step="any" name="{{ $field }}[]" class="form-control value=" {{
-                                                    old(" $field.$i") }}" placeholder="{{ __('invoice.' . $field) }}">
+                                                    <input type="number" step="any" name="{{ $field }}[]"
+                                                        class="form-control value=" {{ old(" $field.$i") }}"
+                                                        placeholder="{{ __('invoice.' . $field) }}">
                                                 @endif
 
                                                 @error("$field.$i")
@@ -101,7 +108,7 @@
                             'old_water',
                             'new_water',
                             'water_rate',
-                            'other_charge'
+                            'other_charge',
                         ];
                         $currentMonth = \Carbon\Carbon::now()->format('Y-m');
                     @endphp
@@ -112,8 +119,9 @@
                             </label>
 
                             @if ($field === 'month')
-                                <input type="text" name="month[]" class="form-control datepicker" value="{{ $currentMonth }}"
-                                    placeholder="{{ __('invoice.select_month') }}" autocomplete="off">
+                                <input type="text" name="month[]" class="form-control datepicker"
+                                    value="{{ $currentMonth }}" placeholder="{{ __('invoice.select_month') }}"
+                                    autocomplete="off">
                             @else
                                 <input type="number" step="any" name="{{ $field }}[]" class="form-control"
                                     placeholder="{{ __('invoice.' . $field) }}">
@@ -131,7 +139,7 @@
         <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 const select = new TomSelect('#roomId', {
                     plugins: ['remove_button'],
                     placeholder: "{{ __('room.please_select_rooms') }}",
@@ -168,7 +176,7 @@
                 }
 
                 // Handle room selection
-                select.on('change', function (values) {
+                select.on('change', function(values) {
                     formFieldsContainer.innerHTML = '';
 
                     if (values.length === 0) {
@@ -199,5 +207,5 @@
             });
         </script>
     @endpush
-    
+
 @endsection

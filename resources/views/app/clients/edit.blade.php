@@ -8,7 +8,7 @@
                 <div class="card-header">
                     <h3 class="card-title">{{ __('tenant.information') }}</h3>
                 </div>
-                <form action="{{ route('clients.update', [$client['id'], $client['room']['id']]) }}" method="POST"
+                <form action="{{ route('clients.update', [$client['id'], $client['room']['id'],$locationId]) }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
@@ -53,7 +53,7 @@
                                 <label class="form-label required">{{ __('client.date_of_birth') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="calendar" /></span>
-                                    <input type="text" name="date_of_birth" class="form-control dobpicker"
+                                    <input type="text" name="date_of_birth" class="form-control datepicker"
                                         value="{{ old('date_of_birth', $client['date_of_birth']) }}">
                                 </div>
                                 @error('date_of_birth')

@@ -354,7 +354,8 @@ class RoomController extends Controller
             'roomstatus',
             'statuses',
             'clients',
-            'inactive'
+            'inactive',
+            'locationId'
         ));
     }
 
@@ -414,7 +415,7 @@ class RoomController extends Controller
 
         $roomstatus = RoomStatus::getStatus($room['status']);
 
-        return view('app.rooms.booking', compact('room', 'buttons', 'roomstatus'));
+        return view('app.rooms.booking', compact('room', 'buttons', 'roomstatus', 'locationId'));
     }
 
     public function updateStatus(Request $request, $roomId, $locationId)

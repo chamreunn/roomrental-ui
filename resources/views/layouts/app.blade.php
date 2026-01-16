@@ -39,7 +39,7 @@
             @include('partials.nav')
 
             <div class="page-wrapper">
-                <x-page-header :buttons="$buttons ?? []" />
+                {{-- <x-page-header :buttons="$buttons ?? []" /> --}}
 
                 <div class="page-body">
                     <div class="container-xl">

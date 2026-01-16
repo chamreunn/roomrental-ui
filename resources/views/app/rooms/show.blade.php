@@ -32,7 +32,8 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         @foreach ($statuses as $key => $status)
                                             <li>
-                                                <button type="submit" name="status" value="{{ $key }}" class="dropdown-item">
+                                                <button type="submit" name="status" value="{{ $key }}"
+                                                    class="dropdown-item">
                                                     <span class="{{ $status['text'] }}">{{ __($status['name']) }}</span>
                                                 </button>
                                             </li>
@@ -91,7 +92,8 @@
                                 </a>
                             </div>
                             <div class="col-lg-6">
-                                <button class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#{{ $room['id'] }}">
+                                <button class="btn btn-danger w-100" data-bs-toggle="modal"
+                                    data-bs-target="#{{ $room['id'] }}">
                                     <x-icon name="trash" /> {{ __('titles.delete') }}
                                 </button>
                             </div>
@@ -115,12 +117,14 @@
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h5 class="fw-bold mb-0">{{ __('invoice.latest_invoice') }}</h5>
-                            <a href="{{ route('invoice.user_index') }}" class="btn btn-outline-primary btn-sm">
+                            <a href="{{ route('invoice.user_index', $locationId) }}"
+                                class="btn btn-outline-primary btn-sm">
                                 {{ __('invoice.view_all') }}
                             </a>
                         </div>
 
-                        <a href="{{ route('invoice.show', ['id' => $latestInvoice['id']]) }}" class="text-decoration-none">
+                        <a href="{{ route('invoice.show', ['id' => $latestInvoice['id'], 'locationId' => $locationId]) }}"
+                            class="text-decoration-none">
                             <div class="card card-sm card-link-pop position-relative hover-shadow">
                                 <div class="card-body d-flex justify-content-between align-items-center">
                                     <div>
@@ -220,10 +224,12 @@
                                                         @endif
 
                                                         <div class="flex-fill">
-                                                            <div class="fw-bold text-primary">{{ ucfirst($client['username']) }}
+                                                            <div class="fw-bold text-primary">
+                                                                {{ ucfirst($client['username']) }}
                                                             </div>
                                                             <div class="text-muted small">
-                                                                <x-icon name="calendar-week" class="me-1" width="16" />
+                                                                <x-icon name="calendar-week" class="me-1"
+                                                                    width="16" />
                                                                 {{ __('client.date_of_birth') }}:
                                                                 {{ $client['dateOfBirth'] }}
                                                             </div>
@@ -263,7 +269,8 @@
 
                                                         {{-- Dropdown Actions --}}
                                                         <div class="dropdown">
-                                                            <a href="#" class="btn-action" data-bs-toggle="dropdown">
+                                                            <a href="#" class="btn-action"
+                                                                data-bs-toggle="dropdown">
                                                                 <x-icon name="dots-vertical" />
                                                             </a>
                                                             <div class="dropdown-menu dropdown-menu-end">
@@ -320,7 +327,8 @@
     @foreach ($clients as $client)
         <div class="modal modal-blur fade" id="{{ $client['id'] }}" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                <form action="{{ route('clients.update-client-status', [$client['id'], $inactive]) }}" method="POST">
+                <form action="{{ route('clients.update-client-status', [$client['id'], $inactive, $locationId]) }}"
+                    method="POST">
                     @csrf
                     @method('PATCH')
                     <div class="modal-content">
@@ -328,9 +336,9 @@
                             <div class="modal-title">{{ __('modal.confirm_client_title') }}</div>
                             <div>
                                 {!! __('modal.confirm_client_message', [
-                'action' => '<span class="badge bg-danger-lt">' . __('client.end_lease') . '</span>',
-                'name' => '<span class="text-primary">' . $client['username'] . '</span>'
-            ]) !!}
+                                    'action' => '<span class="badge bg-danger-lt">' . __('client.end_lease') . '</span>',
+                                    'name' => '<span class="text-primary">' . $client['username'] . '</span>',
+                                ]) !!}
                             </div>
                         </div>
                         <div class="modal-footer">

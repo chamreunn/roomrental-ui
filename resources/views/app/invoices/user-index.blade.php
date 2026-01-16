@@ -13,7 +13,8 @@
                         <option value="">{{ __('invoice.status') ?? 'All' }}</option>
                         @foreach (\App\Enum\InvoiceStatus::all() as $key => $label)
                             @php $status = \App\Enum\InvoiceStatus::getStatus($key); @endphp
-                            <option value="{{ $key }}" {{ (string) $filter_status === (string) $key ? 'selected' : '' }}>
+                            <option value="{{ $key }}"
+                                {{ (string) $filter_status === (string) $key ? 'selected' : '' }}>
                                 {{ __($status['name']) }}
                             </option>
                         @endforeach
@@ -35,25 +36,26 @@
                 {{-- Building Name --}}
                 <div class="col-lg-2 col-md-4">
                     <input type="text" name="building_name" id="building_name" class="form-control"
-                        value="{{ $filter_building }}" placeholder="{{__('invoice.building')}}">
+                        value="{{ $filter_building }}" placeholder="{{ __('invoice.building') }}">
                 </div>
 
                 {{-- Floor Name --}}
                 <div class="col-lg-2 col-md-4">
-                    <input type="text" name="floor_name" id="floor_name" class="form-control" value="{{ $filter_floor }}"
-                        placeholder="{{__('invoice.floor')}}">
+                    <input type="text" name="floor_name" id="floor_name" class="form-control"
+                        value="{{ $filter_floor }}" placeholder="{{ __('invoice.floor') }}">
                 </div>
 
                 {{-- Room Name --}}
                 <div class="col-lg-2 col-md-4">
                     <input type="text" name="room_name" id="room_name" class="form-control" value="{{ $filter_room }}"
-                        placeholder="{{__('invoice.room')}}">
+                        placeholder="{{ __('invoice.room') }}">
                 </div>
 
                 {{-- Month --}}
                 <div class="col-lg-2 col-md-4">
-                    <input type="month" name="month" id="month" class="form-control monthpicker" value="{{ $filter_month }}"
-                        placeholder="{{ __('invoice.month_placeholder') }}" autocomplete="off">
+                    <input type="month" name="month" id="month" class="form-control monthpicker"
+                        value="{{ $filter_month }}" placeholder="{{ __('invoice.month_placeholder') }}"
+                        autocomplete="off">
                 </div>
 
                 {{-- From Date --}}
@@ -64,14 +66,15 @@
 
                 {{-- To Date --}}
                 <div class="col-lg-2 col-md-4">
-                    <input type="date" name="to_date" id="to_date" class="form-control datepicker" value="{{ $to_date }}"
-                        placeholder="{{ __('invoice.to_date') }}" autocomplete="off">
+                    <input type="date" name="to_date" id="to_date" class="form-control datepicker"
+                        value="{{ $to_date }}" placeholder="{{ __('invoice.to_date') }}" autocomplete="off">
                 </div>
 
                 {{-- Search --}}
                 <div class="col-lg-2 col-md-4">
                     <input type="text" name="search" id="search" class="form-control"
-                        placeholder="{{ __('invoice.search_placeholder') ?? 'Invoice No / Room' }}" value="{{ $search }}">
+                        placeholder="{{ __('invoice.search_placeholder') ?? 'Invoice No / Room' }}"
+                        value="{{ $search }}">
                 </div>
 
                 {{-- Buttons --}}
@@ -84,7 +87,7 @@
                             </button>
                         </div>
                         <div class="col-6">
-                            <a href="{{ route('invoice.user_index') }}" class="btn btn-secondary w-100">
+                            <a href="{{ route('invoice.user_index', $locationId) }}" class="btn btn-secondary w-100">
                                 {{ __('invoice.reset') ?? 'Reset' }}
                             </a>
                         </div>
@@ -115,71 +118,73 @@
                         </thead>
                         <tbody>
                             @foreach ($invoices as $index => $invoice)
-                                            @php
-                                                $status = \App\Enum\InvoiceStatus::getStatus($invoice['status']);
-                                            @endphp
-                                            <tr>
-                                                <td>{{ $index + 1 }}</td>
-                                                <td>{{ $invoice['invoice_no'] }}</td>
-                                                <td>{{ $invoice['room']['room_name'] ?? '-' }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($invoice['invoice_date'])->translatedFormat('d-M-Y') }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($invoice['due_date'])->translatedFormat('d-M-Y') }}</td>
-                                                <td>{{ number_format($invoice['room_fee'], 0, '.', ',') }}</td>
-                                                <td>{{ number_format($invoice['electric_rate'] * ($invoice['new_electric'] - $invoice['old_electric']), 0, '.', ',') }}
-                                                </td>
-                                                <td>
-                                                    {{ number_format(
-                                    $invoice['water_rate'] * ($invoice['new_water'] - $invoice['old_water']),
-                                    0,
-                                    '.',
-                                    ','
-                                ) }}
-                                                </td>
-                                                <td>{{ number_format($invoice['other_charge'], 0, '.', ',') }}</td>
-                                                <td><span class="text-danger">{{ number_format($invoice['total'], 0, '.', ',') }}</span></td>
-                                                <td>
-                                                    <form action="{{ route('invoice.updateStatus', [$invoice['id']]) }}" method="POST"
-                                                        class="d-inline">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <div class="dropdown d-inline-block mb-2">
-                                                            <button class="btn {{ $status['badge'] }} btn-sm dropdown-toggle" type="button"
-                                                                data-bs-toggle="dropdown">
-                                                                <x-icon name="pencil" class="me-1" /> {{ __($status['name']) }}
+                                @php
+                                    $status = \App\Enum\InvoiceStatus::getStatus($invoice['status']);
+                                @endphp
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $invoice['invoice_no'] }}</td>
+                                    <td>{{ $invoice['room']['room_name'] ?? '-' }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($invoice['invoice_date'])->translatedFormat('d-M-Y') }}
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($invoice['due_date'])->translatedFormat('d-M-Y') }}</td>
+                                    <td>{{ number_format($invoice['room_fee'], 0, '.', ',') }}</td>
+                                    <td>{{ number_format($invoice['electric_rate'] * ($invoice['new_electric'] - $invoice['old_electric']), 0, '.', ',') }}
+                                    </td>
+                                    <td>
+                                        {{ number_format($invoice['water_rate'] * ($invoice['new_water'] - $invoice['old_water']), 0, '.', ',') }}
+                                    </td>
+                                    <td>{{ number_format($invoice['other_charge'], 0, '.', ',') }}</td>
+                                    <td><span
+                                            class="text-danger">{{ number_format($invoice['total'], 0, '.', ',') }}</span>
+                                    </td>
+                                    <td>
+                                        <form
+                                            action="{{ route('invoice.updateStatus', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
+                                            method="POST" class="d-inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div class="dropdown d-inline-block mb-2">
+                                                <button class="btn {{ $status['badge'] }} btn-sm dropdown-toggle"
+                                                    type="button" data-bs-toggle="dropdown">
+                                                    <x-icon name="pencil" class="me-1" /> {{ __($status['name']) }}
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    @foreach ($statuses as $key => $status)
+                                                        <li>
+                                                            <button type="submit" name="status"
+                                                                value="{{ $key }}" class="dropdown-item">
+                                                                <span
+                                                                    class="{{ $status['text'] }}">{{ __($status['name']) }}</span>
                                                             </button>
-                                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                                @foreach ($statuses as $key => $status)
-                                                                    <li>
-                                                                        <button type="submit" name="status" value="{{ $key }}"
-                                                                            class="dropdown-item">
-                                                                            <span class="{{ $status['text'] }}">{{ __($status['name']) }}</span>
-                                                                        </button>
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
-                                                        </div>
-                                                    </form>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex justify-content-center gap-1">
-                                                        <a href="{{ route('invoice.show', $invoice['id']) }}" class="btn btn-sm btn-primary"
-                                                            data-bs-toggle="tooltip" title="{{ __('invoice.view') ?? 'View' }}">
-                                                            {{-- {{ __('invoice.view') ?? 'View' }} --}}
-                                                            <x-icon name="eye" class="me-0" />
-                                                        </a>
-                                                        <a href="{{ route('invoice.edit', $invoice['id']) }}" data-bs-toggle="tooltip"
-                                                            title="{{ __('invoice.edit') ?? 'Edit' }}" class="btn btn-sm btn-warning">
-                                                            {{-- {{ __('invoice.edit') ?? 'Edit' }} --}}
-                                                            <x-icon name="edit" class="me-0" />
-                                                        </a>
-                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#{{ $invoice['id'] }}"
-                                                            class="btn btn-sm btn-danger">
-                                                            {{-- {{ __('invoice.edit') ?? 'Edit' }} --}}
-                                                            <x-icon name="trash" class="me-0" />
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a href="{{ route('invoice.show', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
+                                                class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
+                                                title="{{ __('invoice.view') ?? 'View' }}">
+                                                {{-- {{ __('invoice.view') ?? 'View' }} --}}
+                                                <x-icon name="eye" class="me-0" />
+                                            </a>
+                                            <a href="{{ route('invoice.edit', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
+                                                data-bs-toggle="tooltip" title="{{ __('invoice.edit') ?? 'Edit' }}"
+                                                class="btn btn-sm btn-warning">
+                                                <x-icon name="edit" class="me-0" />
+                                            </a>
+
+                                            <a href="#" data-bs-toggle="modal"
+                                                data-bs-target="#{{ $invoice['id'] }}" class="btn btn-sm btn-danger">
+                                                {{-- {{ __('invoice.edit') ?? 'Edit' }} --}}
+                                                <x-icon name="trash" class="me-0" />
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="table-light">
@@ -196,18 +201,16 @@
                     </table>
                 </div>
             @else
-                <x-empty-state title="{{ __('invoice.no_invoice_found') }}" message="{{ __('invoice.no_invoices_message') }}"
-                    svg="svgs/no_result.svg" width="450px" />
+                <x-empty-state title="{{ __('invoice.no_invoice_found') }}"
+                    message="{{ __('invoice.no_invoices_message') }}" svg="svgs/no_result.svg" width="450px" />
             @endif
         </div>
     </div>
 
     @foreach ($invoices as $invoice)
-
         <x-delete-modal id="{{ $invoice['id'] }}" title="{{ __('invoice.delete_invoice') }}"
-            action="{{ route('invoice.destroy', $invoice['id']) }}" item="{{ $invoice['invoice_no'] }}"
-            text="{{ __('invoice.delete_invoice_confirmation_with_id') }}" />
-
+            action="{{ route('invoice.destroy', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
+            item="{{ $invoice['invoice_no'] }}" text="{{ __('invoice.delete_invoice_confirmation_with_id') }}" />
     @endforeach
 
 @endsection

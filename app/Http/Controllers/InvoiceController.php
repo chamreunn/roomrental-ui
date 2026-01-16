@@ -18,7 +18,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class InvoiceController extends Controller
 {
 
-    public function index(Request $request)
+    public function index(Request $request, $locationId)
     {
         // === 1. Get filter/search params ===
         $statusFilter   = $request->query('status');
@@ -33,7 +33,7 @@ class InvoiceController extends Controller
         $toDate         = $request->query('to_date');
 
         // === 2. Fetch invoices from API ===
-        $response = $this->api()->get('v1/invoices');
+        $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get('v1/invoices');
         $invoices = $response['data'] ?? [];
 
         $totals = [
@@ -138,7 +138,16 @@ class InvoiceController extends Controller
             'locations'        => $locations,
             'roomTypes'        => $roomTypes,
             'statuses'         => $statuses,
+            'locationId'       => $locationId,
         ]);
+    }
+
+    public function showLocation(Request $request)
+    {
+        // === 4. Fetch dropdown data ===
+        $locations  = $this->api()->get('v1/locations')['locations']['data'] ?? [];
+
+        return view('app.invoices.show_location', compact('locations'));
     }
 
     public function chooseLocation(Request $request)
@@ -403,11 +412,11 @@ class InvoiceController extends Controller
             ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.create_failed')]);
     }
 
-    public function show(Request $request, $id)
+    public function show(Request $request, $id, $locationId)
     {
         try {
             // === 1. Fetch invoice details from API ===
-            $response = $this->api()->get("v1/invoices/{$id}");
+            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get("v1/invoices/{$id}");
 
             // === 2. Validate and extract invoice data ===
             $invoice = $response['invoice'] ?? null;
@@ -425,7 +434,7 @@ class InvoiceController extends Controller
                 ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
 
             // === 4. Pass to view ===
-            return view('app.invoices.show', compact('invoice'));
+            return view('app.invoices.show', compact('invoice', 'locationId'));
         } catch (\Throwable $e) {
             // === 5. Handle unexpected errors gracefully ===
             Log::error('Failed to fetch invoice details', [
@@ -439,11 +448,11 @@ class InvoiceController extends Controller
         }
     }
 
-    public function edit(Request $request, $id)
+    public function edit(Request $request, $id, $locationId)
     {
         try {
             // === 1. Fetch invoice details from API ===
-            $response = $this->api()->get("v1/invoices/{$id}");
+            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get("v1/invoices/{$id}");
 
             // === 2. Validate and extract invoice data ===
             $invoice = $response['invoice'] ?? null;
@@ -457,7 +466,7 @@ class InvoiceController extends Controller
             // dd($invoice);
 
             // === 3. Pass to view ===
-            return view('app.invoices.edit', compact('invoice'));
+            return view('app.invoices.edit', compact('invoice', 'locationId'));
         } catch (\Throwable $e) {
             // === 4. Handle unexpected errors gracefully ===
             Log::error('Failed to fetch invoice details for editing', [
@@ -465,12 +474,12 @@ class InvoiceController extends Controller
                 'error' => $e->getMessage(),
             ]);
             return redirect()
-                ->route('invoice.user_index')
+                ->route('invoice.user_index', $locationId)
                 ->withErrors(['error' => __('invoice.fetch_failed')]);
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, $locationId)
     {
         // === 1. Validation rules for all fields ===
         $rules = [
@@ -524,7 +533,7 @@ class InvoiceController extends Controller
         ];
 
         // === 3. Call API ===
-        $response = $this->api()->patch("v1/invoices/{$id}", $payload);
+        $response = $this->api()->withHeaders(['Location-Id' => $locationId])->patch("v1/invoices/{$id}", $payload);
 
         // === 4. Handle API response ===
         if (!empty($response['success']) && $response['success'] === true) {
@@ -538,11 +547,11 @@ class InvoiceController extends Controller
             ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.update_failed')]);
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, $id, $locationId)
     {
         try {
             // === 1. Call API to delete invoice ===
-            $response = $this->api()->delete("v1/invoices/{$id}");
+            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->delete("v1/invoices/{$id}");
 
             // === 2. Handle API response ===
             if (!empty($response['success']) && $response['success'] === true) {
@@ -560,12 +569,12 @@ class InvoiceController extends Controller
             ]);
 
             return redirect()
-                ->route('invoice.index')
+                ->route('invoice.user_index', $locationId)
                 ->withErrors(['error' => __('invoice.delete_failed') . ' - ' . $e->getMessage()]);
         }
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, $locationId)
     {
         // ✅ Allowed statuses
         $allowedStatuses = array_keys(InvoiceStatus::all());
@@ -589,7 +598,7 @@ class InvoiceController extends Controller
         try {
             // dd($status);
             // 2️⃣ Send to API as integer (PATCH)
-            $response = $this->api()->post("v1/invoices/{$id}/status", [
+            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->patch("v1/invoices/{$id}/status", [
                 '_method' => 'PATCH',
                 'status' => $status
             ]);
@@ -614,28 +623,40 @@ class InvoiceController extends Controller
         }
     }
 
+    public function userChooseLocation(Request $request)
+    {
+        $locations = collect(Session::get('user.user_locations', []))
+            ->pluck('location')
+            ->values()
+            ->toArray();
+
+        return view('app.invoices.user-choose-loation', compact('locations'));
+    }
+
     // for user
-    public function userCreateInvoice(Request $request)
+    public function userCreateInvoice(Request $request, string $location)
     {
         try {
-            $locationId = Session::get('user.user_locations', []);
-            $firstLocationId = $locationId[0]['location_id'] ?? null;
+            $response = $this->api()
+                ->withHeaders([
+                    'Location-Id' => $location,
+                ])
+                ->get('v1/rooms', $request->query());
 
-            $colors = ['primary', 'success', 'warning', 'info', 'danger', 'purple', 'teal', 'orange'];
+            $rooms = data_get($response, 'rooms.data', []);
 
-            $rooms = $this->api()
-                ->withHeaders(['Location-Id' => $firstLocationId])
-                ->get('v1/rooms', $request->query())['rooms']['data'] ?? [];
-
-            return view('app.invoices.user-create-invoice', compact('rooms'));
+            return view('app.invoices.user-create-invoice', [
+                'rooms'      => $rooms,
+                'locationId' => $location,
+            ]);
         } catch (\Throwable $e) {
-            // === 5. Handle unexpected errors gracefully ===
-            Log::error('Failed to fetch locations for user invoice creation', [
-                'error' => $e->getMessage(),
+            Log::error('Failed to fetch rooms', [
+                'location_id' => $location,
+                'error'       => $e->getMessage(),
             ]);
 
             return redirect()
-                ->route('invoice.index')
+                ->route('invoice.user_choose_location')
                 ->withErrors(['error' => __('invoice.fetch_failed')]);
         }
     }
@@ -643,10 +664,9 @@ class InvoiceController extends Controller
     /**
      * Store multiple invoices at once.
      */
-    public function storeMultiple(Request $request)
+    public function storeMultiple(Request $request, string $location)
     {
-        // Validate each array of inputs
-        $rules = [
+        $validated = $request->validate([
             'room_id.*'       => 'required|uuid',
             'month.*'         => 'required|string',
             'old_electric.*'  => 'required|numeric|min:0',
@@ -656,75 +676,58 @@ class InvoiceController extends Controller
             'new_water.*'     => 'required|numeric|min:0',
             'water_rate.*'    => 'required|numeric|min:0',
             'other_charge.*'  => 'nullable|numeric|min:0',
-        ];
-
-        $messages = [
-            'month.*.required'         => __('validation.required_month'),
-            'old_electric.*.required'  => __('validation.required_old_electric'),
-            'new_electric.*.required'  => __('validation.required_new_electric'),
-            'electric_rate.*.required' => __('validation.required_electric_rate'),
-            'old_water.*.required'     => __('validation.required_old_water'),
-            'new_water.*.required'     => __('validation.required_new_water'),
-            'water_rate.*.required'    => __('validation.required_water_rate'),
-        ];
-
-        $validated = $request->validate($rules, $messages);
+        ]);
 
         $count = count($request->room_id);
         $errors = [];
         $successCount = 0;
 
         for ($i = 0; $i < $count; $i++) {
-            $invoice = [
-                'room_id'       => $request->room_id[$i],
-                'month'         => $request->month[$i],
-                'old_electric'  => $request->old_electric[$i],
-                'new_electric'  => $request->new_electric[$i],
-                'electric_rate' => $request->electric_rate[$i],
-                'old_water'     => $request->old_water[$i],
-                'new_water'     => $request->new_water[$i],
-                'water_rate'    => $request->water_rate[$i],
-                'other_charge'  => $request->other_charge[$i] ?? 0,
-            ];
 
-            // Manual custom validations
-            if ($invoice['new_electric'] < $invoice['old_electric']) {
+            if ($request->new_electric[$i] < $request->old_electric[$i]) {
                 $errors[$i]['new_electric'] = [__('validation.new_electric_must_be_greater')];
                 continue;
             }
 
-            if ($invoice['new_water'] < $invoice['old_water']) {
+            if ($request->new_water[$i] < $request->old_water[$i]) {
                 $errors[$i]['new_water'] = [__('validation.new_water_must_be_greater')];
                 continue;
             }
 
-            // Send each invoice to your API
             $payload = [
-                'room_id'       => $invoice['room_id'],
-                'old_electric'  => (float) $invoice['old_electric'],
-                'new_electric'  => (float) $invoice['new_electric'],
-                'electric_rate' => (float) $invoice['electric_rate'],
-                'old_water'     => (float) $invoice['old_water'],
-                'new_water'     => (float) $invoice['new_water'],
-                'water_rate'    => (float) $invoice['water_rate'],
-                'other_charge'  => (float) $invoice['other_charge'],
-                'invoice_date'  => $invoice['month'],
+                'room_id'       => $request->room_id[$i],
+                'old_electric'  => (float) $request->old_electric[$i],
+                'new_electric'  => (float) $request->new_electric[$i],
+                'electric_rate' => (float) $request->electric_rate[$i],
+                'old_water'     => (float) $request->old_water[$i],
+                'new_water'     => (float) $request->new_water[$i],
+                'water_rate'    => (float) $request->water_rate[$i],
+                'other_charge'  => (float) ($request->other_charge[$i] ?? 0),
+                'invoice_date'  => $request->month[$i],
             ];
 
-            $response = $this->api()->post('v1/invoices', $payload);
+            $response = $this->api()->post(
+                'v1/invoices',
+                $payload,
+                token: null,
+                asForm: false,
+                files: [],
+                fileField: 'documents[]',
+                moreHeaders: ['Location-Id' => $location]
+            );
 
-            if (!empty($response['success']) && $response['success'] === true) {
+            if (!empty($response['success'])) {
                 $successCount++;
             } else {
                 $errors[$i] = $response['errors'] ?? [
-                    'error' => $response['message'] ?? __('invoice.create_failed'),
+                    'error' => __('invoice.create_failed'),
                 ];
             }
         }
 
-        // === Redirect with validation messages ===
         if ($successCount === $count) {
-            return redirect()->route('invoice.index')
+            return redirect()
+                ->route('invoice.index')
                 ->with('success', __('All invoices saved successfully.'));
         }
 
@@ -741,16 +744,22 @@ class InvoiceController extends Controller
             ->withInput();
     }
 
-    public function userIndex(Request $request)
+    public function userIndexChooseLocation()
+    {
+        $locations = collect(Session::get('user.user_locations', []))
+            ->pluck('location')
+            ->values()
+            ->toArray();
+
+        return view('app.invoices.user-index-choose-loation', compact('locations'));
+    }
+
+    public function userIndex(Request $request, string $location)
     {
         try {
-            $locationId = Session::get('user.user_locations', []);
-            $firstLocationId = $locationId[0]['location_id'] ?? null;
-
             // === 1. Get filter/search params ===
             $statusFilter   = $request->query('status');
             $search         = $request->query('search');
-            $locationFilter = $request->query('location');
             $buildingFilter = $request->query('building_name');
             $floorFilter    = $request->query('floor_name');
             $roomFilter     = $request->query('room_name');
@@ -759,7 +768,8 @@ class InvoiceController extends Controller
             $fromDate       = $request->query('from_date');
             $toDate         = $request->query('to_date');
 
-            $response = $this->api()->get('v1/invoices', ['location_id' => $firstLocationId]);
+            // === 2. Fetch invoices for THIS location ===
+            $response = $this->api()->withHeaders(['location_id' => $location])->get('v1/invoices');
             $invoices = $response['data'] ?? [];
 
             $totals = [
@@ -768,49 +778,48 @@ class InvoiceController extends Controller
                 'water_charge'    => $response['total_water_charge'] ?? 0,
             ];
 
-            // === 3. Apply Filters ===
+            // === 3. Apply client-side filters (fallback) ===
 
-            // Status filter
             if ($statusFilter !== null && $statusFilter !== '') {
-                $invoices = array_filter($invoices, fn($inv) => $inv['status'] == $statusFilter);
-            }
-
-            // Location filter
-            if ($locationFilter !== null && $locationFilter !== '') {
                 $invoices = array_filter(
                     $invoices,
-                    fn($inv) => ($inv['room']['location_id'] ?? null) == $locationFilter
+                    fn($inv) => ($inv['status'] ?? null) == $statusFilter
                 );
             }
 
-            // Building name filter
             if ($buildingFilter) {
                 $invoices = array_filter(
                     $invoices,
                     fn($inv) =>
-                    str_contains(strtolower($inv['room']['building_name'] ?? ''), strtolower($buildingFilter))
+                    str_contains(
+                        strtolower($inv['room']['building_name'] ?? ''),
+                        strtolower($buildingFilter)
+                    )
                 );
             }
 
-            // Floor name filter
             if ($floorFilter) {
                 $invoices = array_filter(
                     $invoices,
                     fn($inv) =>
-                    str_contains(strtolower($inv['room']['floor_name'] ?? ''), strtolower($floorFilter))
+                    str_contains(
+                        strtolower($inv['room']['floor_name'] ?? ''),
+                        strtolower($floorFilter)
+                    )
                 );
             }
 
-            // Room name filter
             if ($roomFilter) {
                 $invoices = array_filter(
                     $invoices,
                     fn($inv) =>
-                    str_contains(strtolower($inv['room']['room_name'] ?? ''), strtolower($roomFilter))
+                    str_contains(
+                        strtolower($inv['room']['room_name'] ?? ''),
+                        strtolower($roomFilter)
+                    )
                 );
             }
 
-            // Room type filter
             if ($roomTypeFilter !== null && $roomTypeFilter !== '') {
                 $invoices = array_filter(
                     $invoices,
@@ -818,28 +827,31 @@ class InvoiceController extends Controller
                 );
             }
 
-            // Month filter (YYYY-MM)
             if ($monthFilter) {
-                $invoices = array_filter($invoices, function ($inv) use ($monthFilter) {
-                    return Carbon::parse($inv['invoice_date'])->format('Y-m') === $monthFilter;
-                });
+                $invoices = array_filter(
+                    $invoices,
+                    fn($inv) =>
+                    \Carbon\Carbon::parse($inv['invoice_date'])->format('Y-m') === $monthFilter
+                );
             }
 
-            // Date range filter
             if ($fromDate && $toDate) {
-                $invoices = array_filter($invoices, function ($inv) use ($fromDate, $toDate) {
-                    $date = Carbon::parse($inv['invoice_date'])->toDateString();
-                    return $date >= $fromDate && $date <= $toDate;
-                });
+                $invoices = array_filter(
+                    $invoices,
+                    fn($inv) =>
+                    \Carbon\Carbon::parse($inv['invoice_date'])->toDateString() >= $fromDate &&
+                        \Carbon\Carbon::parse($inv['invoice_date'])->toDateString() <= $toDate
+                );
             }
 
-            // General search
             if ($search) {
                 $search = strtolower($search);
-                $invoices = array_filter($invoices, function ($inv) use ($search) {
-                    return str_contains(strtolower($inv['invoice_no']), $search) ||
-                        str_contains(strtolower($inv['room']['room_name'] ?? ''), $search);
-                });
+                $invoices = array_filter(
+                    $invoices,
+                    fn($inv) =>
+                    str_contains(strtolower($inv['invoice_no'] ?? ''), $search) ||
+                        str_contains(strtolower($inv['room']['room_name'] ?? ''), $search)
+                );
             }
 
             // === 4. Fetch dropdown data ===
@@ -847,33 +859,32 @@ class InvoiceController extends Controller
 
             $statuses = InvoiceStatus::all();
 
-            return view(
-                'app.invoices.user-index',
-                [
-                    'invoices'         => $invoices,
-                    'totals'           => $totals,
-                    'filter_status'    => $statusFilter,
-                    'filter_location'  => $locationFilter,
-                    'filter_building'  => $buildingFilter,
-                    'filter_floor'     => $floorFilter,
-                    'filter_room'      => $roomFilter,
-                    'filter_room_type' => $roomTypeFilter,
-                    'filter_month'     => $monthFilter,
-                    'from_date'        => $fromDate,
-                    'to_date'          => $toDate,
-                    'search'           => $search,
-                    'roomTypes'        => $roomTypes,
-                    'statuses'         => $statuses,
-                ]
-            );
+            return view('app.invoices.user-index', [
+                'invoices'         => $invoices,
+                'totals'           => $totals,
+                'locationId'       => $location,
+
+                'filter_status'    => $statusFilter,
+                'filter_building'  => $buildingFilter,
+                'filter_floor'     => $floorFilter,
+                'filter_room'      => $roomFilter,
+                'filter_room_type' => $roomTypeFilter,
+                'filter_month'     => $monthFilter,
+                'from_date'        => $fromDate,
+                'to_date'          => $toDate,
+                'search'           => $search,
+
+                'roomTypes'        => $roomTypes,
+                'statuses'         => $statuses,
+            ]);
         } catch (\Throwable $e) {
-            // === 5. Handle unexpected errors gracefully ===
-            Log::error('Failed to fetch locations for user invoice creation', [
-                'error' => $e->getMessage(),
+            Log::error('Failed to fetch invoices for location', [
+                'location_id' => $location,
+                'error'       => $e->getMessage(),
             ]);
 
             return redirect()
-                ->route('invoice.index')
+                ->route('invoice.user_chooselocation')
                 ->withErrors(['error' => __('invoice.fetch_failed')]);
         }
     }

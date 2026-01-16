@@ -24,9 +24,9 @@
                     <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1"
                         aria-label="Show notifications" data-bs-auto-close="outside" aria-expanded="false">
                         <!-- Download SVG icon from http://tabler.io/icons/icon/bell -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="icon icon-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" class="icon icon-1">
                             <path
                                 d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6">
                             </path>
@@ -214,7 +214,7 @@
                     </a>
                 </li>
 
-                @if(userRole() == 'admin')
+                @if (userRole() == 'admin')
                     <!-- Accounts -->
                     <li class="nav-item dropdown {{ active_class('account.*') }}">
                         <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class('account.*') }}"
@@ -260,7 +260,7 @@
                                         href="{{ route('location.index') }}">
                                         {{ __('sidebar.location_list') }}
                                     </a>
-                                    @if(userRole() != 'manager')
+                                    @if (userRole() != 'manager')
                                         <a class="dropdown-item {{ active_class('user_location.index') }}"
                                             href="{{ route('user_location.index') }}">
                                             {{ __('user_location.user_location') }}
@@ -343,12 +343,12 @@
                         <div class="dropdown-menu {{ active_class(['invoice.*', 'invoices*'], '', true) }}">
                             <div class="dropdown-menu-columns">
                                 <div class="dropdown-menu-column">
-                                    <a class="dropdown-item {{ active_class(['invoice.choose_location', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
+                                    <a class="dropdown-item {{ active_class(['invoice.choose_location', 'invoices.show-locations', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
                                         href="{{ route('invoice.choose_location') }}">
                                         {{ __('sidebar.create_invoice') }}
                                     </a>
                                     <a class="dropdown-item {{ active_class(['invoice.index', 'invoice.invoice_list', 'invoice.show']) }}"
-                                        href="{{ route('invoice.index') }}">
+                                        href="{{ route('invoice.show_locations') }}">
                                         {{ __('sidebar.invoice_list') }}
                                     </a>
                                 </div>
@@ -387,8 +387,7 @@
                     </li>
                 @endif
 
-                @if(userRole() == 'manager')
-
+                @if (userRole() == 'manager')
                     <!-- Room Type -->
                     <li class="nav-item dropdown {{ active_class(['roomtype.*']) }}">
                         <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['roomtype.*']) }}"
@@ -461,12 +460,12 @@
                         <div class="dropdown-menu {{ active_class(['invoice.*', 'invoices*'], '', true) }}">
                             <div class="dropdown-menu-columns">
                                 <div class="dropdown-menu-column">
-                                    <a class="dropdown-item {{ active_class(['invoice.choose_location', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
+                                    <a class="dropdown-item {{ active_class(['invoice.choose_location', 'invoices.show-locations', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
                                         href="{{ route('invoice.choose_location') }}">
                                         {{ __('sidebar.create_invoice') }}
                                     </a>
                                     <a class="dropdown-item {{ active_class(['invoice.index', 'invoice.invoice_list', 'invoice.show']) }}"
-                                        href="{{ route('invoice.index') }}">
+                                        href="{{ route('invoice.show_locations') }}">
                                         {{ __('sidebar.invoice_list') }}
                                     </a>
                                 </div>
@@ -505,10 +504,10 @@
                     </li>
                 @endif
 
-                @if(userRole() == 'user')
+                @if (userRole() == 'user')
                     <!-- Clients -->
                     <li class="nav-item {{ active_class('clients.*', 'active') }}">
-                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.index') }}">
+                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.choose_location') }}">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <x-icon name="users" />
                             </span>
@@ -527,12 +526,12 @@
                         <div class="dropdown-menu {{ active_class(['invoice.*', 'invoices*'], '', true) }}">
                             <div class="dropdown-menu-columns">
                                 <div class="dropdown-menu-column">
-                                    <a class="dropdown-item {{ active_class(['invoice.user_create_invoice', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
-                                        href="{{ route('invoice.user_create_invoice') }}">
+                                    <a class="dropdown-item {{ active_class(['invoice.user_choose_location', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
+                                        href="{{ route('invoice.user_choose_location') }}">
                                         {{ __('sidebar.create_invoice') }}
                                     </a>
-                                    <a class="dropdown-item {{ active_class(['invoice.user_index', 'invoice.invoice_list', 'invoice.show', 'invoice.edit']) }}"
-                                        href="{{ route('invoice.user_index') }}">
+                                    <a class="dropdown-item {{ active_class(['invoice.user_index', 'invoice.user_chooselocation', 'invoice.invoice_list', 'invoice.show', 'invoice.edit']) }}"
+                                        href="{{ route('invoice.user_chooselocation') }}">
                                         {{ __('sidebar.invoice_list') }}
                                     </a>
                                 </div>
@@ -541,9 +540,11 @@
                     </li>
 
                     <!-- Cash Transaction Income & Expense -->
-                    <li class="nav-item dropdown {{ active_class(['user_cash_transaction.*', 'user_income.*', 'user_expense.*']) }}">
+                    <li
+                        class="nav-item dropdown {{ active_class(['user_cash_transaction.*', 'user_income.*', 'user_expense.*']) }}">
                         <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['user_cash_transaction.*', 'income.*', 'expense*']) }}"
-                            href="#navbar-user_cash_transaction" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                            href="#navbar-user_cash_transaction" data-bs-toggle="dropdown"
+                            data-bs-auto-close="false">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <x-icon name="cash-register" />
                             </span>

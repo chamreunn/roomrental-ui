@@ -4,7 +4,7 @@
     <div class="card">
         <div class="list-group list-group-flush">
             @foreach ($locations as $location)
-                <a href="{{ route('invoice.user_create_invoice',$location['id']) }}"
+                <a href="{{ route('invoice.index', $location['id']) }}"
                     class="list-group-item list-group-item-action d-flex align-items-center">
                     <span class="avatar avatar-1 bg-primary-lt me-2">
                         <x-icon name="map-pin" />
@@ -18,4 +18,3 @@
         </div>
     </div>
 @endsection
-
