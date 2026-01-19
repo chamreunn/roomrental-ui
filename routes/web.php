@@ -142,6 +142,7 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::get('/rooms/booking/{room_id}/{location_id}', [RoomController::class, 'booking'])->name('room.booking');
     Route::patch('/rooms/{room_id}/{location_id}', [RoomController::class, 'updateStatus'])->name('room.update-status');
     // For clients
+    Route::get('/clients/show-locations', [ClientController::class, 'showLocation'])->name('clients.show_location');
     // for user
     Route::get('/clients/choose-locations', [ClientController::class, 'chooseLocation'])->name('clients.choose_location');
 

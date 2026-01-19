@@ -54,4 +54,6 @@ return [
      //user invoice
     'select_room' => 'ជ្រើសរើសបន្ទប់',
     'please_select_rooms' => 'សូមជ្រើសរើសបន្ទប់យ៉ាងហោចណាស់មួយ',
+
+    'status' => 'ស្ថានភាពបន្ទប់',
 ];

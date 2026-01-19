@@ -12,6 +12,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class ClientController extends Controller
 {
+    public function showLocation()
+    {
+        // Get location detail
+        $locationResponse = $this->api()->get("v1/locations");
+        $locations = $locationResponse['locations']['data'] ?? null;
+
+        return view('app.clients.show-location', compact('locations'));
+    }
+
     public function chooseLocation()
     {
         $locations = collect(Session::get('user.user_locations', []))
@@ -164,9 +173,7 @@ class ClientController extends Controller
         try {
             // 2️⃣ Normalize dates
             $dob = Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
-
             $startDate = Carbon::parse($validated['start_rental_date'])->format('Y-m-d');
-
             $endDate = !empty($validated['end_rental_date'])
                 ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d')
                 : null;
@@ -189,49 +196,62 @@ class ClientController extends Controller
                 'description'       => $validated['description'] ?? null,
             ];
 
-            // 4️⃣ File handling
-            $files = $request->hasFile('image')
-                ? [$request->file('image')]
-                : [];
+            // 4️⃣ Handle file
+            $files = $request->hasFile('image') ? [$request->file('image')] : [];
 
-            // 5️⃣ API call (multipart + Location-Id header)
-            $response = $this->api()->post(
-                'v1/clients',
-                $payload,
-                token: null,
-                asForm: true,
-                files: $files,
-                fileField: 'client_image',
-                moreHeaders: ['Location-Id' => $locationId]
-            );
+            // 5️⃣ API call
+            try {
+                $response = $this->api()->post(
+                    'v1/clients',
+                    $payload,
+                    token: null,
+                    asForm: true,
+                    files: $files,
+                    fileField: 'client_image',
+                    moreHeaders: ['Location-Id' => $locationId]
+                );
+            } catch (\Illuminate\Http\Client\RequestException $e) {
+                // Catch 422 errors from API
+                $body = $e->response->body();
+                $json = json_decode($body, true);
 
-            // 6️⃣ Handle response
-            if (!empty($response['success']) && $response['success'] === true) {
-                return redirect()
-                    ->route('clients.index')
-                    ->with('success', __('messages.rental_success'));
+                $errorMessage = 'Something went wrong';
+                if (!empty($json['errors'])) {
+                    foreach ($json['errors'] as $fieldErrors) {
+                        if (is_array($fieldErrors) && count($fieldErrors) > 0) {
+                            $errorMessage = $fieldErrors[0];
+                            break;
+                        }
+                    }
+                } elseif (!empty($json['message'])) {
+                    $errorMessage = $json['message'];
+                }
+
+                return back()->withErrors(['api' => $errorMessage])->withInput();
             }
 
-            return back()
-                ->withErrors([
-                    'api' => $response['message'] ?? __('messages.rental_failed'),
-                ])
-                ->withInput();
+            // 6️⃣ Handle API success
+            if (!empty($response['status']) && $response['status'] === 'success') {
+                return redirect()->route('clients.clients',$locationId)
+                    ->with('success', $response['message'] ?? __('messages.rental_success'));
+            }
+
+            // 7️⃣ Handle API returned failure
+            $errorMessage = $response['message'] ?? __('messages.rental_failed');
+            return back()->withErrors(['api' => $errorMessage])->withInput();
         } catch (\Throwable $e) {
+            // 8️⃣ Catch unexpected errors
             Log::error('Client store failed', [
-                'error' => $e->getMessage(),
-                'room_id' => $roomId,
+                'error'       => $e->getMessage(),
+                'room_id'     => $roomId,
                 'location_id' => $locationId,
             ]);
 
-            return back()
-                ->withErrors(['api' => $e->getMessage()])
-                ->withInput();
+            return back()->withErrors(['api' => $e->getMessage()])->withInput();
         }
     }
 
-
-    public function update(Request $request, $clientId, $roomId,$locationId)
+    public function update(Request $request, $clientId, $roomId, $locationId)
     {
         $validated = $request->validate([
             'username'          => 'required|string|max:100',

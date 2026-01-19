@@ -69,84 +69,111 @@
         <div class="col-12">
             <div class="row g-3 row-deck row-cards align-items-stretch">
                 {{-- ===== Left: Recent Clients ===== --}}
-                <div class="col-md-4 col-lg-4 d-flex">
-                    <div class="card flex-fill d-flex flex-column">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ __('dashboard.recent_clients') }}</h3>
-                        </div>
+                <div class="row row-cards">
 
-                        {{-- Empty State --}}
-                        @if (empty($clients))
-                            <x-empty-state title="{{ __('dashboard.no_clients') }}"
-                                message="{{ __('dashboard.no_clients_message') }}" svg="svgs/no_result.svg"
-                                width="150px" />
-                        @else
-                            <div class="table-responsive flex-fill">
-                                <table class="table card-table table-vcenter">
-                                    <thead>
-                                        <tr>
-                                            <th>{{ __('dashboard.client') }}</th>
-                                            {{-- <th>{{ __('dashboard.room') }}</th> --}}
-                                            <th>{{ __('dashboard.check_in') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($clients as $client)
-                                            @if ($loop->index >= 5)
-                                                @break
-                                            @endif
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        @if (empty($client['client_image']))
-                                                            <span
-                                                                class="avatar me-3 bg-{{ $client['gender'] == 'ប្រុស' ? 'blue' : 'pink' }} text-white fw-bold">
-                                                                {{ strtoupper(substr($client['username'], 0, 1)) }}
-                                                            </span>
-                                                        @else
-                                                            <span class="avatar me-3"
-                                                                style="background-image: url('{{ $client['image'] }}'); object-fit: cover;"></span>
-                                                        @endif
-                                                        <div>
-                                                            <div class="font-weight-medium text-primary">
-                                                                <strong>{{ ucfirst($client['username']) }}</strong>
-                                                                <span class="ms-2"><span class="{{ $client['clientstatus']['badge'] }}">{{ __($client['clientstatus']['name']) }}</span></span>
-                                                            </div>
-                                                            <div class="text-muted">
-                                                                {{ $client['room']['room_name'] ?? 'N/A' }}
-                                                                {{ $client['room']['building_name'] ?? 'N/A' }}
-                                                                ({{__('room.floor_name')}} {{ $client['room']['floor_name'] ?? 'N/A' }})
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="text-nowrap">
-                                                    {{ \Carbon\Carbon::parse($client['start_rental_date'])->translatedFormat('d M Y') }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                    {{-- ================= LEFT: Recent Clients ================= --}}
+                    <div class="col-md-4 col-lg-4 d-flex">
+                        <div class="card flex-fill d-flex flex-column">
+
+                            <div class="card-header">
+                                <h3 class="card-title">{{ __('dashboard.recent_clients') }}</h3>
                             </div>
-                        @endif
 
-                        <div class="card-footer mt-auto">
-                            <a href="{{ route('clients.index') }}" class="btn btn-sm w-100">
-                                {{ __('dashboard.view_all_clients') }}
-                                <x-icon name="arrow-right" />
-                            </a>
+                            {{-- Empty State --}}
+                            @if ($recentClients->isEmpty())
+                                <x-empty-state title="{{ __('dashboard.no_clients') }}"
+                                    message="{{ __('dashboard.no_clients_message') }}" svg="svgs/no_result.svg"
+                                    width="150px" />
+                            @else
+                                <div class="table-responsive flex-fill">
+                                    <table class="table card-table table-vcenter">
+                                        <thead>
+                                            <tr>
+                                                <th>{{ __('dashboard.client') }}</th>
+                                                <th>{{ __('dashboard.check_in') }}</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @foreach ($recentClients->take(5) as $client)
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+
+                                                            {{-- Avatar --}}
+                                                            @if (empty($client['image']))
+                                                                <span
+                                                                    class="avatar me-3 bg-{{ ($client['gender'] ?? '') === 'ប្រុស' ? 'blue' : 'pink' }} text-white fw-bold">
+                                                                    {{ strtoupper(substr($client['username'], 0, 1)) }}
+                                                                </span>
+                                                            @else
+                                                                <span class="avatar me-3"
+                                                                    style="background-image: url('{{ $client['image'] }}'); background-size: cover;">
+                                                                </span>
+                                                            @endif
+
+                                                            <div>
+                                                                <div class="font-weight-medium text-primary">
+                                                                    <strong>{{ ucfirst($client['username']) }}</strong>
+
+                                                                    @if (!empty($client['clientstatus']))
+                                                                        <span class="ms-2">
+                                                                            <span
+                                                                                class="{{ $client['clientstatus']['badge'] }}">
+                                                                                {{ __($client['clientstatus']['name']) }}
+                                                                            </span>
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+
+                                                                <div class="text-muted">
+                                                                    {{ $client['room']['room_name'] ?? 'N/A' }}
+                                                                    {{ $client['room']['building_name'] ?? '' }}
+                                                                    ({{ __('room.floor_name') }}
+                                                                    {{ $client['room']['floor_name'] ?? 'N/A' }})
+                                                                </div>
+
+                                                                <div class="text-muted small">
+                                                                    {{ $client['location_name'] ?? '' }}
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                    </td>
+
+                                                    <td class="text-nowrap">
+                                                        {{ \Carbon\Carbon::parse($client['start_rental_date'])->translatedFormat('d M Y') }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
+
+                            <div class="card-footer mt-auto">
+                                <a href="{{ route('clients.show_location') }}" class="btn btn-sm w-100">
+                                    {{ __('dashboard.view_all_clients') }}
+                                    <x-icon name="arrow-right" />
+                                </a>
+                            </div>
+
                         </div>
                     </div>
-                </div>
 
-                {{-- ===== Right: Booking Overview Chart ===== --}}
-                <div class="col-lg-8 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ __('dashboard.booking_overview') }}</h3>
-                        </div>
-                        <div class="card-body d-flex align-items-center justify-content-center">
-                            <div id="booking-stats-chart" class="w-100" style="height: 100%; min-height: 350px;"></div>
+                    {{-- ================= RIGHT: Booking Overview Chart ================= --}}
+                    <div class="col-lg-8 d-flex">
+                        <div class="card flex-fill">
+
+                            <div class="card-header">
+                                <h3 class="card-title">{{ __('dashboard.booking_overview') }}</h3>
+                            </div>
+
+                            <div class="card-body d-flex align-items-center justify-content-center">
+                                <div id="booking-stats-chart" class="w-100" style="min-height: 350px;">
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -174,11 +201,13 @@
                                         <div class="card room-card text-center flex-shrink-0 shadow-sm border-0"
                                             style="width: 170px; min-width: 160px;">
                                             <div class="card-body p-2">
-                                                <h5 class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
+                                                <h5
+                                                    class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
                                                     {{ $room['room_name'] }}
                                                     @if (!empty($room['is_ending_soon']) && $room['is_ending_soon'])
                                                         <span class="status-dot status-dot-animated bg-red d-block ms-2"
-                                                            style="width: 8px; height: 8px;" title="Rental ending soon"></span>
+                                                            style="width: 8px; height: 8px;"
+                                                            title="Rental ending soon"></span>
                                                     @endif
                                                 </h5>
 

@@ -8,8 +8,8 @@
                 <div class="card-header">
                     <h3 class="card-title">{{ __('tenant.information') }}</h3>
                 </div>
-                <form action="{{ route('clients.update', [$client['id'], $client['room']['id'],$locationId]) }}" method="POST"
-                    enctype="multipart/form-data">
+                <form action="{{ route('clients.update', [$client['id'], $client['room']['id'], $locationId]) }}"
+                    method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
                     <div class="card-body d-flex justify-content-center">
@@ -68,12 +68,12 @@
                                     <span class="input-group-text"><x-icon name="users" /></span>
                                     <select name="gender" class="form-select tom-select">
                                         <option value="">{{ __('client.select_option') }}</option>
-                                        <option value="m" {{ old('gender', $client['gender_mapped']) === 'm' ? 'selected' : ''
-                                                }}>
+                                        <option value="m"
+                                            {{ old('gender', $client['gender_mapped']) === 'm' ? 'selected' : '' }}>
                                             {{ __('client.male') }}
                                         </option>
-                                        <option value="f" {{ old('gender', $client['gender_mapped']) === 'f' ? 'selected' : ''
-                                                }}>
+                                        <option value="f"
+                                            {{ old('gender', $client['gender_mapped']) === 'f' ? 'selected' : '' }}>
                                             {{ __('client.female') }}
                                         </option>
                                     </select>
@@ -134,8 +134,7 @@
                             {{-- Address --}}
                             <div class="col-lg-12">
                                 <label class="form-label required">{{ __('client.address') }}</label>
-                                <textarea name="address"
-                                    class="form-control">{{ old('address', $client['address']) }}</textarea>
+                                <textarea name="address" class="form-control">{{ old('address', $client['address']) }}</textarea>
                                 @error('address')
                                     <div class="text-danger mt-1">{{ $message }}</div>
                                 @enderror
@@ -144,8 +143,7 @@
                             {{-- Description --}}
                             <div class="col-lg-12">
                                 <label class="form-label">{{ __('client.description') }}</label>
-                                <textarea name="description"
-                                    class="form-control">{{ old('description', $client['description']) }}</textarea>
+                                <textarea name="description" class="form-control">{{ old('description', $client['description']) }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -154,7 +152,8 @@
                         <button type="submit" class="btn btn-primary">
                             <x-icon name="save" class="me-1" /> {{ __('client.save') }}
                         </button>
-                        <a href="{{ route('clients.index') }}" class="btn btn-secondary">{{ __('client.cancel') }}</a>
+                        <a href="{{ route('clients.clients', $locationId) }}"
+                            class="btn btn-secondary">{{ __('client.cancel') }}</a>
                     </div>
                 </form>
             </div>
@@ -176,7 +175,7 @@
         avatarPreview.addEventListener('click', () => avatarInput.click());
 
         // Preview selected image
-        avatarInput.addEventListener('change', function (event) {
+        avatarInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();

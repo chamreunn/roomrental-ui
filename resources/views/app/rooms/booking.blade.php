@@ -314,7 +314,7 @@
                                             {{ __('tenant.save') }}
                                             <x-icon name="plus" class="icon-end" />
                                         </button>
-                                        <a href="{{ dashboardRoute() }}" class="btn">{{ __('tenant.cancel') }}</a>
+                                        {{-- <a href="{{ dashboardRoute() }}" class="btn">{{ __('tenant.cancel') }}</a> --}}
                                     </div>
                                 </div>
                             </div>

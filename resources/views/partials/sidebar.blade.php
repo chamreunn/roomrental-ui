@@ -323,7 +323,7 @@
 
                     <!-- Clients -->
                     <li class="nav-item {{ active_class('clients.*', 'active') }}">
-                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.index') }}">
+                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.show_location') }}">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <x-icon name="users" />
                             </span>
@@ -440,7 +440,7 @@
 
                     <!-- Clients -->
                     <li class="nav-item {{ active_class('clients.*', 'active') }}">
-                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.index') }}">
+                        <a class="nav-link {{ active_class('clients.*') }}" href="{{ route('clients.show_location') }}">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <x-icon name="users" />
                             </span>

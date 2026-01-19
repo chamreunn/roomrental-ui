@@ -58,17 +58,37 @@
                                 <th>{{ __('cash_transaction.note') ?? 'Note' }}</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             @foreach ($incomes as $index => $item)
                                 <tr>
-                                    <td class="text-center">{{ $incomes->firstItem() + $index }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($item['transaction_date'])->translatedFormat('d-M-Y') }}</td>
+                                    <td class="text-center">
+                                        {{ $incomes->firstItem() + $index }}
+                                    </td>
+                                    <td>
+                                        {{ \Carbon\Carbon::parse($item['transaction_date'])->translatedFormat('d-M-Y') }}
+                                    </td>
                                     <td>{{ $item['category'] }}</td>
-                                    <td class="text-end text-primary">{{ number_format($item['amount'], 2) }}</td>
+                                    <td class="text-end text-primary">
+                                        {{ number_format($item['amount'], 2) }}(៛)
+                                    </td>
                                     <td>{{ $item['description'] ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
+
+                        {{-- ✅ TOTAL ROW --}}
+                        <tfoot>
+                            <tr class="fw-bold bg-light">
+                                <td colspan="3" class="text-end text-danger">
+                                    {{ __('cash_transaction.total') ?? 'Total' }}
+                                </td>
+                                <td class="text-end text-danger">
+                                    {{ number_format($totalIncome, 2) }}(៛)
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
@@ -80,8 +100,8 @@
                 @endif
             @else
                 <div class="alert alert-info text-center mb-0 justify-content-center">
-                    <x-empty-state title="{{ __('cash_transaction.no_data') }}" message="{{ __('cash_transaction.no_data') }}"
-                        svg="svgs/no_result.svg" width="450px" />
+                    <x-empty-state title="{{ __('cash_transaction.no_data') }}"
+                        message="{{ __('cash_transaction.no_data') }}" svg="svgs/no_result.svg" width="450px" />
                 </div>
             @endif
         </div>

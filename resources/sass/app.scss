@@ -50,7 +50,6 @@
 // Tabler SCSS
 @import "@tabler/core/scss/tabler";
 @import "@tabler/core/scss/tabler-vendors";
-@import "@tabler/core/scss/tabler-themes";
 @import "@tabler/core/scss/tabler-marketing";
 @import "@tabler/core/scss/tabler-flags";
 @import "@tabler/core/scss/tabler-payments";
@@ -69,20 +68,11 @@
   --tblr-font-sans-serif: "khmer", sans-serif;
   --tblr-body-font-family: var(--tblr-font-sans-serif);
   --tblr-btn-font-family: var(--tblr-font-sans-serif);
-
-  /* Font size and line height */
-  --tblr-font-size: 1rem;
-  --tblr-line-height: 1.5;
-
-  /* Sidebar width */
-  --tblr-sidebar-width: 250px;
 }
 
 /* Apply globally */
 body, body *, *::before, *::after {
   font-family: var(--tblr-body-font-family) !important;
-  font-size: var(--tblr-font-size) !important;
-  line-height: var(--tblr-line-height) !important;
 }
 
 /* Dynamic font switching */

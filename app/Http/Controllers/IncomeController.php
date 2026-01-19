@@ -30,55 +30,69 @@ class IncomeController extends Controller
         $type = $this->CashTransactionType()::INCOME;
         $page = request('page', 1);
 
-        // Base params for API
         $filters = [
             'type' => $type,
             'page' => $page,
         ];
 
-        // ✅ Fetch all data (no date filter in API)
+        // ✅ Fetch from API
         $response = $this->api()
-            ->withHeaders(['location_id' => $id])
+            ->withHeaders(['Location-Id' => $id])
             ->get('v1/cash-transactions', $filters);
 
-        $data = $response['data']['data'] ?? [];
-        $total = $response['data']['total'] ?? 0;
-        $perPage = $response['data']['per_page'] ?? 10;
+        // ===============================
+        // API DATA
+        // ===============================
+        $data        = $response['data']['data'] ?? [];
+        $perPage     = $response['data']['per_page'] ?? 10;
         $currentPage = $response['data']['current_page'] ?? $page;
 
-        // ✅ Convert to collection for local filtering
+        // ✅ API TOTALS (before filter)
+        $apiTotals = collect($response['totals'] ?? []);
+
+        // ===============================
+        // LOCAL FILTERING
+        // ===============================
         $collection = collect($data);
 
-        // 🧠 Apply filters locally (in Laravel)
         if (request()->filled('from_date')) {
-            $collection = $collection->filter(function ($item) {
-                return $item['transaction_date'] >= request('from_date');
-            });
+            $collection = $collection->filter(
+                fn($item) =>
+                $item['transaction_date'] >= request('from_date')
+            );
         }
 
         if (request()->filled('to_date')) {
-            $collection = $collection->filter(function ($item) {
-                return $item['transaction_date'] <= request('to_date');
-            });
+            $collection = $collection->filter(
+                fn($item) =>
+                $item['transaction_date'] <= request('to_date')
+            );
         }
 
         if (request()->filled('category')) {
-            $collection = $collection->filter(function ($item) {
-                return str_contains(
+            $collection = $collection->filter(
+                fn($item) =>
+                str_contains(
                     mb_strtolower($item['category']),
                     mb_strtolower(request('category'))
-                );
-            });
+                )
+            );
         }
 
-        // ✅ Reset keys and count
-        $filteredData = $collection->values();
-        $total = $filteredData->count();
+        // ===============================
+        // CALCULATE TOTAL AFTER FILTER
+        // ===============================
+        $totalIncome = $collection->sum(fn($item) => (float) $item['amount']);
 
-        // ✅ Manually paginate filtered results
+        // ===============================
+        // PAGINATION
+        // ===============================
+        $filteredData = $collection->values();
+        $totalRows = $filteredData->count();
+
         $incomes = new LengthAwarePaginator(
             $filteredData->forPage($currentPage, $perPage),
-            $total,
+            $totalRows,
             $perPage,
             $currentPage,
             [
@@ -87,6 +101,12 @@ class IncomeController extends Controller
             ]
         );
 
-        return view('app.income.list', compact('incomes', 'buttons', 'id'));
+        return view('app.income.list', compact(
+            'incomes',
+            'buttons',
+            'id',
+            'totalIncome',
+            'apiTotals'
+        ));
     }
 }

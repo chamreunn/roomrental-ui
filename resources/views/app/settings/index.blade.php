@@ -112,22 +112,6 @@
                                 @endforeach
                             </div>
 
-                            <!-- Font Size -->
-                            <div class="col-lg-4 col-sm-12 d-grid">
-                                <label class="form-label">{{ __('settings.font_size') }}</label>
-                                <input type="range" min="12" max="32" step="1" name="theme-font-size" class="form-range">
-                                <span class="range-value" id="font-size-value"></span>
-                                <span class="form-hint">{{ __('settings.font_size_hint') }}</span>
-                            </div>
-
-                            <!-- Line Height -->
-                            <div class="col-lg-4 col-sm-12 d-grid">
-                                <label class="form-label">{{ __('settings.line_height') }}</label>
-                                <input type="range" min="1" max="2" step="0.05" name="theme-line-height" class="form-range">
-                                <span class="range-value" id="line-height-value"></span>
-                                <span class="form-hint">{{ __('settings.line_height_hint') }}</span>
-                            </div>
-
                             <!-- Language -->
                             <div class="col-lg-4 col-sm-12">
                                 <label class="form-label">{{ __('settings.language') }}</label>

@@ -4,59 +4,86 @@ namespace App\Http\Controllers;
 
 use App\Enum\Active;
 use App\Enum\RoomStatus;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
     public function index(Request $request)
     {
-        // Fetch locations, room types, and statuses
+        // ===============================
+        // 1. Fetch base data
+        // ===============================
         $locations = $this->api()->get('v1/locations')['locations']['data'] ?? [];
 
-        $roomTypes = collect($this->api->get('v1/room-types')['room_types']['data'] ?? []);
+        $roomTypes = collect(
+            $this->api()->get('v1/room-types')['room_types']['data'] ?? []
+        );
+
         $roomStatuses = RoomStatus::all();
 
-        // Initialize counts
-        $statusCounts = collect($roomStatuses)->mapWithKeys(fn($_, $key) => [$key => 0])->toArray();
-        $statusCounts['all'] = 0;
-
+        // ===============================
+        // 2. Initialize containers
+        // ===============================
         $groupedRooms = [];
         $locationCounts = [];
+        $clientsByLocation = [];
+        $recentClients = collect();
 
-        // Loop through locations to get rooms
+        $statusCounts = collect($roomStatuses)
+            ->mapWithKeys(fn($_, $key) => [$key => 0])
+            ->toArray();
+
+        $statusCounts['all'] = 0;
+
+        // ===============================
+        // 3. Loop locations → rooms
+        // ===============================
         foreach ($locations as $location) {
-            $locationId = $location['id'];
-            $locationName = $location['location_name'] ?? 'មិនមានទីតាំង';
 
-            // Build filter query
+            $locationId = $location['id'];
+            $locationName = $location['location_name'] ?? __('Unknown Location');
+
+            // Filters
             $query = $request->only(['room_type_id', 'status', 'search']);
             $query['location_id'] = $locationId;
 
-            // Fetch rooms for this location
-            $rooms = $this->api->get('v1/rooms', $query,null,['Location-Id' => $locationId])['rooms']['data'] ?? [];
+            // Fetch rooms per location
+            $rooms = $this->api()->get(
+                'v1/rooms',
+                $query,
+                token: null,
+                moreHeaders: ['Location-Id' => $locationId]
+            )['rooms']['data'] ?? [];
 
-                // dd($rooms);
-
-            // Count per location
             $locationCounts[$locationName] = count($rooms);
             $statusCounts['all'] += count($rooms);
 
-            foreach ($rooms as &$room) {
+            foreach ($rooms as $room) {
+
+                // ===============================
+                // Room status info
+                // ===============================
                 $statusKey = $room['status'] ?? null;
                 $statusInfo = RoomStatus::getStatus($statusKey);
-                if (!$statusInfo) continue;
+
+                if (!$statusInfo) {
+                    continue;
+                }
 
                 $statusCounts[$statusKey]++;
 
-                $roomTypeName = $roomTypes->firstWhere('id', $room['room_type_id'] ?? null)['type_name']
-                    ?? 'មិនមានប្រភេទបន្ទប់';
+                $roomTypeName = $roomTypes
+                    ->firstWhere('id', $room['room_type_id'] ?? null)['type_name']
+                    ?? __('Unknown Type');
 
-                // ==========================
-                // Rental End Detection
-                // ==========================
+                // ===============================
+                // Rental ending detection
+                // ===============================
                 $room['is_ending_soon'] = false;
 
                 $roomClients = $room['clients'] ?? [];
+
                 if (!empty($roomClients)) {
                     $latestClient = collect($roomClients)
                         ->sortByDesc('start_rental_date')
@@ -64,61 +91,85 @@ class AdminController extends Controller
 
                     if (!empty($latestClient['end_rental_date'])) {
                         try {
-                            $today = \Carbon\Carbon::today();
-                            $endDate = \Carbon\Carbon::parse($latestClient['end_rental_date']);
-                            $daysLeft = $today->diffInDays($endDate, false);
+                            $daysLeft = now()->diffInDays(
+                                Carbon::parse($latestClient['end_rental_date']),
+                                false
+                            );
 
                             if ($daysLeft >= 0 && $daysLeft <= 7) {
                                 $room['is_ending_soon'] = true;
                             }
-                        } catch (\Exception $e) {
-                            $room['is_ending_soon'] = false; // fallback if date cannot be parsed
+                        } catch (\Throwable $e) {
+                            $room['is_ending_soon'] = false;
                         }
                     }
                 }
 
-                // ==========================
-                // Normal Room Info
-                // ==========================
-                $room['status_name'] = $statusInfo['name'];
+                // ===============================
+                // Decorate room
+                // ===============================
+                $room['status_name']  = $statusInfo['name'];
                 $room['status_class'] = $statusInfo['badge'];
-                $room['status_text'] = $statusInfo['text'];
+                $room['status_text']  = $statusInfo['text'];
                 $room['room_type_name'] = $roomTypeName;
 
-                // Group by location > room type > status
+                // ===============================
+                // Group rooms
+                // ===============================
                 $groupedRooms[$locationName][$roomTypeName][$statusKey][] = $room;
+
+                // ===============================
+                // Extract clients per location
+                // ===============================
+                foreach ($roomClients as $client) {
+
+                    $client['room'] = [
+                        'room_name'     => $room['room_name'] ?? '',
+                        'building_name' => $room['building_name'] ?? '',
+                        'floor_name'    => $room['floor_name'] ?? '',
+                    ];
+
+                    $client['location_name'] = $locationName;
+                    $client['clientstatus'] = Active::getStatus($client['status']);
+                    $client['image'] = api_image($client['client_image']);
+
+                    $clientsByLocation[$locationName][] = $client;
+                    $recentClients->push($client);
+                }
             }
         }
 
-        $hasRooms = !empty($groupedRooms);
+        // ===============================
+        // 4. Recent clients + stats
+        // ===============================
+        $recentClients = $recentClients
+            ->sortByDesc('start_rental_date')
+            ->take(10)
+            ->values();
 
-        $responseClient = $this->api()->get('v1/clients')['clients'] ?? [];
-        $recentClients = $responseClient['data'] ?? [];
-
-        $clients = collect($recentClients)->map(function ($client) {
-            $client['clientstatus'] = Active::getStatus($client['status']);
-            $client['image'] = api_image($client['client_image']);
-            return $client;
-        });
-
-        // ✅ Count bookings per day (e.g., by start_rental_date)
-        $bookingsByDate = collect($recentClients)
-            ->groupBy(fn($client) => \Carbon\Carbon::parse($client['start_rental_date'])->format('Y-m-d'))
+        $bookingsByDate = $recentClients
+            ->groupBy(
+                fn($c) =>
+                Carbon::parse($c['start_rental_date'])->format('Y-m-d')
+            )
             ->map->count();
 
-            // dd($groupedRooms);
+        $hasRooms = !empty($groupedRooms);
 
-        // Pass to view
-        return view('admin.dashboard', compact(
-            'groupedRooms',
-            'hasRooms',
-            'statusCounts',
-            'roomTypes',
-            'locations',
-            'locationCounts',
-            'roomStatuses',
-            'clients',
-            'bookingsByDate',
-        ));
+        // ===============================
+        // 5. Return view
+        // ===============================
+        return view('admin.dashboard', [
+            'groupedRooms'      => $groupedRooms,
+            'hasRooms'          => $hasRooms,
+            'statusCounts'      => $statusCounts,
+            'roomTypes'         => $roomTypes,
+            'locations'         => $locations,
+            'locationCounts'    => $locationCounts,
+            'roomStatuses'      => $roomStatuses,
+            'clientsByLocation' => $clientsByLocation,
+            'recentClients'     => $recentClients,
+            'bookingsByDate'    => $bookingsByDate,
+        ]);
     }
 }

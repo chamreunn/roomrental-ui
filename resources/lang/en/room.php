@@ -54,4 +54,6 @@ return [
      //user invoice
     'select_room' => 'Select Rooms',
     'please_select_rooms' => 'Please select at least one room to generate invoices.',
+
+    'status' => 'Room Status',
 ];

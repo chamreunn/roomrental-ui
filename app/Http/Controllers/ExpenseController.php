@@ -20,71 +20,98 @@ class ExpenseController extends Controller
     {
         $buttons = [
             [
-                'text' => __('titles.back'),
-                'icon' => 'chevrons-left',
+                'text'  => __('titles.back'),
+                'icon'  => 'chevrons-left',
                 'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
-                'url' => route('expense.index', $id),
+                'url'   => route('expense.index', $id),
             ],
         ];
 
         $type = $this->CashTransactionType()::EXPENSE;
         $page = request('page', 1);
 
-        // Base API request
-        $response = $this->api()
-            ->withHeaders(['location_id' => $id])
-            ->get('v1/cash-transactions', [
-                'type' => $type,
-                'page' => $page,
-            ]);
+        $filters = [
+            'type' => $type,
+            'page' => $page,
+        ];
 
-        // Handle missing or null response
-        $data = $response['data']['data'] ?? [];
-        $total = $response['data']['total'] ?? 0;
-        $perPage = $response['data']['per_page'] ?? 10;
+        // ===============================
+        // FETCH FROM API
+        // ===============================
+        $response = $this->api()
+            ->withHeaders(['Location-Id' => $id]) // ✅ keep consistent
+            ->get('v1/cash-transactions', $filters);
+
+        // ===============================
+        // API DATA
+        // ===============================
+        $data        = $response['data']['data'] ?? [];
+        $perPage     = $response['data']['per_page'] ?? 10;
         $currentPage = $response['data']['current_page'] ?? $page;
 
-        // Convert to collection for local filtering
+        // Optional: API totals (if needed later)
+        $apiTotals = collect($response['totals'] ?? []);
+
+        // ===============================
+        // LOCAL FILTERING
+        // ===============================
         $collection = collect($data);
 
-        // ✅ Local filters (since API doesn’t support these)
+        // From Date
         if (request()->filled('from_date')) {
-            $collection = $collection->filter(function ($item) {
-                return $item['transaction_date'] >= request('from_date');
-            });
+            $collection = $collection->filter(
+                fn($item) =>
+                $item['transaction_date'] >= request('from_date')
+            );
         }
 
+        // To Date
         if (request()->filled('to_date')) {
-            $collection = $collection->filter(function ($item) {
-                return $item['transaction_date'] <= request('to_date');
-            });
+            $collection = $collection->filter(
+                fn($item) =>
+                $item['transaction_date'] <= request('to_date')
+            );
         }
 
+        // Category
         if (request()->filled('category')) {
-            $collection = $collection->filter(function ($item) {
-                return str_contains(
+            $collection = $collection->filter(
+                fn($item) =>
+                str_contains(
                     mb_strtolower($item['category']),
                     mb_strtolower(request('category'))
-                );
-            });
+                )
+            );
         }
 
-        // Rebuild filtered collection
-        $filteredData = $collection->values();
-        $total = $filteredData->count();
+        // ===============================
+        // CALCULATE TOTAL EXPENSE
+        // ===============================
+        $totalExpense = $collection->sum(fn($item) => (float) $item['amount']);
 
-        // Manual pagination
+        // ===============================
+        // PAGINATION
+        // ===============================
+        $filteredData = $collection->values();
+        $totalRows   = $filteredData->count();
+
         $expenses = new LengthAwarePaginator(
             $filteredData->forPage($currentPage, $perPage),
-            $total,
+            $totalRows,
             $perPage,
             $currentPage,
             [
-                'path' => request()->url(),
+                'path'  => request()->url(),
                 'query' => request()->query(),
             ]
         );
 
-        return view('app.expense.list', compact('expenses', 'buttons', 'id'));
+        return view('app.expense.list', compact(
+            'expenses',
+            'buttons',
+            'id',
+            'totalExpense',
+            'apiTotals'
+        ));
     }
 }

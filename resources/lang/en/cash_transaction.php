@@ -52,4 +52,6 @@ return [
     'select' => 'Please Select',
     'location' => 'Location',
     'select_location' => 'Select Location',
+
+    'total' => 'Totals'
 ];

@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+    /* =====================================================
+     * DEFAULT THEME CONFIG
+     * ===================================================== */
     const themeConfig = {
         theme: "light",
         "theme-base": "gray",
@@ -7,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "theme-font": "khmer",
         "theme-font-size": "14px",
         "theme-line-height": "1.2",
-        "theme-sidebar-width": "15%", // Fixed, not changeable
+        "theme-sidebar-width": "15%",
     };
 
     const fontMap = {
@@ -21,14 +24,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("settings");
     const resetButton = document.getElementById("reset-changes");
-
-    // Elements for showing slider values
     const fontSizeValueEl = document.getElementById("font-size-value");
     const lineHeightValueEl = document.getElementById("line-height-value");
 
-    // Apply font family
+    /* =====================================================
+     * READ THEME FROM URL (?theme=dark|light)
+     * ===================================================== */
+    const params = new URLSearchParams(window.location.search);
+    const urlTheme = params.get("theme");
+
+    if (urlTheme === "dark" || urlTheme === "light") {
+        localStorage.setItem("tabler-theme", urlTheme);
+        document.documentElement.setAttribute("data-bs-theme", urlTheme);
+
+        // Clean URL (recommended)
+        window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+        );
+    }
+
+    /* =====================================================
+     * FONT HANDLER
+     * ===================================================== */
     function updateFontVariables(font) {
         const family = (fontMap[font] || "khmer") + ", sans-serif";
+
         [
             "--tblr-font-sans-serif",
             "--tblr-body-font-family",
@@ -39,31 +61,38 @@ document.addEventListener("DOMContentLoaded", () => {
             "--tblr-dropdown-font-family",
             "--tblr-nav-font-family",
             "--tblr-breadcrumb-font-family",
-        ].forEach((v) => document.documentElement.style.setProperty(v, family));
+        ].forEach((v) => {
+            document.documentElement.style.setProperty(v, family);
+        });
     }
 
-    // Apply all settings
+    /* =====================================================
+     * APPLY SETTINGS
+     * ===================================================== */
     function applySettings() {
         for (const key in themeConfig) {
-            let value =
+            const value =
                 localStorage.getItem("tabler-" + key) || themeConfig[key];
 
             switch (key) {
                 case "theme-font":
                     updateFontVariables(value);
                     break;
+
                 case "theme-font-size":
                     document.documentElement.style.setProperty(
                         "--tblr-font-size",
                         value
                     );
                     break;
+
                 case "theme-line-height":
                     document.documentElement.style.setProperty(
                         "--tblr-line-height",
                         value
                     );
                     break;
+
                 case "theme-sidebar-width":
                     document.documentElement.style.setProperty(
                         "--tblr-sidebar-width",
@@ -74,16 +103,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.documentElement.setAttribute("data-bs-" + key, value);
         }
+
         updateValueDisplays();
     }
 
-    // Update slider value display
+    /* =====================================================
+     * UPDATE SLIDER LABELS
+     * ===================================================== */
     function updateValueDisplays() {
         const fontSize = parseInt(
             getComputedStyle(document.documentElement).getPropertyValue(
                 "--tblr-font-size"
             )
         );
+
         const lineHeight = parseFloat(
             getComputedStyle(document.documentElement).getPropertyValue(
                 "--tblr-line-height"
@@ -94,16 +127,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if (lineHeightValueEl) lineHeightValueEl.textContent = lineHeight;
     }
 
-    // Initialize slider positions from saved settings
+    /* =====================================================
+     * INIT FORM VALUES
+     * ===================================================== */
     function checkItems() {
+        if (!form) return;
+
         for (const key in themeConfig) {
             const value =
                 localStorage.getItem("tabler-" + key) || themeConfig[key];
+
             form.querySelectorAll(`[name="${key}"]`).forEach((el) => {
                 if (el.type === "radio") el.checked = el.value === value;
                 if (el.type === "range") {
                     if (key === "theme-font-size") el.value = parseInt(value);
-                    else if (key === "theme-line-height")
+                    if (key === "theme-line-height")
                         el.value = parseFloat(value);
                 }
             });
@@ -113,72 +151,86 @@ document.addEventListener("DOMContentLoaded", () => {
     applySettings();
     checkItems();
 
-    // Handle input changes
-    form.addEventListener("input", (e) => {
-        const name = e.target.name;
-        if (!themeConfig.hasOwnProperty(name)) return;
+    /* =====================================================
+     * HANDLE FORM INPUT
+     * ===================================================== */
+    if (form) {
+        form.addEventListener("input", (e) => {
+            const name = e.target.name;
+            if (!themeConfig.hasOwnProperty(name)) return;
 
-        let value = e.target.value;
+            let value = e.target.value;
 
-        switch (name) {
-            case "theme-font":
-                updateFontVariables(value);
-                break;
-            case "theme-font-size":
-                value += "px";
-                document.documentElement.style.setProperty(
-                    "--tblr-font-size",
-                    value
-                );
-                if (fontSizeValueEl) fontSizeValueEl.textContent = value;
-                break;
-            case "theme-line-height":
-                document.documentElement.style.setProperty(
-                    "--tblr-line-height",
-                    value
-                );
-                if (lineHeightValueEl) lineHeightValueEl.textContent = value;
-                break;
-        }
-
-        document.documentElement.setAttribute("data-bs-" + name, value);
-        localStorage.setItem("tabler-" + name, value);
-    });
-
-    // Reset button
-    resetButton.addEventListener("click", () => {
-        for (const key in themeConfig) {
-            document.documentElement.removeAttribute("data-bs-" + key);
-            localStorage.removeItem("tabler-" + key);
-
-            const defaultValue = themeConfig[key];
-
-            switch (key) {
+            switch (name) {
                 case "theme-font":
-                    updateFontVariables(defaultValue);
+                    updateFontVariables(value);
                     break;
+
                 case "theme-font-size":
+                    value += "px";
                     document.documentElement.style.setProperty(
                         "--tblr-font-size",
-                        defaultValue
+                        value
                     );
+                    if (fontSizeValueEl) fontSizeValueEl.textContent = value;
                     break;
+
                 case "theme-line-height":
                     document.documentElement.style.setProperty(
                         "--tblr-line-height",
-                        defaultValue
+                        value
                     );
-                    break;
-                case "theme-sidebar-width":
-                    document.documentElement.style.setProperty(
-                        "--tblr-sidebar-width",
-                        defaultValue
-                    );
+                    if (lineHeightValueEl)
+                        lineHeightValueEl.textContent = value;
                     break;
             }
-        }
 
-        checkItems();
-        updateValueDisplays();
-    });
+            document.documentElement.setAttribute("data-bs-" + name, value);
+            localStorage.setItem("tabler-" + name, value);
+        });
+    }
+
+    /* =====================================================
+     * RESET BUTTON
+     * ===================================================== */
+    if (resetButton) {
+        resetButton.addEventListener("click", () => {
+            for (const key in themeConfig) {
+                localStorage.removeItem("tabler-" + key);
+                document.documentElement.removeAttribute("data-bs-" + key);
+
+                const def = themeConfig[key];
+
+                switch (key) {
+                    case "theme-font":
+                        updateFontVariables(def);
+                        break;
+
+                    case "theme-font-size":
+                        document.documentElement.style.setProperty(
+                            "--tblr-font-size",
+                            def
+                        );
+                        break;
+
+                    case "theme-line-height":
+                        document.documentElement.style.setProperty(
+                            "--tblr-line-height",
+                            def
+                        );
+                        break;
+
+                    case "theme-sidebar-width":
+                        document.documentElement.style.setProperty(
+                            "--tblr-sidebar-width",
+                            def
+                        );
+                        break;
+                }
+            }
+
+            applySettings();
+            checkItems();
+        });
+    }
 });

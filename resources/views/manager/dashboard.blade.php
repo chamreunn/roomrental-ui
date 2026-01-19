@@ -1,158 +1,70 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="row g-3">
-        {{-- ===== Summary Cards ===== --}}
-        <div class="col-12">
-            <div class="row row-cards">
-                {{-- All Rooms --}}
-                <div class="col-sm-6 col-lg-4">
-                    <div class="card card-sm">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="bg-primary text-white avatar">
-                                        <x-icon name="home" />
-                                    </span>
-                                </div>
-                                <div class="col">
-                                    <div class="font-weight-medium">{{ __('dashboard.all_rooms') }}</div>
-                                    <div class="text-secondary">{{ $statusCounts['all'] }} {{ __('dashboard.room') }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <form method="GET" class="card mb-4 p-3 shadow-sm">
+        <div class="row g-3 align-items-end">
 
-                {{-- Loop through each room status --}}
-                @foreach ($roomStatuses as $statusKey => $status)
-                    <div class="col-sm-6 col-lg-2">
-                        <div class="card card-sm">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-auto">
-                                        <span class="{{ $status['class'] }} avatar">
-                                            @switch($statusKey)
-                                                @case(0)
-                                                    <x-icon name="door" />
-                                                @break
-
-                                                @case(1)
-                                                    <x-icon name="door-off" />
-                                                @break
-
-                                                @case(2)
-                                                    <x-icon name="calendar-week" />
-                                                @break
-
-                                                @case(3)
-                                                    <x-icon name="tool" />
-                                                @break
-                                            @endswitch
-                                        </span>
-                                    </div>
-                                    <div class="col">
-                                        <div class="font-weight-medium">{{ __($status['name']) }}</div>
-                                        <div class="text-secondary">
-                                            {{ $statusCounts[$statusKey] ?? 0 }}
-                                            {{ strtolower(__($status['name'])) }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+            {{-- Location --}}
+            <div class="col-md-3">
+                <label class="form-label">{{ __('location.name') }}</label>
+                <select name="location_id" class="form-select tom-select">
+                    <option value="">{{ __('common.choose') }}</option>
+                    @foreach ($locations as $loc)
+                        <option value="{{ $loc['location_id'] }}"
+                            {{ request('location_id') == $loc['location_id'] ? 'selected' : '' }}>
+                            {{ $loc['location_name'] }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-        </div>
 
-        <div class="col-12">
-            <div class="row g-3 row-deck row-cards align-items-stretch">
-                {{-- ===== Left: Recent Clients ===== --}}
-                <div class="col-md-4 col-lg-4 d-flex">
-                    <div class="card flex-fill d-flex flex-column">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ __('dashboard.recent_clients') }}</h3>
-                        </div>
+            {{-- Room Type --}}
+            <div class="col-md-3">
+                <label class="form-label">{{ __('roomtype.name') }}</label>
+                <select name="room_type_id" class="form-select tom-select">
+                    <option value="">{{ __('common.choose') }}</option>
+                    @foreach ($roomTypes as $type)
+                        <option value="{{ $type['id'] }}" {{ request('room_type_id') == $type['id'] ? 'selected' : '' }}>
+                            {{ $type['type_name'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                        {{-- Empty State --}}
-                        @if (empty($clients))
-                            <x-empty-state title="{{ __('dashboard.no_clients') }}"
-                                message="{{ __('dashboard.no_clients_message') }}" svg="svgs/no_result.svg"
-                                width="150px" />
-                        @else
-                            <div class="table-responsive flex-fill">
-                                <table class="table card-table table-vcenter">
-                                    <thead>
-                                        <tr>
-                                            <th>{{ __('dashboard.client') }}</th>
-                                            {{-- <th>{{ __('dashboard.room') }}</th> --}}
-                                            <th>{{ __('dashboard.check_in') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($clients as $client)
-                                            @if ($loop->index >= 5)
-                                                @break
-                                            @endif
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        @if (empty($client['client_image']))
-                                                            <span
-                                                                class="avatar me-3 bg-{{ $client['gender'] == 'ប្រុស' ? 'blue' : 'pink' }} text-white fw-bold">
-                                                                {{ strtoupper(substr($client['username'], 0, 1)) }}
-                                                            </span>
-                                                        @else
-                                                            <span class="avatar me-3"
-                                                                style="background-image: url('{{ $client['image'] }}'); object-fit: cover;"></span>
-                                                        @endif
-                                                        <div>
-                                                            <div class="font-weight-medium text-primary">
-                                                                <strong>{{ ucfirst($client['username']) }}</strong>
-                                                                <span class="ms-2"><span class="{{ $client['clientstatus']['badge'] }}">{{ __($client['clientstatus']['name']) }}</span></span>
-                                                            </div>
-                                                            <div class="text-muted">
-                                                                {{ $client['room']['room_name'] ?? 'N/A' }}
-                                                                {{ $client['room']['building_name'] ?? 'N/A' }}
-                                                                ({{__('room.floor_name')}} {{ $client['room']['floor_name'] ?? 'N/A' }})
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="text-nowrap">
-                                                    {{ \Carbon\Carbon::parse($client['start_rental_date'])->translatedFormat('d M Y') }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
+            {{-- Status --}}
+            <div class="col-md-2">
+                <label class="form-label">{{ __('room.status') }}</label>
+                <select name="status" class="form-select tom-select">
+                    <option value="">{{ __('common.choose') }}</option>
+                    @foreach ($roomStatuses as $key => $status)
+                        <option value="{{ $key }}" {{ request('status') === (string) $key ? 'selected' : '' }}
+                            data-custom-properties="<span class='{{ $status['class'] }} badge mx-0'></span>">
+                            {{ __($status['name']) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                        <div class="card-footer mt-auto">
-                            <a href="{{ route('clients.index') }}" class="btn btn-sm w-100">
-                                {{ __('dashboard.view_all_clients') }}
-                                <x-icon name="arrow-right" />
-                            </a>
-                        </div>
+            {{-- Buttons --}}
+            <div class="col-md-4">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <button type="submit" class="btn btn-primary w-100">
+                            {{ __('common.search') }}
+                        </button>
                     </div>
-                </div>
-
-                {{-- ===== Right: Booking Overview Chart ===== --}}
-                <div class="col-lg-8 d-flex">
-                    <div class="card flex-fill">
-                        <div class="card-header">
-                            <h3 class="card-title">{{ __('dashboard.booking_overview') }}</h3>
-                        </div>
-                        <div class="card-body d-flex align-items-center justify-content-center">
-                            <div id="booking-stats-chart" class="w-100" style="height: 100%; min-height: 350px;"></div>
-                        </div>
+                    <div class="col-6">
+                        {{-- CLEAR --}}
+                        <a href="{{ route('dashboard.user') }}" class="btn btn-outline-secondary w-100">
+                            {{ __('common.clear') }}
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
+    </form>
 
+    <div class="row row-cards g-3">
         <div class="col-12">
             @foreach ($groupedRooms as $locationName => $roomTypes)
                 <div class="mb-4">
@@ -174,11 +86,13 @@
                                         <div class="card room-card text-center flex-shrink-0 shadow-sm border-0"
                                             style="width: 170px; min-width: 160px;">
                                             <div class="card-body p-2">
-                                                <h5 class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
+                                                <h5
+                                                    class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
                                                     {{ $room['room_name'] }}
                                                     @if (!empty($room['is_ending_soon']) && $room['is_ending_soon'])
                                                         <span class="status-dot status-dot-animated bg-red d-block ms-2"
-                                                            style="width: 8px; height: 8px;" title="Rental ending soon"></span>
+                                                            style="width: 8px; height: 8px;"
+                                                            title="Rental ending soon"></span>
                                                     @endif
                                                 </h5>
 
@@ -229,115 +143,146 @@
     </div>
 @endsection
 
+<style>
+    .room-scroll.dragging {
+        cursor: grabbing;
+        cursor: -webkit-grabbing;
+    }
+
+    .room-scroll {
+        cursor: grab;
+        cursor: -webkit-grab;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+    }
+
+    .scroll-btn {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .room-scroll-wrapper:hover .scroll-btn {
+        opacity: 1;
+    }
+</style>
+
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const el = document.querySelector("#booking-stats-chart");
-            if (!el) return;
-
-            const bookings = @json($bookingsByDate);
-            const categories = Object.keys(bookings);
-            const data = Object.values(bookings);
-
-            const chart = new ApexCharts(el, {
-                chart: {
-                    type: "area",
-                    height: 260,
-                    toolbar: {
-                        show: false
-                    },
-                },
-                series: [{
-                    name: "{{ __('dashboard.bookings_count') }}",
-                    data: data,
-                }],
-                xaxis: {
-                    categories: categories,
-                    title: {
-                        text: "{{ __('dashboard.booking_date') }}"
-                    }
-                },
-                yaxis: {
-                    title: {
-                        text: "{{ __('dashboard.clients_count') }}"
-                    }
-                },
-                colors: ["#206bc4"],
-                fill: {
-                    type: "gradient",
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.4,
-                        opacityTo: 0.1
-                    }
-                },
-                stroke: {
-                    curve: "smooth",
-                    width: 3
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                tooltip: {
-                    x: {
-                        format: "yyyy-MM-dd"
-                    },
-                    y: {
-                        formatter: val => `${val} {{ __('dashboard.bookings_count') }}`
-                    }
-                },
-            });
-
-            chart.render();
-        });
-    </script>
-
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll(".room-scroll-wrapper").forEach(wrapper => {
                 const scrollContainer = wrapper.querySelector(".room-scroll");
                 const btnLeft = wrapper.querySelector(".scroll-left");
                 const btnRight = wrapper.querySelector(".scroll-right");
+                const SCROLL_AMOUNT = 300;
+
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+                let velocity = 0;
+                let momentumID;
 
                 function updateButtons() {
-                    const scrollWidth = Math.ceil(scrollContainer.scrollWidth);
-                    const clientWidth = Math.ceil(scrollContainer.clientWidth);
-                    const maxScrollLeft = scrollWidth - clientWidth;
-                    const totalCards = scrollContainer.querySelectorAll(".room-card").length;
+                    const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
-                    // ✅ Force showing arrows if there are many cards (even when screen is large)
-                    const forceShow = totalCards > 4;
-
-                    if (scrollWidth <= clientWidth + 2 && !forceShow) {
-                        btnLeft.style.opacity = "0";
-                        btnRight.style.opacity = "0";
+                    if (maxScrollLeft <= 0) {
+                        btnLeft.style.opacity = 0;
+                        btnRight.style.opacity = 0;
                         btnLeft.style.pointerEvents = "none";
                         btnRight.style.pointerEvents = "none";
                         return;
                     }
 
-                    // ✅ Smoothly show/hide based on scroll position
-                    btnLeft.style.opacity = scrollContainer.scrollLeft > 10 ? "1" : "0";
-                    btnLeft.style.pointerEvents = scrollContainer.scrollLeft > 10 ? "auto" : "none";
+                    btnLeft.style.opacity = scrollContainer.scrollLeft > 5 ? "1" : "0";
+                    btnLeft.style.pointerEvents = scrollContainer.scrollLeft > 5 ? "auto" : "none";
 
-                    btnRight.style.opacity = scrollContainer.scrollLeft < maxScrollLeft - 10 ? "1" : "0";
-                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 10 ?
-                        "auto" : "none";
+                    btnRight.style.opacity = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "1" : "0";
+                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "auto" :
+                        "none";
                 }
 
+                // Button click scrolling
                 btnLeft.addEventListener("click", () => {
                     scrollContainer.scrollBy({
-                        left: -300,
+                        left: -SCROLL_AMOUNT,
                         behavior: "smooth"
                     });
                 });
                 btnRight.addEventListener("click", () => {
                     scrollContainer.scrollBy({
-                        left: 300,
+                        left: SCROLL_AMOUNT,
                         behavior: "smooth"
                     });
                 });
+
+                // Stop momentum on user interaction
+                function stopMomentum() {
+                    cancelAnimationFrame(momentumID);
+                    velocity = 0;
+                }
+
+                // Drag / swipe support with momentum
+                scrollContainer.addEventListener("mousedown", (e) => {
+                    isDown = true;
+                    scrollContainer.classList.add("dragging");
+                    startX = e.pageX - scrollContainer.offsetLeft;
+                    scrollLeft = scrollContainer.scrollLeft;
+                    stopMomentum();
+                });
+
+                scrollContainer.addEventListener("mouseleave", () => {
+                    isDown = false;
+                    scrollContainer.classList.remove("dragging");
+                    applyMomentum();
+                });
+
+                scrollContainer.addEventListener("mouseup", () => {
+                    isDown = false;
+                    scrollContainer.classList.remove("dragging");
+                    applyMomentum();
+                });
+
+                scrollContainer.addEventListener("mousemove", (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - scrollContainer.offsetLeft;
+                    const walk = (x - startX);
+                    velocity = walk; // track last move for momentum
+                    scrollContainer.scrollLeft = scrollLeft - walk;
+                });
+
+                // Touch support
+                scrollContainer.addEventListener("touchstart", (e) => {
+                    startX = e.touches[0].pageX - scrollContainer.offsetLeft;
+                    scrollLeft = scrollContainer.scrollLeft;
+                    stopMomentum();
+                });
+
+                scrollContainer.addEventListener("touchmove", (e) => {
+                    const x = e.touches[0].pageX - scrollContainer.offsetLeft;
+                    const walk = (x - startX);
+                    velocity = walk;
+                    scrollContainer.scrollLeft = scrollLeft - walk;
+                });
+
+                scrollContainer.addEventListener("touchend", applyMomentum);
+
+                // Momentum scrolling function
+                function applyMomentum() {
+                    const decay = 0.95;
+                    const minVelocity = 0.5;
+
+                    function step() {
+                        scrollContainer.scrollLeft -= velocity;
+                        velocity *= decay;
+
+                        if (Math.abs(velocity) > minVelocity) {
+                            momentumID = requestAnimationFrame(step);
+                        } else {
+                            cancelAnimationFrame(momentumID);
+                        }
+                    }
+                    momentumID = requestAnimationFrame(step);
+                }
 
                 scrollContainer.addEventListener("scroll", updateButtons);
                 window.addEventListener("resize", updateButtons);

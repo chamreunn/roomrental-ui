@@ -1,6 +1,68 @@
 @extends('layouts.app')
 
 @section('content')
+    <form method="GET" class="card mb-4 p-3 shadow-sm">
+        <div class="row g-3 align-items-end">
+
+            {{-- Location --}}
+            <div class="col-md-3">
+                <label class="form-label">{{ __('location.name') }}</label>
+                <select name="location_id" class="form-select tom-select">
+                    <option value="">{{ __('common.choose') }}</option>
+                    @foreach ($locations as $loc)
+                        <option value="{{ $loc['location_id'] }}"
+                            {{ request('location_id') == $loc['location_id'] ? 'selected' : '' }}>
+                            {{ $loc['location_name'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Room Type --}}
+            <div class="col-md-3">
+                <label class="form-label">{{ __('roomtype.name') }}</label>
+                <select name="room_type_id" class="form-select tom-select">
+                    <option value="">{{ __('common.choose') }}</option>
+                    @foreach ($roomTypes as $type)
+                        <option value="{{ $type['id'] }}" {{ request('room_type_id') == $type['id'] ? 'selected' : '' }}>
+                            {{ $type['type_name'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Status --}}
+            <div class="col-md-2">
+                <label class="form-label">{{ __('room.status') }}</label>
+                <select name="status" class="form-select tom-select">
+                    <option value="">{{ __('common.choose') }}</option>
+                    @foreach ($roomStatuses as $key => $status)
+                        <option value="{{ $key }}" {{ request('status') === (string) $key ? 'selected' : '' }}
+                            data-custom-properties="<span class='{{ $status['class'] }} badge mx-0'></span>">
+                            {{ __($status['name']) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Buttons --}}
+            <div class="col-md-4">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <button type="submit" class="btn btn-primary w-100">
+                            {{ __('common.search') }}
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        {{-- CLEAR --}}
+                        <a href="{{ route('dashboard.user') }}" class="btn btn-outline-secondary w-100">
+                            {{ __('common.clear') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 
     <div class="row row-cards g-3">
         <div class="col-12">
@@ -24,11 +86,13 @@
                                         <div class="card room-card text-center flex-shrink-0 shadow-sm border-0"
                                             style="width: 170px; min-width: 160px;">
                                             <div class="card-body p-2">
-                                                <h5 class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
+                                                <h5
+                                                    class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
                                                     {{ $room['room_name'] }}
                                                     @if (!empty($room['is_ending_soon']) && $room['is_ending_soon'])
                                                         <span class="status-dot status-dot-animated bg-red d-block ms-2"
-                                                            style="width: 8px; height: 8px;" title="Rental ending soon"></span>
+                                                            style="width: 8px; height: 8px;"
+                                                            title="Rental ending soon"></span>
                                                     @endif
                                                 </h5>
 
@@ -104,7 +168,7 @@
 
 @push('scripts')
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll(".room-scroll-wrapper").forEach(wrapper => {
                 const scrollContainer = wrapper.querySelector(".room-scroll");
                 const btnLeft = wrapper.querySelector(".scroll-left");
@@ -132,15 +196,22 @@
                     btnLeft.style.pointerEvents = scrollContainer.scrollLeft > 5 ? "auto" : "none";
 
                     btnRight.style.opacity = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "1" : "0";
-                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "auto" : "none";
+                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "auto" :
+                        "none";
                 }
 
                 // Button click scrolling
                 btnLeft.addEventListener("click", () => {
-                    scrollContainer.scrollBy({ left: -SCROLL_AMOUNT, behavior: "smooth" });
+                    scrollContainer.scrollBy({
+                        left: -SCROLL_AMOUNT,
+                        behavior: "smooth"
+                    });
                 });
                 btnRight.addEventListener("click", () => {
-                    scrollContainer.scrollBy({ left: SCROLL_AMOUNT, behavior: "smooth" });
+                    scrollContainer.scrollBy({
+                        left: SCROLL_AMOUNT,
+                        behavior: "smooth"
+                    });
                 });
 
                 // Stop momentum on user interaction
