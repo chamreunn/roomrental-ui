@@ -34,8 +34,8 @@ class RoomtypeController extends Controller
             // Convert to collection and map 'is_active' to status badge
             $dataCollection = collect($paginatedData['data'] ?? [])->transform(function ($item) {
                 $item['status_badge'] = Status::getStatus($item['is_active']); // use 'is_active'
-                $item['create_date_kh'] = Util::translateDateToKhmer($item['created_at'], 'd F, Y h:i A');
-                $item['update_date_kh'] = Util::translateDateToKhmer($item['updated_at'], 'd F, Y h:i A');
+                $item['create_date_kh'] = Util::translateDateToKhmer($item['created_at'], 'd F, Y h:i');
+                $item['update_date_kh'] = Util::translateDateToKhmer($item['updated_at'], 'd F, Y h:i');
                 return $item;
             });
 

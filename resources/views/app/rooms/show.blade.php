@@ -145,7 +145,7 @@
 
                                     <div class="text-end">
                                         <div class="fw-bold text-success mb-1">
-                                            ${{ number_format($latestInvoice['total'], 2) }}
+                                            {{ number_format($latestInvoice['total'], 2) }}(៛)
                                         </div>
                                         <span class="{{ $status['badge'] }}">
                                             {{ __($status['name']) }}
@@ -157,22 +157,22 @@
                                 <div class="card-body border-top text-muted small">
                                     <div>{{ __('invoice.room_fee') }}:
                                         <span class="text-primary">
-                                            ${{ number_format($latestInvoice['room_fee'], 2) }}
+                                            {{ number_format($latestInvoice['room_fee'], 2) }}(៛)
                                         </span>
                                     </div>
                                     <div>{{ __('invoice.electric') }}:
                                         <span class="text-primary">
-                                            ${{ number_format(($latestInvoice['new_electric'] - $latestInvoice['old_electric']) * $latestInvoice['electric_rate'], 2) }}
+                                            {{ number_format(($latestInvoice['new_electric'] - $latestInvoice['old_electric']) * $latestInvoice['electric_rate'], 2) }}(៛)
                                         </span>
                                     </div>
                                     <div>{{ __('invoice.water') }}:
                                         <span class="text-primary">
-                                            ${{ number_format(($latestInvoice['new_water'] - $latestInvoice['old_water']) * $latestInvoice['water_rate'], 2) }}
+                                            {{ number_format(($latestInvoice['new_water'] - $latestInvoice['old_water']) * $latestInvoice['water_rate'], 2) }}(៛)
                                         </span>
                                     </div>
                                     <div>{{ __('invoice.other_charge') }}:
                                         <span class="text-primary">
-                                            ${{ number_format($latestInvoice['other_charge'], 2) }}
+                                            {{ number_format($latestInvoice['other_charge'], 2) }}(៛)
                                         </span>
                                     </div>
                                 </div>
