@@ -8,5 +8,6 @@ return [
     'password_required' => 'Please enter your password.',
     'login_failed' => 'The password is incorrect.',
     'welcome' => 'Welcome, :name!',
-    'logout_success' => 'You have logged out successfully. Thank you.'
+    'logout_success' => 'You have logged out successfully. Thank you.',
+    'no_permission_cash_transaction' => 'You do not have permission to access Cash Transaction.',
 ];

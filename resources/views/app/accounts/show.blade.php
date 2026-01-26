@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     <form action="{{ route('account.update', $user['id']) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PATCH')
@@ -34,7 +33,8 @@
                                         data-placeholder="{{ __('account.select_a_role') }}">
                                         <option value="">{{ __('account.select_a_role') }}</option>
                                         @foreach ($roles as $roleKey => $role)
-                                            <option value="{{ $roleKey }}" {{ old('role', $user['role'] ?? ($selectedRole ?? '')) == $roleKey ? 'selected' : '' }}
+                                            <option value="{{ $roleKey }}"
+                                                {{ old('role', $user['role'] ?? ($selectedRole ?? '')) == $roleKey ? 'selected' : '' }}
                                                 data-custom-properties="<span class='{{ $role['class'] }} badge mx-0'>{{ ucfirst($role['name']) }}</span>">
                                             </option>
                                         @endforeach
@@ -91,8 +91,7 @@
                                 <label for="address" class="form-label">{{ __('account.address') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><x-icon name="home" /></span>
-                                    <textarea id="address" class="form-control" name="address"
-                                        rows="2">{{ old('address', $user['address'] ?? '') }}</textarea>
+                                    <textarea id="address" class="form-control" name="address" rows="2">{{ old('address', $user['address'] ?? '') }}</textarea>
                                 </div>
                             </div>
 
@@ -106,12 +105,31 @@
                             @foreach ($locations as $location)
                                 <label class="form-check form-check-inline cursor-pointer">
                                     <input class="form-check-input cursor-pointer" name="location_id[]"
-                                        value="{{ $location['id'] }}" type="checkbox" {{ in_array($location['id'], old('location_id', $user['user_locations'] ?? [])) ? 'checked' : '' }}>
+                                        value="{{ $location['id'] }}" type="checkbox"
+                                        {{ in_array($location['id'], old('location_id', $user['user_locations'] ?? [])) ? 'checked' : '' }}>
                                     <span class="form-check-label cursor-pointer">{{ $location['location_name'] }}</span>
                                 </label>
                             @endforeach
                         </div>
                         @error('location_id')
+                            <div class="text-red mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="card-body">
+                        <div class="form-label">{{ __('account.permission') }}</div>
+                        <div>
+                            @php
+                                $canCash = old('can_cash_transaction', $user['can_cash_transaction'] ?? 0);
+                            @endphp
+
+                            <label class="form-check form-check-inline cursor-pointer">
+                                <input class="form-check-input cursor-pointer" name="can_cash_transaction" value="1"
+                                    type="checkbox" {{ $canCash ? 'checked' : '' }}>
+                                <span class="form-check-label cursor-pointer">{{ __('account.cash_transaction') }}</span>
+                            </label>
+                        </div>
+                        @error('can_cash_transaction')
                             <div class="text-red mt-1">{{ $message }}</div>
                         @enderror
                     </div>
@@ -156,7 +174,6 @@
             </div>
         </div>
     </form>
-
 @endsection
 
 @push('scripts')
@@ -174,7 +191,7 @@
         avatarPreview.addEventListener('click', () => avatarInput.click());
 
         // Preview selected image
-        avatarInput.addEventListener('change', function (event) {
+        avatarInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();

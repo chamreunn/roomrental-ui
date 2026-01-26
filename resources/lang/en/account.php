@@ -24,4 +24,6 @@ return [
     'validation_error' => 'Some fields are invalid. Please check again.',
     'location_already_assigned' => 'This location is already assigned to the user.',
     'location_not_found' => 'The selected location could not be found.',
+    'permission' => 'Permission',
+    'cash_transaction' => 'Cash Transaction',
 ];

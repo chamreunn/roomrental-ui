@@ -90,12 +90,12 @@
                                     <span class="input-group-text"><x-icon name="lock" /></span>
                                     <input type="password" id="password" class="form-control" name="password"
                                         placeholder="{{ __('account.password') }}">
-                                        <span class="input-group-text">
-                                <a href="javascript:void(0)" id="passwordToggle" class="link-secondary"
-                                    data-bs-toggle="tooltip" aria-label="Show password">
-                                    <x-icon name="eye" />
-                                </a>
-                            </span>
+                                    <span class="input-group-text">
+                                        <a href="javascript:void(0)" id="passwordToggle" class="link-secondary"
+                                            data-bs-toggle="tooltip" aria-label="Show password">
+                                            <x-icon name="eye" />
+                                        </a>
+                                    </span>
                                 </div>
                                 @error('password')
                                     <div class="text-red mt-1">{{ $message }}</div>
@@ -119,7 +119,7 @@
 
                     {{-- Locations --}}
                     <div class="card-body">
-                        <div class="form-label">ទីតាំងអ្នកប្រើប្រាស់</div>
+                        <div class="form-label">{{ __('user_location.user_location') }}</div>
                         <div>
                             @foreach ($locations as $location)
                                 <label class="form-check form-check-inline cursor-pointer">
@@ -131,6 +131,19 @@
                             @endforeach
                         </div>
                         @error('location_id')
+                            <div class="text-red mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="card-body">
+                        <div class="form-label">{{ __('account.permission') }}</div>
+                        <div>
+                            <label class="form-check form-check-inline cursor-pointer">
+                                <input class="form-check-input cursor-pointer" name="can_cash_transaction" value="1"
+                                    type="checkbox" {{ old('can_cash_transaction') ? 'checked' : '' }}>
+                                <span class="form-check-label cursor-pointer">{{ __('account.cash_transaction') }}</span>
+                            </label>
+                        </div>
+                        @error('can_cash_transaction')
                             <div class="text-red mt-1">{{ $message }}</div>
                         @enderror
                     </div>
@@ -201,7 +214,7 @@
     </script>
 
     <script>
-        document.getElementById('passwordToggle').addEventListener('click', function () {
+        document.getElementById('passwordToggle').addEventListener('click', function() {
             const passwordField = document.getElementById('password');
             const isVisible = passwordField.type === 'text';
 
@@ -209,9 +222,9 @@
             passwordField.type = isVisible ? 'password' : 'text';
 
             // Swap icon
-            this.innerHTML = isVisible
-                ? `<x-icon name="eye" />`
-                : `<x-icon name="eye-off" />`;
+            this.innerHTML = isVisible ?
+                `<x-icon name="eye" />` :
+                `<x-icon name="eye-off" />`;
 
             // Update tooltip
             this.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');

@@ -80,13 +80,15 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     Route::post('/invoices/preview/{room}/{location}', [InvoiceController::class, 'preview'])->name('invoices.preview');
     Route::post('/invoices/store', [InvoiceController::class, 'store'])->name('invoice.store');
     //cash transaction
-    Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
-    Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
-    Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
-    Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
-    Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
-    Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
-    Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
+    Route::middleware(['auth.session', 'can.cash'])->group(function () {
+        Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
+        Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+        Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+        Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+        Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
+        Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+        Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
+    });
     //income
     Route::get('/income/choose-location', [IncomeController::class, 'index'])->name('income.index');
     Route::get('/income/choose-location/{id}', [IncomeController::class, 'list'])->name('income.list');
@@ -119,7 +121,7 @@ Route::middleware(['auth.session', 'role:manager'])->group(function () {
 });
 
 // 🧩 User Routes
-Route::middleware(['auth.session', 'role:user'])->group(function () {
+Route::middleware(['auth.session', 'role:user', 'can.cash'])->group(function () {
     Route::prefix('user')->group(function () {
         // user cash transaction
         Route::get('/cash-transaction/create', [UserCashTransactionController::class, 'create'])->name('user_cash_transaction.create');
@@ -155,16 +157,34 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     //settings
     Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
     //for cash transaction
-    Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
-    Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
-    Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
-    Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
-    Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
-    Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
+
+    // for cash transaction
+    Route::middleware(['auth.session', 'can.cash'])->prefix('user')->group(function () {
+
+        Route::post(
+            '/cash-transaction/add',
+            [UserCashTransactionController::class, 'addTemporary']
+        )->name('user_cash_transaction.add_temp');
+
+        Route::get(
+            '/cash-transaction/create',
+            [UserCashTransactionController::class, 'create']
+        )->name('user_cash_transaction.create');
+
+        Route::post(
+            '/cash-transaction/store',
+            [UserCashTransactionController::class, 'store']
+        )->name('user_cash_transaction.store');
+
+        Route::delete(
+            '/cash-transactions/{location_id}/remove/{index}',
+            [UserCashTransactionController::class, 'removeTemporary']
+        )->name('user_cash_transaction.removeTemporary');
+    });
 
     // Invoice for user
     Route::prefix('invoices')->group(function () {
-        Route::get('/choose-locations/{location}',[InvoiceController::class, 'userIndex'])->name('invoice.user_index');
+        Route::get('/choose-locations/{location}', [InvoiceController::class, 'userIndex'])->name('invoice.user_index');
         Route::get('/show/{id}/{locationId}', [InvoiceController::class, 'show'])->name('invoice.show');
         Route::get('/choose-locations', [InvoiceController::class, 'userIndexChooseLocation'])->name('invoice.user_chooselocation');
         Route::get('/show/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
@@ -172,8 +192,8 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
         Route::patch('/update/{id}/{locationId}', [InvoiceController::class, 'update'])->name('invoice.update');
         Route::delete('/destroy/{id}/{locationId}', [InvoiceController::class, 'destroy'])->name('invoice.destroy');
         Route::patch('/updateStatus/{id}/{locationId}', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
-        Route::get('/user-create-invoice/{location}',[InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
+        Route::get('/user-create-invoice/{location}', [InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
         Route::post('/user-create-invoice/{location}/store-multiple', [InvoiceController::class, 'storeMultiple'])->name('invoices.storeMultiple');
-        Route::get('/create-invoice/choose-locations',[InvoiceController::class, 'userChooseLocation'])->name('invoice.user_choose_location');
+        Route::get('/create-invoice/choose-locations', [InvoiceController::class, 'userChooseLocation'])->name('invoice.user_choose_location');
     });
 });

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enum\AbilitiesStatus;
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Enum\AbilitiesStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AccountController extends Controller
@@ -81,22 +82,24 @@ class AccountController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'role' => 'required',
-            'email' => 'required|email|max:255',
+            'name'  => 'required|string|max:255',
+            'role'  => 'required|string',
+            'email' => 'required|email|max:255', // add unique:users,email if saving locally
             'phone_number' => 'required|string|max:20',
             'dob' => 'required|date_format:d-m-Y',
-            'password' => 'required|string',
+            'password' => 'required|string|min:6',
             'address' => 'nullable|string|max:500',
+
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+
             'location_id' => 'nullable|array',
             'location_id.*' => 'uuid',
+
+            'can_cash_transaction' => 'nullable|boolean',
         ]);
 
-        // Convert DOB to API format
-        $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
+        $dob = Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
 
-        // Prepare payload
         $payload = [
             'name' => $validated['name'],
             'role' => $validated['role'],
@@ -105,15 +108,17 @@ class AccountController extends Controller
             'date_of_birth' => $dob,
             'password' => $validated['password'],
             'address' => $validated['address'] ?? null,
+
+            // checkbox: send 1/0
+            'can_cash_transaction' => (int) $request->boolean('can_cash_transaction'),
         ];
 
-        // Handle file upload
         $files = [];
         if ($request->hasFile('profile_picture')) {
             $files['profile_picture'] = $request->file('profile_picture');
         }
 
-        // Send to API (multipart/form-data)
+        // Your API wrapper call (kept same style)
         $apiResponse = $this->api()->post('v1/users', $payload, null, true, $files, 'profile_picture');
 
         if (!($apiResponse['id'] ?? false)) {
@@ -122,7 +127,6 @@ class AccountController extends Controller
             );
         }
 
-        // Attach user to locations if any selected
         if (!empty($validated['location_id'])) {
             foreach ($validated['location_id'] as $location_id) {
                 $this->api()->post('v1/user-locations', [
@@ -148,29 +152,31 @@ class AccountController extends Controller
             ],
         ];
 
-        // Roles
         $roles = [
-            AbilitiesStatus::ADMIN => AbilitiesStatus::getStatus(AbilitiesStatus::ADMIN),
+            AbilitiesStatus::ADMIN   => AbilitiesStatus::getStatus(AbilitiesStatus::ADMIN),
             AbilitiesStatus::MANAGER => AbilitiesStatus::getStatus(AbilitiesStatus::MANAGER),
-            AbilitiesStatus::USER => AbilitiesStatus::getStatus(AbilitiesStatus::USER),
+            AbilitiesStatus::USER    => AbilitiesStatus::getStatus(AbilitiesStatus::USER),
         ];
 
-        // Get user detail
         $userResponse = $this->api()->get("v1/users/{$id}");
         $user = $userResponse['user'] ?? null;
-
-        $response = $this->api()->get('v1/locations');
-        $locations = $response['locations']['data'];
 
         if (!$user) {
             return redirect()->route('account.index')->withErrors(__('account.user_not_found'));
         }
 
-        // ✅ user_locations are already IDs, so just assign directly
-        // ✅ Extract only location_id from user_locations
+        $response = $this->api()->get('v1/locations');
+        $locations = $response['locations']['data'] ?? [];
+
+        // user_locations -> array of location UUIDs
         $user['user_locations'] = collect($user['user_locations'] ?? [])
             ->pluck('location_id')
             ->toArray();
+
+        // (optional) pre-format dob for blade
+        $user['dob_dmy'] = !empty($user['date_of_birth'])
+            ? Carbon::parse($user['date_of_birth'])->format('d-m-Y')
+            : '';
 
         return view('app.accounts.show', compact('buttons', 'user', 'roles', 'locations'));
     }
@@ -179,24 +185,28 @@ class AccountController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            // ✅ Validate input
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'role' => 'required',
+                'role' => 'required|string',
                 'email' => 'required|email|max:255',
                 'phone_number' => 'required|string|max:20',
                 'dob' => 'required|date_format:d-m-Y',
-                'password' => 'nullable|string',
+
+                'password' => 'nullable|string|min:6',
                 'address' => 'nullable|string|max:500',
+
                 'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+
                 'location_id' => 'nullable|array',
                 'location_id.*' => 'uuid',
+
+                'can_cash_transaction' => 'nullable|boolean',
             ]);
 
-            // ✅ Convert DOB to API format
+            // Convert DOB
             $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
 
-            // ✅ Prepare payload for API
+            // Prepare payload
             $payload = [
                 '_method' => 'PATCH',
                 'name' => $validated['name'],
@@ -205,38 +215,48 @@ class AccountController extends Controller
                 'phone_number' => $validated['phone_number'],
                 'date_of_birth' => $dob,
                 'address' => $validated['address'] ?? null,
+
+                // ✅ checkbox: always send 1/0
+                'can_cash_transaction' => (int) $request->boolean('can_cash_transaction'),
             ];
 
             if (!empty($validated['password'])) {
                 $payload['password'] = $validated['password'];
             }
 
-            // ✅ Handle profile picture upload
+            // File upload
             $files = [];
             if ($request->hasFile('profile_picture')) {
                 $files['profile_picture'] = $request->file('profile_picture');
             }
 
-            // ✅ Update user info via API
+            // Update user via API
             $apiResponse = $this->api()->post("v1/users/{$id}", $payload, null, true, $files, 'profile_picture');
 
+            // If API returned an error structure
+            if (!($apiResponse['success'] ?? false) && !isset($apiResponse['id'])) {
+                return back()
+                    ->withInput()
+                    ->withErrors($apiResponse['errors'] ?? [])
+                    ->with('error', __('account.update_failed'));
+            }
+
             // ===============================
-            // ✅ Sync user locations
+            // Sync user locations
             // ===============================
 
             $newLocations = $validated['location_id'] ?? [];
 
-            // Get full current user locations (pivot records)
-            $currentUserLocations = $this->api()->get("v1/users/{$id}")['user']['user_locations'] ?? [];
+            // Fetch current pivot records
+            $userResponse = $this->api()->get("v1/users/{$id}");
+            $currentUserLocations = $userResponse['user']['user_locations'] ?? [];
 
-            // Current location IDs for comparison
             $currentLocationIds = collect($currentUserLocations)->pluck('location_id')->toArray();
 
-            // Determine locations to add and remove
-            $locationsToAdd = array_diff($newLocations, $currentLocationIds);
-            $locationsToRemove = array_diff($currentLocationIds, $newLocations);
+            $locationsToAdd = array_values(array_diff($newLocations, $currentLocationIds));
+            $locationsToRemove = array_values(array_diff($currentLocationIds, $newLocations));
 
-            // Add new locations
+            // Add
             foreach ($locationsToAdd as $location_id) {
                 try {
                     $this->api()->post('v1/user-locations', [
@@ -249,28 +269,23 @@ class AccountController extends Controller
                 }
             }
 
-            // Remove unchecked locations
+            // Remove
             foreach ($locationsToRemove as $location_id) {
-                // Find the corresponding pivot ID
                 $userLocation = collect($currentUserLocations)->firstWhere('location_id', $location_id);
-                if ($userLocation) {
-                    try {
-                        $this->api()->delete('v1/user-locations/' . $userLocation['id']);
-                    } catch (\Illuminate\Http\Client\RequestException $e) {
-                        $errorMessage = $this->mapApiErrorToTranslation($e);
-                        return back()->withInput()->with('error', $errorMessage);
-                    }
+
+                if (!$userLocation || empty($userLocation['id'])) {
+                    continue;
+                }
+
+                try {
+                    $this->api()->delete('v1/user-locations/' . $userLocation['id']);
+                } catch (\Illuminate\Http\Client\RequestException $e) {
+                    $errorMessage = $this->mapApiErrorToTranslation($e);
+                    return back()->withInput()->with('error', $errorMessage);
                 }
             }
 
-            // ✅ Handle success
-            if (($apiResponse['success'] ?? false) || isset($apiResponse['id'])) {
-                return redirect()->back()->with('success', __('account.updated_successfully'));
-            }
-
-            return back()
-                ->withInput()
-                ->with('error', __('account.update_failed'));
+            return redirect()->back()->with('success', __('account.updated_successfully'));
         } catch (\Illuminate\Http\Client\RequestException $e) {
             $errorMessage = $this->mapApiErrorToTranslation($e);
             return back()->withInput()->with('error', $errorMessage);
@@ -280,6 +295,7 @@ class AccountController extends Controller
                 ->with('error', 'Unexpected error: ' . $e->getMessage());
         }
     }
+
 
     /**
      * Map API error messages to translation keys

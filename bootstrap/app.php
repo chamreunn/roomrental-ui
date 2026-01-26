@@ -1,12 +1,13 @@
 <?php
 
-use App\Http\Middleware\AuthMiddleware;
-use App\Http\Middleware\RedirectIfAuthenticated;
-use App\Http\Middleware\RoleMiddleware; // <-- import your middleware
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\AuthMiddleware;
+use App\Http\Middleware\CanCashTransaction;
+use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\RoleMiddleware; // <-- import your middleware
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -22,8 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Define aliases
         $middleware->alias([
             'auth.web' => AuthMiddleware::class,
-            'role' => RoleMiddleware::class, 
+            'role' => RoleMiddleware::class,
             'guest.session' => RedirectIfAuthenticated::class,
+            'can.cash' => CanCashTransaction::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
