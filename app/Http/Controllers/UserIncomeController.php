@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Client\Response as HttpResponse;
 
 class UserIncomeController extends Controller
 {
@@ -30,6 +32,8 @@ class UserIncomeController extends Controller
         ];
 
         $type = $this->CashTransactionType()::INCOME;
+        // categories: [1=>"ថ្លៃជួលបន្ទប់", 2=>"ថ្លៃអគ្គិសនី", ...]
+        $category = $this->CashTransactionCategory()->getCategories();
         $page = request('page', 1);
 
         $filters = [
@@ -71,16 +75,18 @@ class UserIncomeController extends Controller
             );
         }
 
+        // ✅ Category filter by NUMBER (key)
         if (request()->filled('category')) {
-            $collection = $collection->filter(
-                fn($item) =>
-                str_contains(
-                    mb_strtolower($item['category']),
-                    mb_strtolower(request('category'))
-                )
-            );
-        }
+            $selectedKey = (int) request('category');         // 1..5
+            $selectedLabel = $category[$selectedKey] ?? null; // Khmer label
 
+            if ($selectedLabel) {
+                // Most APIs return label text in $item['category'], so compare by label
+                $collection = $collection->filter(
+                    fn($item) => ($item['category'] ?? '') === $selectedLabel
+                );
+            }
+        }
         // ===============================
         // CALCULATE TOTAL AFTER FILTER
         // ===============================
@@ -108,7 +114,147 @@ class UserIncomeController extends Controller
             'buttons',
             'id',
             'totalIncome',
-            'apiTotals'
+            'apiTotals',
+            'category'
         ));
+    }
+
+    public function export(Request $request, $id)
+    {
+        $type = $this->CashTransactionType()::INCOME;
+
+        // ✅ export is POST => use input()
+        $params = array_filter([
+            'type'      => $type,
+            'from_date' => $request->input('from_date'),
+            'to_date'   => $request->input('to_date'),
+            'category'  => $request->input('category'), // number
+        ], fn($v) => $v !== null && $v !== '');
+
+        $res = $this->api()
+            ->withHeaders(['Location-Id' => $id])
+            ->download('v1/cash-transaction-exports', $params, null, [
+                'Accept' => 'application/octet-stream',
+            ]);
+
+        if (!($res instanceof HttpResponse)) {
+            return back()->with('error', 'Export failed: no response from API.');
+        }
+
+        if (!$res->successful()) {
+            return back()->with('error', 'Export failed: API status ' . $res->status());
+        }
+
+        $contentType = $res->header('Content-Type') ?? 'application/octet-stream';
+
+        $ext = match (true) {
+            Str::contains($contentType, 'csv') => 'csv',
+            Str::contains($contentType, 'pdf') => 'pdf',
+            Str::contains($contentType, 'excel') || Str::contains($contentType, 'spreadsheet') => 'xlsx',
+            default => 'xlsx',
+        };
+
+        $filename = 'user_income_export_' . $id . '_' . now()->format('Ymd_His') . '.' . $ext;
+
+        return response()->streamDownload(function () use ($res) {
+            echo $res->body();
+        }, $filename, ['Content-Type' => $contentType]);
+    }
+
+    public function edit($id, $txId)
+    {
+        $res = $this->api()
+            ->withHeaders(['Location-Id' => $id])
+            ->get("v1/cash-transactions/{$txId}");
+
+        $income = $res['data'] ?? null;
+
+        if (!$income) {
+            return redirect()
+                ->route('user_income.list', $id)
+                ->with('error', 'Transaction not found.');
+        }
+
+        $category = $this->CashTransactionCategory()->getCategories();
+
+        // ✅ convert current category to key for select
+        $rawCategory = $income['category'] ?? null;
+        $selectedCategoryKey = null;
+
+        if ($rawCategory !== null && $rawCategory !== '') {
+            if (is_numeric($rawCategory)) {
+                $selectedCategoryKey = (string) (int) $rawCategory;
+            } else {
+                // if API returned label, map label -> key
+                $foundKey = array_search($rawCategory, $category, true);
+                $selectedCategoryKey = $foundKey !== false ? (string) $foundKey : null;
+            }
+        }
+
+        return view('app.user_income.edit', compact(
+            'income',
+            'id',
+            'txId',
+            'category',
+            'selectedCategoryKey'
+        ));
+    }
+
+    public function update(Request $request, $id, $txId)
+    {
+        $categoryMap = $this->CashTransactionCategory()->getCategories();
+
+        $request->validate([
+            'transaction_date' => ['required', 'date'],
+            'category'         => ['required', 'integer', 'in:' . implode(',', array_keys($categoryMap))],
+            'amount'           => ['required', 'numeric'],
+            'description'      => ['nullable', 'string'],
+        ]);
+
+        $payload = [
+            'transaction_date' => $request->input('transaction_date'),
+            'category'         => (int) $request->input('category'), // ✅ NUMBER
+            'amount'           => (float) $request->input('amount'),
+            'description'      => $request->input('description'),
+            'type'             => $this->CashTransactionType()::INCOME,
+        ];
+
+        $res = $this->api()
+            ->withHeaders(['Location-Id' => $id])
+            ->patch("v1/cash-transactions/{$txId}", $payload);
+
+        if (is_array($res) && ($res['error'] ?? false)) {
+            $apiErrors = $res['errors'] ?? null;
+
+            if (is_array($apiErrors)) {
+                // pass API validation errors into Laravel errors
+                foreach ($apiErrors as $field => $messages) {
+                    if (is_array($messages) && isset($messages[0])) {
+                        return back()->withInput()->withErrors([$field => $messages[0]]);
+                    }
+                }
+            }
+
+            return back()->withInput()->with('error', $res['message'] ?? 'Update failed');
+        }
+
+        return redirect()
+            ->route('user_income.list', $id)
+            ->with('success', 'Updated successfully.');
+    }
+
+    public function destroy($id, $txId)
+    {
+        $res = $this->api()
+            ->withHeaders(['Location-Id' => $id])
+            ->delete("v1/cash-transactions/{$txId}");
+
+        if (is_array($res) && ($res['error'] ?? false)) {
+            return back()->with('error', $res['message'] ?? 'Delete failed');
+        }
+
+        return redirect()
+            ->route('user_income.list', $id)
+            ->with('success', 'Deleted successfully.');
     }
 }

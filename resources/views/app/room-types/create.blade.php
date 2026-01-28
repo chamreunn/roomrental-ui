@@ -26,8 +26,11 @@
 
                     <div class="col-lg-4">
                         <label for="roomtype_price" class="form-label required">{{ __('roomtype.price') }}</label>
-                        <input type="text" id="roomtype_price" name="price" class="form-control"
-                            value="{{ old('roomtype_price') }}" placeholder="{{ __('roomtype.price') }}">
+
+                        <input type="text" id="roomtype_price" name="price" class="form-control riel"
+                            inputmode="numeric" autocomplete="off" value="{{ old('price') }}"
+                            placeholder="{{ __('roomtype.price') }}">
+
                         @error('price')
                             <div class="text-red mt-1">{{ $message }}</div>
                         @enderror

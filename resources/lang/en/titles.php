@@ -30,6 +30,8 @@ return [
     'room_size' => 'Size',
     'price' => 'Price',
     'booking' => 'Booking',
+    'cancel' => 'Cancel',
+    'save' => 'Save',
 
     // Default actions
     'create' => 'Create',

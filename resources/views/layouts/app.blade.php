@@ -7,7 +7,7 @@
     <title>{{ page_title() }}</title>
 
     <!-- Vite -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js','resources/js/settings.js'])
+    @vite(['resources/sass/app.scss', 'resources/js/app.js', 'resources/js/settings.js'])
 </head>
 
 <body>
@@ -32,8 +32,8 @@
     <!-- ✅ Main App Content (Hidden until loaded) -->
     <div id="app-content" style="display: none;">
         <div class="page">
-            {{-- @if(userRole() != 'user') --}}
-                @include('partials.sidebar')
+            {{-- @if (userRole() != 'user') --}}
+            @include('partials.sidebar')
             {{-- @endif --}}
 
             @include('partials.nav')
@@ -57,11 +57,11 @@
 
     <!-- ✅ Loader JS -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const loader = document.getElementById('page-loader');
             const content = document.getElementById('app-content');
 
-            window.addEventListener('load', function () {
+            window.addEventListener('load', function() {
                 loader.style.transition = 'opacity 0.4s ease';
                 loader.style.opacity = 0;
                 setTimeout(() => {
@@ -127,6 +127,36 @@
     <script>
         window.appLocale = "{{ app()->getLocale() }}";
         window.monthsTranslation = @json($months);
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toDigits = (v) => (v ?? '').toString().replace(/[^\d]/g, '');
+            const format = (digits) => digits ? new Intl.NumberFormat('en-US').format(Number(digits)) : '';
+
+            function attach(el) {
+                const sync = () => {
+                    const digits = toDigits(el.value);
+                    el.value = format(digits);
+                };
+
+                el.addEventListener('input', sync);
+                el.addEventListener('blur', sync);
+                el.addEventListener('paste', () => setTimeout(sync, 0));
+                sync(); // initial
+            }
+
+            document.querySelectorAll('input.riel').forEach(attach);
+
+            // IMPORTANT: before submit, remove commas so backend gets plain number
+            document.querySelectorAll('form').forEach((form) => {
+                form.addEventListener('submit', () => {
+                    form.querySelectorAll('input.riel').forEach((el) => {
+                        el.value = toDigits(el.value);
+                    });
+                });
+            });
+        });
     </script>
 
 </body>

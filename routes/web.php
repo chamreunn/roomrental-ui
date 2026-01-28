@@ -95,6 +95,28 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
     //expense
     Route::get('/expense/choose-location', [ExpenseController::class, 'index'])->name('expense.index');
     Route::get('/expense/choose-location/{id}', [ExpenseController::class, 'list'])->name('expense.list');
+    // incom
+    Route::prefix('income')->group(function () {
+        Route::get('{locationId}/list', [IncomeController::class, 'list'])->name('income.list');
+
+        Route::get('{locationId}/{txId}/edit', [IncomeController::class, 'edit'])->name('income.edit');
+        Route::patch('{locationId}/{txId}', [IncomeController::class, 'update'])->name('income.update');
+
+        Route::delete('{locationId}/{txId}', [IncomeController::class, 'destroy'])->name('income.destroy');
+
+        Route::post('{locationId}/export', [IncomeController::class, 'export'])->name('income.export');
+    });
+    //expense
+    Route::prefix('expense')->group(function () {
+        Route::get('{locationId}/list', [ExpenseController::class, 'list'])->name('expense.list');
+
+        Route::get('{locationId}/{txId}/edit', [ExpenseController::class, 'edit'])->name('expense.edit');
+        Route::patch('{locationId}/{txId}', [ExpenseController::class, 'update'])->name('expense.update');
+
+        Route::delete('{locationId}/{txId}', [ExpenseController::class, 'destroy'])->name('expense.destroy');
+
+        Route::post('{locationId}/export', [ExpenseController::class, 'export'])->name('expense.export');
+    });
 });
 
 // 🧩 Admin Routes
@@ -113,6 +135,14 @@ Route::middleware(['auth.session', 'role:admin'])->group(function () {
     Route::patch('locations/{id}', [LocationController::class, 'update'])->name('location.update');
     Route::post('/locations/store', [LocationController::class, 'store'])->name('location.store');
     Route::delete('/locations/destroy/{id}', [LocationController::class, 'destroy'])->name('location.destroy');
+    //cash transaction report
+    Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
+    Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+    Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+    Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+    Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
+    Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+    Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
 });
 
 // 🧩 Manager Routes
@@ -134,6 +164,30 @@ Route::middleware(['auth.session', 'role:user', 'can.cash'])->group(function () 
         //expense
         Route::get('/expense/choose-location', [UserExpenseController::class, 'index'])->name('user_expense.index');
         Route::get('/expense/choose-location/{id}', [UserExpenseController::class, 'list'])->name('user_expense.list');
+        // for cash transaction
+        Route::middleware(['auth.session', 'can.cash'])->prefix('user')->group(function () {
+
+            Route::post('/cash-transaction/add', [UserCashTransactionController::class, 'addTemporary'])->name('user_cash_transaction.add_temp');
+            Route::get('/cash-transaction/create', [UserCashTransactionController::class, 'create'])->name('user_cash_transaction.create');
+            Route::post('/cash-transaction/store', [UserCashTransactionController::class, 'store'])->name('user_cash_transaction.store');
+            Route::delete('/cash-transactions/{location_id}/remove/{index}', [UserCashTransactionController::class, 'removeTemporary'])->name('user_cash_transaction.removeTemporary');
+
+            Route::prefix('user-income')->group(function () {
+                Route::get('{id}/list', [UserIncomeController::class, 'list'])->name('user_income.list');
+                Route::get('{id}/{txId}/edit', [UserIncomeController::class, 'edit'])->name('user_income.edit');
+                Route::patch('{id}/{txId}', [UserIncomeController::class, 'update'])->name('user_income.update');
+                Route::delete('{id}/{txId}', [UserIncomeController::class, 'destroy'])->name('user_income.destroy');
+                Route::post('{id}/export', [UserIncomeController::class, 'export'])->name('user_income.export');
+            });
+
+            Route::prefix('user-expense')->group(function () {
+                Route::get('{id}/list', [UserExpenseController::class, 'list'])->name('user_expense.list');
+                Route::get('{id}/{txId}/edit', [UserExpenseController::class, 'edit'])->name('user_expense.edit');
+                Route::patch('{id}/{txId}', [UserExpenseController::class, 'update'])->name('user_expense.update');
+                Route::delete('{id}/{txId}', [UserExpenseController::class, 'destroy'])->name('user_expense.destroy');
+                Route::post('{id}/export', [UserExpenseController::class, 'export'])->name('user_expense.export');
+            });
+         });
     });
 });
 
@@ -156,31 +210,6 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::patch('/clients/update-status/{id}/{inactive}/{locationId}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
     //settings
     Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
-    //for cash transaction
-
-    // for cash transaction
-    Route::middleware(['auth.session', 'can.cash'])->prefix('user')->group(function () {
-
-        Route::post(
-            '/cash-transaction/add',
-            [UserCashTransactionController::class, 'addTemporary']
-        )->name('user_cash_transaction.add_temp');
-
-        Route::get(
-            '/cash-transaction/create',
-            [UserCashTransactionController::class, 'create']
-        )->name('user_cash_transaction.create');
-
-        Route::post(
-            '/cash-transaction/store',
-            [UserCashTransactionController::class, 'store']
-        )->name('user_cash_transaction.store');
-
-        Route::delete(
-            '/cash-transactions/{location_id}/remove/{index}',
-            [UserCashTransactionController::class, 'removeTemporary']
-        )->name('user_cash_transaction.removeTemporary');
-    });
 
     // Invoice for user
     Route::prefix('invoices')->group(function () {

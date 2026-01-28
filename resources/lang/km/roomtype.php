@@ -4,7 +4,7 @@ return [
     // Field Labels
     'name' => 'ប្រភេទបន្ទប់',
     'size' => 'ទំហំបន្ទប់',
-    'price' => 'តម្លៃ',
+    'price' => 'តម្លៃ(៛)',
     'description' => 'ពិពណ៌នា',
     'save' => 'រក្សាទុក',
     'select_roomtype' => 'ជ្រើសរើសប្រភេទបន្ទប់',

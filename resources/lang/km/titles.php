@@ -32,6 +32,8 @@ return [
     'room_size' => 'ទំហំបន្ទប់',
     'price' => 'តម្លៃ',
     'booking' => 'ការកក់បន្ទប់',
+    'cancel' => 'បោះបង់',
+    'save' => 'រក្សាទុក',
 
     // Default actions
     'create' => 'បង្កើត',

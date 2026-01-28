@@ -62,7 +62,7 @@
                         {{-- Room Price --}}
                         <div class="card-body text-center">
                             <div class="h1 text-success fw-bold mb-1">
-                                ${{ number_format($room['room_type']['price'], 2) }}
+                                {{ number_format($room['room_type']['price'], 2) }}(៛)
                             </div>
                             <span class="text-muted">/ {{ __('room.per_month') }}</span>
                         </div>

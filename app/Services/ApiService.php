@@ -179,6 +179,31 @@ class ApiService
         return $this->handleAuthAndResponse('delete', func_get_args(), $response);
     }
 
+
+    /* -----------------------------------------------------------
+ * DOWNLOAD / RAW RESPONSE (for export files)
+ * ----------------------------------------------------------- */
+    public function download(string $endpoint, array $query = [], $token = null, array $moreHeaders = [])
+    {
+        $url   = $this->buildUrl($endpoint);
+        $token = $token ?? $this->getApiToken();
+
+        try {
+            $http = $this->getHttpClient($token);
+
+            if (!empty($moreHeaders)) {
+                $http = $http->withHeaders($moreHeaders);
+            }
+
+            // IMPORTANT: do not call ->json() here
+            return $http->withOptions(['stream' => true])->get($url, $query);
+        } catch (ConnectionException $e) {
+            return null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     /* -----------------------------------------------------------
      * Auto-refresh token and handle response
      * ----------------------------------------------------------- */

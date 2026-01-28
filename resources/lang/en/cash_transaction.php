@@ -16,6 +16,11 @@ return [
     'amount' => 'Amount',
     'note' => 'Note',
     'save_transaction' => 'Save Transaction',
+    'export' => 'Export',
+    'category_expense' => 'Expense Category',
+
+    'confirm_delete' => 'Are you sure you want to delete this transaction?',
+    'delete_warning' => 'This action cannot be undone.',
 
     // Validation Messages
     'transaction_date_required' => 'The transaction date is required.',

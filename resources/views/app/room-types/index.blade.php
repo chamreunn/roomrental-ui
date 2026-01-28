@@ -10,8 +10,8 @@
                         <th>{{ __('roomtype.size') }}</th>
                         <th>{{ __('roomtype.price') }}</th>
                         <th>{{ __('roomtype.description') }}</th>
-                        <th>{{ __('titles.created_at') }}</th>
-                        <th>{{ __('titles.updated_at') }}</th>
+                        {{-- <th>{{ __('titles.created_at') }}</th>
+                        <th>{{ __('titles.updated_at') }}</th> --}}
                         <th>{{ __('titles.status') }}</th>
                         <th>{{ __('titles.actions') }}</th>
                     </tr>
@@ -23,8 +23,8 @@
                             <td>{{ $roomtype['room_size'] }}</td>
                             <td>{{ $roomtype['price'] }}</td>
                             <td>{{ $roomtype['description'] ?? '-' }}</td>
-                            <td>{{ $roomtype['create_date_kh'] }}</td>
-                            <td>{{ $roomtype['update_date_kh'] }}</td>
+                            {{-- <td>{{ $roomtype['create_date_kh'] }}</td>
+                            <td>{{ $roomtype['update_date_kh'] }}</td> --}}
                             <td><span
                                     class="{{ $roomtype['status_badge']['class'] }}">{{ __($roomtype['status_badge']['name']) }}</span>
                             </td>
