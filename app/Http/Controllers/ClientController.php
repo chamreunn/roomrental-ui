@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use Carbon\Carbon;
 use App\Enum\Active;
+use App\Enum\RoomStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -33,46 +34,97 @@ class ClientController extends Controller
 
     public function clients(Request $request, $locationId)
     {
+        $perPage     = (int) $request->query('per_page', 10);
+        $currentPage = (int) $request->query('page', 1);
+
+        $search      = trim((string) $request->query('search', ''));
+        $roomStatus  = $request->query('room_status'); // from filter dropdown
+
+        // ✅ validate roomStatus using enum keys
+        $allowedRoomStatuses = array_keys(RoomStatus::all());
+        $roomStatus = ($roomStatus !== null && $roomStatus !== '' && in_array((int)$roomStatus, $allowedRoomStatuses, true))
+            ? (int)$roomStatus
+            : null;
+
         try {
-            $perPage = $request->query('per_page', 10);
-            $currentPage = $request->query('page', 1);
+            $response = $this->api()
+                ->withHeaders(['Location-Id' => $locationId])
+                ->get('v1/clients');
 
-            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get('v1/clients');
             $data = $response['clients'] ?? [];
-
-            // Clients list
             $clientsArray = $data['data'] ?? [];
-            $total = $data['total'] ?? count($clientsArray);
 
-            // Transform & make room safe
-            $dataCollection = collect($clientsArray)->transform(function ($item) {
+            // ✅ Transform + safe room + badges
+            $collection = collect($clientsArray)->map(function ($item) {
 
-                $item['status_badge'] = Active::getStatus($item['status']);
+                // client status badge
+                $item['status_badge'] = Active::getStatus($item['status'] ?? null);
 
-                // Ensure room always exists (avoid null errors)
+                // ensure room exists
                 $item['room'] = $item['room'] ?? [
                     'id' => null,
                     'location_id' => null,
                     'building_name' => '-',
                     'room_name' => '-',
+                    'status' => null,
                 ];
+
+                // room status meta (enum)
+                $item['room']['status_meta'] = RoomStatus::getStatus($item['room']['status'] ?? null);
 
                 return $item;
             });
 
-            // Pagination
+            // ✅ Filter by room status
+            if ($roomStatus !== null) {
+                $collection = $collection->filter(fn($c) => (int)($c['room']['status'] ?? -1) === $roomStatus);
+            }
+
+            // ✅ Search: username / email / phone / room name
+            if ($search !== '') {
+                $q = mb_strtolower($search);
+
+                $collection = $collection->filter(function ($c) use ($q) {
+                    $username = mb_strtolower((string)($c['username'] ?? ''));
+                    $email    = mb_strtolower((string)($c['email'] ?? ''));
+                    $phone    = mb_strtolower((string)($c['phone_number'] ?? ''));
+                    $roomName = mb_strtolower((string)($c['room']['room_name'] ?? ''));
+
+                    return str_contains($username, $q)
+                        || str_contains($email, $q)
+                        || str_contains($phone, $q)
+                        || str_contains($roomName, $q);
+                });
+            }
+
+            // ✅ Pagination after filtering
+            $total = $collection->count();
+
+            $items = $collection->values()
+                ->slice(($currentPage - 1) * $perPage, $perPage)
+                ->values();
+
             $clients = new LengthAwarePaginator(
-                $dataCollection,
+                $items,
                 $total,
                 $perPage,
                 $currentPage,
-                ['path' => url()->current(), 'query' => $request->query()]
+                [
+                    'path'  => url()->current(),
+                    'query' => $request->query(),
+                ]
             );
-        } catch (Exception $e) {
-            $clients = new LengthAwarePaginator([], 0, 10);
+        } catch (\Throwable $e) {
+            $clients = new LengthAwarePaginator([], 0, $perPage, $currentPage, [
+                'path'  => url()->current(),
+                'query' => $request->query(),
+            ]);
         }
 
-        return view('app.clients.index', compact('clients'));
+        // ✅ send enum list to blade for dropdown
+        $roomStatuses = RoomStatus::all();
+
+        return view('app.clients.index', compact('clients', 'roomStatuses', 'locationId'));
     }
 
     public function index(Request $request)
@@ -232,7 +284,7 @@ class ClientController extends Controller
 
             // 6️⃣ Handle API success
             if (!empty($response['status']) && $response['status'] === 'success') {
-                return redirect()->route('clients.clients',$locationId)
+                return redirect()->route('clients.clients', $locationId)
                     ->with('success', $response['message'] ?? __('messages.rental_success'));
             }
 
@@ -258,7 +310,7 @@ class ClientController extends Controller
             'gender'            => 'required|string|in:m,f',
             'phone_number'      => 'required|string|max:20',
             'email'             => 'nullable|email|max:100',
-            'date_of_birth'     => 'required|date_format:d-m-Y',
+            'date_of_birth'     => 'required|date',
             'national_id'       => 'nullable|string|max:30',
             'passport'          => 'nullable|string|max:30',
             'address'           => 'required|string|max:255',
@@ -277,11 +329,6 @@ class ClientController extends Controller
         ]);
 
         try {
-            // Convert dates to Y-m-d format
-            $dob = Carbon::createFromFormat('d-m-Y', $validated['date_of_birth'])->format('Y-m-d');
-            $startDate = $validated['start_rental_date'] ? Carbon::parse($validated['start_rental_date'])->format('Y-m-d') : now()->format('Y-m-d');
-            $endDate = $validated['end_rental_date'] ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d') : null;
-
             // Prepare payload
             $payload = [
                 '_method'           => 'PATCH',
@@ -289,15 +336,15 @@ class ClientController extends Controller
                 'updated_by'        => Session::get('user.id'),
                 // 'room_id'           => $roomId,
                 'username'          => $validated['username'],
-                'date_of_birth'     => $dob,
+                'date_of_birth'     => $validated['date_of_birth'],
                 'gender'            => $validated['gender'],
                 'phone_number'      => $validated['phone_number'],
                 'email'             => $validated['email'] ?? null,
                 'national_id'       => $validated['national_id'] ?? null,
                 'passport'          => $validated['passport'] ?? null,
                 'address'           => $validated['address'],
-                'start_rental_date' => $startDate,
-                'end_rental_date'   => $endDate,
+                'start_rental_date' => $validated['start_rental_date'],
+                'end_rental_date'   => $validated['end_rental_date'] ?? null,
                 'description'       => $validated['description'] ?? null,
             ];
 

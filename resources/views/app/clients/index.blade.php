@@ -1,8 +1,45 @@
 @extends('layouts.app')
 
 @section('content')
-
     <div class="card">
+        <div class="card-header">
+            <form method="GET" class="row g-2 align-items-end w-100">
+
+                {{-- Search --}}
+                <div class="col-md-5">
+                    <label class="form-label">{{ __('client.search') ?? 'Search' }}</label>
+                    <input type="text" name="search" class="form-control" value="{{ request('search') }}"
+                        placeholder="{{ __('client.search_placeholder') ?? 'Name / Email / Phone / Room' }}">
+                </div>
+
+                {{-- Room Status --}}
+                <div class="col-md-4">
+                    <label class="form-label">{{ __('room.status') ?? 'Room Status' }}</label>
+                    <select name="room_status" class="form-select tom-select">
+                        <option value="">{{ __('client.select') ?? 'All' }}</option>
+                        @foreach ($roomStatuses as $key => $st)
+                            <option value="{{ $key }}" @selected((string) request('room_status') === (string) $key)
+                                data-custom-properties="<span class='{{ $st['class'] }} badge mx-0'>{{ __($st['name']) }}</span>">
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Buttons --}}
+                <div class="col-md-3 d-flex gap-2">
+                    <button class="btn btn-primary w-100" type="submit">
+                        {{ __('invoice.filter') ?? 'Filter' }}
+                    </button>
+
+                    {{-- ✅ Reset must include locationId --}}
+                    <a class="btn btn-secondary w-100" href="{{ route('clients.clients', $locationId) }}">
+                        {{ __('invoice.reset') ?? 'Reset' }}
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
                 <thead>
@@ -45,22 +82,24 @@
                             <td>{{ $client['end_rental_date'] ?? '-' }}</td>
 
                             <td>
-                                <span class="{{ $client['status_badge']['badge'] ?? '' }}">
-                                    {{ __($client['status_badge']['name'] ?? '-') }}
+                                @php($st = $client['room']['status_meta'] ?? null)
+                                <span class="{{ $st['badge'] ?? 'badge bg-secondary-lt' }}">
+                                    {{ __($st['name'] ?? 'status.unknown') }}
                                 </span>
                             </td>
 
                             <td class="text-end">
 
                                 {{-- Only show room button if room exists --}}
-                                @if(!empty($client['room']['id']))
+                                @if (!empty($client['room']['id']))
                                     <a href="{{ route('room.show', [$client['room']['id'], $client['room']['location_id']]) }}"
                                         class="btn btn-sm btn-info">
                                         <x-icon name="eye" class="me-0" />
                                     </a>
                                 @endif
 
-                                <a href="{{ route('clients.edit', [$client['id'], $client['room']['location_id']]) }}" class="btn btn-sm btn-warning">
+                                <a href="{{ route('clients.edit', [$client['id'], $client['room']['location_id']]) }}"
+                                    class="btn btn-sm btn-warning">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
 
@@ -70,7 +109,8 @@
                         <tr>
                             <td colspan="8" class="text-center text-muted">
                                 <x-empty-state title="{{ __('cash_transaction.no_data') }}"
-                                    message="{{ __('cash_transaction.no_data') }}" svg="svgs/no_result.svg" width="450px" />
+                                    message="{{ __('cash_transaction.no_data') }}" svg="svgs/no_result.svg"
+                                    width="450px" />
                             </td>
                         </tr>
                     @endforelse
@@ -90,5 +130,4 @@
             </div>
         </div>
     </div>
-
 @endsection

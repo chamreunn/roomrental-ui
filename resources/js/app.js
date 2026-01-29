@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
     flatpickr(".dobpicker", {
         dateFormat: "d-m-Y",
         altInput: true,
-        altFormat: "d M Y",
+        altFormat: "d-M-Y",
         locale:
             locale === "km"
                 ? {

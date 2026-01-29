@@ -14,6 +14,7 @@ return [
     'room_detail' => 'Room',
     'back' => 'Back',
     'details' => 'Details',
+    'common_rates' => 'Common Rates (All Rooms)',
 
     // Input labels
     'month' => 'Month',

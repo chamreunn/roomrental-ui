@@ -42,4 +42,8 @@ return [
     'status_update_failed' => 'Failed to update client status.',
     'phone' => 'Phone Number',
     'name' => 'Client Name',
+    'search' => 'Search',
+    'search_placeholder' => 'Name / Email / Phone / Room',
+    'total' => 'Total',
+    'select' => 'Select',
 ];

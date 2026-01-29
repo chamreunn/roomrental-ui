@@ -14,6 +14,7 @@ return [
     'room_detail' => 'បន្ទប់',
     'back' => 'ត្រឡប់ក្រោយ',
     'details' => 'វិក្កយបត្រលម្អិត',
+    'common_rates' => 'អត្រារួម (សម្រាប់បន្ទប់ទាំងអស់)',
 
     // Input labels
     'month' => 'ខែ',
@@ -85,7 +86,7 @@ return [
     'floor' => 'ជាន់',
     'from_date' => 'ពីកាលបរិច្ឆេទ',
     'to_date' => 'ដល់កាលបរិច្ឆេទ',
-    'filter' => 'តម្រង',
+    'filter' => 'ស្វែងរក',
     'invoice_date' => 'ថ្ងៃវិក័យប័ត្រ',
 
     //user invoice

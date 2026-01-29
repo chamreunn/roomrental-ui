@@ -693,12 +693,16 @@ class InvoiceController extends Controller
     {
         try {
             $response = $this->api()
-                ->withHeaders([
-                    'Location-Id' => $location,
-                ])
+                ->withHeaders(['Location-Id' => $location])
                 ->get('v1/rooms', $request->query());
 
             $rooms = data_get($response, 'rooms.data', []);
+
+            // ✅ attach status meta for badge
+            $rooms = array_map(function ($room) {
+                $room['status_meta'] = RoomStatus::getStatus($room['status'] ?? null);
+                return $room;
+            }, $rooms);
 
             return view('app.invoices.user-create-invoice', [
                 'rooms'      => $rooms,
@@ -721,36 +725,48 @@ class InvoiceController extends Controller
      */
     public function storeMultiple(Request $request, string $location)
     {
+        // ✅ If your Blade changed to invoice_date[] (Y-m-d), use invoice_date.* here (NOT month.*)
         $request->validate([
-            'room_id.*'       => 'required|uuid',
-            'month.*'         => 'required|string',
-            'old_electric.*'  => 'required|numeric|min:0',
-            'new_electric.*'  => 'required|numeric|min:0',
-            'electric_rate.*' => 'required|numeric|min:0',
-            'old_water.*'     => 'required|numeric|min:0',
-            'new_water.*'     => 'required|numeric|min:0',
-            'water_rate.*'    => 'required|numeric|min:0',
-            'other_charge.*'  => 'nullable|numeric|min:0',
+            'room_id.*'      => 'required|uuid',
+
+            // ✅ date in Y-m-d
+            'invoice_date.*' => 'required|date_format:Y-m-d',
+
+            'old_electric.*' => 'required|numeric|min:0',
+            'new_electric.*' => 'required|numeric|min:0',
+
+            // ✅ global (fill once)
+            'electric_rate'  => 'required|numeric|min:0',
+            'water_rate'     => 'required|numeric|min:0',
+
+            'old_water.*'    => 'required|numeric|min:0',
+            'new_water.*'    => 'required|numeric|min:0',
+            'other_charge.*' => 'nullable|numeric|min:0',
         ]);
 
         $count = count($request->room_id ?? []);
-        $errors = [];        // for withErrors()
-        $alertErrors = [];   // for alert text
+        $errors = [];
+        $alertErrors = [];
         $successCount = 0;
 
         for ($i = 0; $i < $count; $i++) {
 
-            // row label
             $rowLabel = 'Row ' . ($i + 1);
 
-            if ($request->new_electric[$i] < $request->old_electric[$i]) {
+            // ✅ avoid "undefined offset" if something missing
+            $oldElectric = (float) ($request->old_electric[$i] ?? 0);
+            $newElectric = (float) ($request->new_electric[$i] ?? 0);
+            $oldWater    = (float) ($request->old_water[$i] ?? 0);
+            $newWater    = (float) ($request->new_water[$i] ?? 0);
+
+            if ($newElectric < $oldElectric) {
                 $msg = __('validation.new_electric_must_be_greater');
                 $errors["new_electric.$i"] = [$msg];
                 $alertErrors[] = "$rowLabel: $msg";
                 continue;
             }
 
-            if ($request->new_water[$i] < $request->old_water[$i]) {
+            if ($newWater < $oldWater) {
                 $msg = __('validation.new_water_must_be_greater');
                 $errors["new_water.$i"] = [$msg];
                 $alertErrors[] = "$rowLabel: $msg";
@@ -759,14 +775,22 @@ class InvoiceController extends Controller
 
             $payload = [
                 'room_id'       => $request->room_id[$i],
-                'old_electric'  => (float) $request->old_electric[$i],
-                'new_electric'  => (float) $request->new_electric[$i],
-                'electric_rate' => (float) $request->electric_rate[$i],
-                'old_water'     => (float) $request->old_water[$i],
-                'new_water'     => (float) $request->new_water[$i],
-                'water_rate'    => (float) $request->water_rate[$i],
+                'old_electric'  => $oldElectric,
+                'new_electric'  => $newElectric,
+
+                // ✅ same for all rooms
+                'electric_rate' => (float) $request->electric_rate,
+
+                'old_water'     => $oldWater,
+                'new_water'     => $newWater,
+
+                // ✅ same for all rooms
+                'water_rate'    => (float) $request->water_rate,
+
                 'other_charge'  => (float) ($request->other_charge[$i] ?? 0),
-                'invoice_date'  => $request->month[$i],
+
+                // ✅ match your UI field name
+                'invoice_date'  => $request->invoice_date[$i],
             ];
 
             try {
@@ -780,7 +804,6 @@ class InvoiceController extends Controller
                     moreHeaders: ['Location-Id' => $location]
                 );
 
-                // ✅ success can be "success: true" OR "status: success"
                 $isSuccess = !empty($response['success']) || (($response['status'] ?? null) === 'success');
 
                 if ($isSuccess) {
@@ -788,7 +811,6 @@ class InvoiceController extends Controller
                     continue;
                 }
 
-                // ✅ API returned error normally (no exception)
                 $msg = collect($response['errors'] ?? [])
                     ->flatten()
                     ->first()
@@ -796,8 +818,7 @@ class InvoiceController extends Controller
 
                 $errors["api.$i"] = [$msg];
                 $alertErrors[] = "$rowLabel: $msg";
-            } catch (RequestException $e) {
-                // ✅ API threw 422
+            } catch (\Illuminate\Http\Client\RequestException $e) {
                 $data = $e->response?->json();
 
                 $msg = collect($data['errors'] ?? [])
@@ -810,14 +831,17 @@ class InvoiceController extends Controller
             }
         }
 
-        // ✅ All success
-        if ($successCount === $count) {
-            return redirect()
-                ->back()
-                ->with('success', __('All invoices saved successfully.'));
+        // ✅ handle "no room selected"
+        if ($count === 0) {
+            return redirect()->back()
+                ->with('error', __('Please select at least one room.'))
+                ->withInput();
         }
 
-        // ✅ Some saved, some failed
+        if ($successCount === $count) {
+            return redirect()->back()->with('success', __('All invoices saved successfully.'));
+        }
+
         if ($successCount > 0) {
             return redirect()->back()
                 ->with('warning', __('Some invoices were saved, but others failed.'))
@@ -826,15 +850,15 @@ class InvoiceController extends Controller
                 ->withInput();
         }
 
-        // ✅ None saved -> SHOW API MESSAGE, not generic
         $firstApiMsg = $alertErrors[0] ?? __('No invoices were saved.');
 
         return redirect()->back()
-            ->with('error', $firstApiMsg)          // ✅ IMPORTANT CHANGE
-            ->with('alert_errors', $alertErrors)   // optional if you later want all messages
+            ->with('error', $firstApiMsg)
+            ->with('alert_errors', $alertErrors)
             ->withErrors($errors)
             ->withInput();
     }
+
 
     public function userIndexChooseLocation()
     {
@@ -849,92 +873,109 @@ class InvoiceController extends Controller
     public function userIndex(Request $request, string $location)
     {
         try {
-            // === 1. Get filter/search params ===
-            $statusFilter   = $request->query('status');
-            $search         = $request->query('search');
-            $buildingFilter = $request->query('building_name');
-            $floorFilter    = $request->query('floor_name');
-            $roomFilter     = $request->query('room_name');
-            $roomTypeFilter = $request->query('room_type');
-            $monthFilter    = $request->query('month');
-            $fromDate       = $request->query('from_date');
-            $toDate         = $request->query('to_date');
+            // === 1) Get filter/search params ===
+            $statusFilter    = $request->query('status');          // string/int
+            $search          = trim((string) $request->query('search', ''));
+            $buildingFilter  = trim((string) $request->query('building_name', ''));
+            $floorFilter     = trim((string) $request->query('floor_name', ''));
+            $roomFilter      = trim((string) $request->query('room_name', ''));
+            $roomTypeFilter  = $request->query('room_type');       // id
+            $monthFilter     = $request->query('month');           // "YYYY-MM" from <input type="month">
+            $fromDate        = $request->query('from_date');       // "YYYY-MM-DD"
+            $toDate          = $request->query('to_date');         // "YYYY-MM-DD"
 
-            // === 2. Fetch invoices for THIS location ===
-            $response = $this->api()->withHeaders(['location_id' => $location])->get('v1/invoices');
+            // normalize dates (optional, but safer)
+            $fromDate = $fromDate ? Carbon::parse($fromDate)->toDateString() : null;
+            $toDate   = $toDate   ? Carbon::parse($toDate)->toDateString()   : null;
+
+            // === 2) Fetch invoices for THIS location ===
+            // ✅ IMPORTANT: your API uses "Location-Id" header (you used different header names before)
+            $response = $this->api()
+                ->withHeaders(['Location-Id' => $location])
+                ->get('v1/invoices');
+
             $invoices = $response['data'] ?? [];
 
-            $totals = [
-                'room_fee'        => $response['total_room_fee'] ?? 0,
-                'electric_charge' => $response['total_electric_charge'] ?? 0,
-                'water_charge'    => $response['total_water_charge'] ?? 0,
-            ];
+            // === 3) Apply filters (client-side fallback) ===
+            $invoices = array_filter($invoices, function ($inv) use (
+                $statusFilter,
+                $buildingFilter,
+                $floorFilter,
+                $roomFilter,
+                $roomTypeFilter,
+                $monthFilter,
+                $fromDate,
+                $toDate,
+                $search
+            ) {
+                $room = $inv['room'] ?? [];
 
-            // === 3. Apply client-side filters (fallback) ===
-            if ($statusFilter !== null && $statusFilter !== '') {
-                $invoices = array_filter($invoices, fn($inv) => ($inv['status'] ?? null) == $statusFilter);
-            }
+                // status
+                if ($statusFilter !== null && $statusFilter !== '') {
+                    if ((string) ($inv['status'] ?? '') !== (string) $statusFilter) return false;
+                }
 
-            if ($buildingFilter) {
-                $invoices = array_filter(
-                    $invoices,
-                    fn($inv) =>
-                    str_contains(strtolower($inv['room']['building_name'] ?? ''), strtolower($buildingFilter))
-                );
-            }
+                // room type
+                if ($roomTypeFilter !== null && $roomTypeFilter !== '') {
+                    if ((string) ($room['room_type_id'] ?? '') !== (string) $roomTypeFilter) return false;
+                }
 
-            if ($floorFilter) {
-                $invoices = array_filter(
-                    $invoices,
-                    fn($inv) =>
-                    str_contains(strtolower($inv['room']['floor_name'] ?? ''), strtolower($floorFilter))
-                );
-            }
+                // building
+                if ($buildingFilter !== '') {
+                    if (!str_contains(mb_strtolower($room['building_name'] ?? ''), mb_strtolower($buildingFilter))) return false;
+                }
 
-            if ($roomFilter) {
-                $invoices = array_filter(
-                    $invoices,
-                    fn($inv) =>
-                    str_contains(strtolower($inv['room']['room_name'] ?? ''), strtolower($roomFilter))
-                );
-            }
+                // floor
+                if ($floorFilter !== '') {
+                    if (!str_contains(mb_strtolower($room['floor_name'] ?? ''), mb_strtolower($floorFilter))) return false;
+                }
 
-            if ($roomTypeFilter !== null && $roomTypeFilter !== '') {
-                $invoices = array_filter($invoices, fn($inv) => ($inv['room']['room_type_id'] ?? null) == $roomTypeFilter);
-            }
+                // room name
+                if ($roomFilter !== '') {
+                    if (!str_contains(mb_strtolower($room['room_name'] ?? ''), mb_strtolower($roomFilter))) return false;
+                }
 
-            if ($monthFilter) {
-                $invoices = array_filter(
-                    $invoices,
-                    fn($inv) =>
-                    Carbon::parse($inv['invoice_date'])->format('Y-m') === $monthFilter
-                );
-            }
+                // invoice_date exists?
+                $invoiceDate = $inv['invoice_date'] ?? null;
+                if (!$invoiceDate) {
+                    // if date missing, it cannot match date filters
+                    if ($monthFilter || $fromDate || $toDate) return false;
+                } else {
+                    $invDate = Carbon::parse($invoiceDate)->toDateString(); // "Y-m-d"
 
-            if ($fromDate && $toDate) {
-                $invoices = array_filter(
-                    $invoices,
-                    fn($inv) =>
-                    Carbon::parse($inv['invoice_date'])->toDateString() >= $fromDate &&
-                        Carbon::parse($inv['invoice_date'])->toDateString() <= $toDate
-                );
-            }
+                    // month filter (YYYY-MM)
+                    if ($monthFilter) {
+                        if (Carbon::parse($invoiceDate)->format('Y-m') !== $monthFilter) return false;
+                    }
 
-            if ($search) {
-                $search = strtolower($search);
-                $invoices = array_filter(
-                    $invoices,
-                    fn($inv) =>
-                    str_contains(strtolower($inv['invoice_no'] ?? ''), $search) ||
-                        str_contains(strtolower($inv['room']['room_name'] ?? ''), $search)
-                );
-            }
+                    // from/to filters (support any combination)
+                    if ($fromDate && $invDate < $fromDate) return false;
+                    if ($toDate && $invDate > $toDate) return false;
+                }
 
-            // ✅ Re-index after array_filter
+                // search (invoice_no OR room name)
+                if ($search !== '') {
+                    $q = mb_strtolower($search);
+                    $invoiceNo = mb_strtolower((string) ($inv['invoice_no'] ?? ''));
+                    $roomName  = mb_strtolower((string) ($room['room_name'] ?? ''));
+
+                    if (!str_contains($invoiceNo, $q) && !str_contains($roomName, $q)) return false;
+                }
+
+                return true;
+            });
+
+            // re-index
             $invoices = array_values($invoices);
 
-            // === 4. Add computed fields (NO @php in Blade) ===
-            $invoices = array_map(function ($inv) {
+            // === 4) Add computed fields + totals based on FILTERED result ===
+            $totals = [
+                'room_fee'        => 0,
+                'electric_charge' => 0,
+                'water_charge'    => 0,
+            ];
+
+            $invoices = array_map(function ($inv) use (&$totals) {
                 $oldE  = (float) ($inv['old_electric'] ?? 0);
                 $newE  = (float) ($inv['new_electric'] ?? 0);
                 $eRate = (float) ($inv['electric_rate'] ?? 0);
@@ -971,10 +1012,15 @@ class InvoiceController extends Controller
                     'grand_total'     => $grand,
                 ];
 
+                // ✅ totals for current filtered list
+                $totals['room_fee']        += $roomFee;
+                $totals['electric_charge'] += $eTotal;
+                $totals['water_charge']    += $wTotal;
+
                 return $inv;
             }, $invoices);
 
-            // === 5. Fetch dropdown data ===
+            // === 5) Fetch dropdown data ===
             $roomTypes = $this->api()->get('v1/room-types')['room_types']['data'] ?? [];
             $statuses  = InvoiceStatus::all();
 
