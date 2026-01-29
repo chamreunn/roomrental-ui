@@ -137,63 +137,68 @@
 
         </div>
     </div>
-@endsection
 
-<!-- Delete Modal -->
-@foreach ($incomes as $index => $item)
-    <div class="modal modal-blur fade" id="deleteUserIncomeModal" tabindex="-1"
-        aria-labelledby="deleteUserIncomeModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteUserIncomeModalLabel">
-                        {{ __('titles.delete') ?? 'Delete' }}
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                    <p class="mb-2">
-                        {{ __('cash_transaction.confirm_delete') ?? 'Are you sure you want to delete this transaction?' }}
-                    </p>
-
-                    <div class="border rounded p-3 bg-light">
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">{{ __('cash_transaction.date') ?? 'Date' }}</span>
-                            <strong id="uiDelDate">-</strong>
+    <!-- Delete Modal -->
+    @if ($incomes->count() > 0)
+        @foreach ($incomes as $index => $item)
+            <div class="modal modal-blur fade" id="deleteUserIncomeModal" tabindex="-1"
+                aria-labelledby="deleteUserIncomeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteUserIncomeModalLabel">
+                                {{ __('titles.delete') ?? 'Delete' }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">{{ __('cash_transaction.category_income') ?? 'Category' }}</span>
-                            <strong id="uiDelCategory">-</strong>
+
+                        <div class="modal-body">
+                            <p class="mb-2">
+                                {{ __('cash_transaction.confirm_delete') ?? 'Are you sure you want to delete this transaction?' }}
+                            </p>
+
+                            <div class="border rounded p-3 bg-light">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">{{ __('cash_transaction.date') ?? 'Date' }}</span>
+                                    <strong id="uiDelDate">-</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span
+                                        class="text-muted">{{ __('cash_transaction.category_income') ?? 'Category' }}</span>
+                                    <strong id="uiDelCategory">-</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">{{ __('cash_transaction.amount') ?? 'Amount' }}(៛)</span>
+                                    <strong id="uiDelAmount">-</strong>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning mt-3 mb-0">
+                                {{ __('cash_transaction.delete_warning') ?? 'This action cannot be undone.' }}
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">{{ __('cash_transaction.amount') ?? 'Amount' }}(៛)</span>
-                            <strong id="uiDelAmount">-</strong>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                {{ __('titles.cancel') ?? 'Cancel' }}
+                            </button>
+
+                            <form method="POST" id="deleteUserIncomeForm" action="#">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">
+                                    {{ __('titles.delete') ?? 'Delete' }}
+                                </button>
+                            </form>
                         </div>
                     </div>
-
-                    <div class="alert alert-warning mt-3 mb-0">
-                        {{ __('cash_transaction.delete_warning') ?? 'This action cannot be undone.' }}
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        {{ __('titles.cancel') ?? 'Cancel' }}
-                    </button>
-
-                    <form method="POST" id="deleteUserIncomeForm" action="#">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            {{ __('titles.delete') ?? 'Delete' }}
-                        </button>
-                    </form>
                 </div>
             </div>
-        </div>
-    </div>
-@endforeach
+        @endforeach
+    @endif
+@endsection
+
+
 
 @push('scripts')
     @push('scripts')
