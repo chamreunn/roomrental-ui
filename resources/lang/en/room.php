@@ -24,6 +24,9 @@ return [
     'no_information_found' => 'No Information Found',
     'this_room_is_no_information' => 'This room does not have any information.',
     'edit_status' => 'Edit Status',
+    'price' => 'Room Price',
+    'total' => 'Total',
+    'rental_ongoing' => 'Rental Ongoing',
 
     'no_client_found' => 'No Client Found',
     'there_are_no_client_in_this_room' => 'There are no clients in this room.',

@@ -24,6 +24,9 @@ return [
     'no_information_found' => 'មិនមានព័ត៌មានទេ',
     'this_room_is_no_information' => 'បន្ទប់នេះមិនមានព័ត៌មានទេ។',
     'edit_status' => 'កែប្រែស្ថានភាព',
+    'price' => 'តម្លៃបន្ទប់',
+    'total' => 'សរុប',
+    'rental_ongoing' => 'ការជួលកំពុងដំណើរការ',
 
     'no_client_found' => 'មិនមានអតិថិជនទេ',
     'there_are_no_client_in_this_room' => 'មិនមានអតិថិជននៅក្នុងបន្ទប់នេះទេ។',

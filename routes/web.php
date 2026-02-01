@@ -88,6 +88,14 @@ Route::middleware(['auth.session', 'role:admin,manager'])->group(function () {
         Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
         Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
         Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
+        //cash transaction report
+        Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
+        Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+        Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+        Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
+        Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
+        Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
+        Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
     });
     //income
     Route::get('/income/choose-location', [IncomeController::class, 'index'])->name('income.index');
@@ -135,14 +143,6 @@ Route::middleware(['auth.session', 'role:admin'])->group(function () {
     Route::patch('locations/{id}', [LocationController::class, 'update'])->name('location.update');
     Route::post('/locations/store', [LocationController::class, 'store'])->name('location.store');
     Route::delete('/locations/destroy/{id}', [LocationController::class, 'destroy'])->name('location.destroy');
-    //cash transaction report
-    Route::get('/cash-transaction/choose-location', [CashTransactionController::class, 'chooseLocation'])->name('cash_transaction.choose_location');
-    Route::get('/cash-transaction/choose-location/{location_id}', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
-    Route::post('/cash-transaction/store/{location_id}', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
-    Route::get('/cash-transaction/{location_id}/create', [CashTransactionController::class, 'create'])->name('cash_transaction.create');
-    Route::post('/cash-transaction/{location_id}/add', [CashTransactionController::class, 'addTemporary'])->name('cash_transaction.add_temp');
-    Route::post('/cash-transaction/{location_id}/store', [CashTransactionController::class, 'store'])->name('cash_transaction.store');
-    Route::delete('/cash-transactions/{location_id}/remove/{index}', [CashTransactionController::class, 'removeTemporary'])->name('cash_transaction.removeTemporary');
 });
 
 // 🧩 Manager Routes
@@ -187,7 +187,7 @@ Route::middleware(['auth.session', 'role:user', 'can.cash'])->group(function () 
                 Route::delete('{id}/{txId}', [UserExpenseController::class, 'destroy'])->name('user_expense.destroy');
                 Route::post('{id}/export', [UserExpenseController::class, 'export'])->name('user_expense.export');
             });
-         });
+        });
     });
 });
 

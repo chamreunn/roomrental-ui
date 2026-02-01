@@ -480,7 +480,7 @@
                         $canCash = (int) session('user.can_cash_transaction', 0);
                     @endphp
 
-                    @if ($role === 'admin' || $canCash === 1)
+                    @if ($role === 'manager' || $canCash === 1)
                         <!-- Cash Transaction Income & Expense -->
                         <li
                             class="nav-item dropdown {{ active_class(['cash_transaction.*', 'income.*', 'expense*']) }}">

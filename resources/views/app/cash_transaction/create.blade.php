@@ -17,7 +17,7 @@
                         <label class="form-label required">{{ __('cash_transaction.date') }}</label>
                         <input type="date"
                                name="date"
-                               class="form-control @error('date') is-invalid @enderror"
+                               class="form-control datepicker @error('date') is-invalid @enderror"
                                value="{{ old('date', date('Y-m-d')) }}">
                         @error('date')
                             <div class="invalid-feedback">{{ $message }}</div>
