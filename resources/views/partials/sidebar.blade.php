@@ -442,7 +442,7 @@
                     <!-- Clients -->
                     <li class="nav-item {{ active_class('clients.*', 'active') }}">
                         <a class="nav-link {{ active_class('clients.*') }}"
-                            href="{{ route('clients.show_location') }}">
+                            href="{{ route('clients.choose_location') }}">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <x-icon name="users" />
                             </span>
@@ -462,12 +462,12 @@
                         <div class="dropdown-menu {{ active_class(['invoice.*', 'invoices*'], '', true) }}">
                             <div class="dropdown-menu-columns">
                                 <div class="dropdown-menu-column">
-                                    <a class="dropdown-item {{ active_class(['invoice.choose_location', 'invoices.show-locations', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
-                                        href="{{ route('invoice.choose_location') }}">
+                                    <a class="dropdown-item {{ active_class(['invoice.user_choose_location', 'invoice.choose_room', 'invoices.preview', 'invoice.create']) }}"
+                                        href="{{ route('invoice.user_choose_location') }}">
                                         {{ __('sidebar.create_invoice') }}
                                     </a>
-                                    <a class="dropdown-item {{ active_class(['invoice.index', 'invoice.invoice_list', 'invoice.show']) }}"
-                                        href="{{ route('invoice.show_locations') }}">
+                                    <a class="dropdown-item {{ active_class(['invoice.user_index', 'invoice.user_chooselocation', 'invoice.invoice_list', 'invoice.show', 'invoice.edit']) }}"
+                                        href="{{ route('invoice.user_chooselocation') }}">
                                         {{ __('sidebar.invoice_list') }}
                                     </a>
                                 </div>
@@ -525,6 +525,7 @@
                             <span class="nav-link-title">{{ __('sidebar.client') }}</span>
                         </a>
                     </li>
+
                     <!-- Invoice -->
                     <li class="nav-item dropdown {{ active_class(['invoice.*', 'invoices*']) }}">
                         <a class="nav-link dropdown-toggle btn-animate-icon btn-animate-icon-move-start {{ active_class(['invoice.*', 'invoices*']) }}"

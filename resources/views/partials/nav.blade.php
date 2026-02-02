@@ -9,11 +9,11 @@
         <!-- BEGIN NAVBAR LOGO -->
 
         <div class="navbar-brand navbar-brand-autodark fw-bold text-primary">
-            @if(userRole() == 'user')
+            {{-- @if(userRole() == 'user')
                 <a href="{{ dashboardRoute() }}" aria-label="Tabler">
                     <img src="{{ asset('favicon.ico') }}" width="40" alt="">RoomioFlex
                 </a>
-            @endif
+            @endif --}}
         </div>
 
         <!-- END NAVBAR LOGO -->

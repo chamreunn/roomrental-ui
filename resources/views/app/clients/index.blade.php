@@ -89,7 +89,6 @@
                             </td>
 
                             <td class="text-end">
-
                                 {{-- Only show room button if room exists --}}
                                 @if (!empty($client['room']['id']))
                                     <a href="{{ route('room.show', [$client['room']['id'], $client['room']['location_id']]) }}"
@@ -98,11 +97,15 @@
                                     </a>
                                 @endif
 
-                                <a href="{{ route('clients.edit', [$client['id'], $client['room']['location_id']]) }}"
+                                <a href="{{ route('clients.edit', [$client['id'], $client['room']['location_id'] ?? $locationId]) }}"
                                     class="btn btn-sm btn-warning">
                                     <x-icon name="edit" class="me-0" />
                                 </a>
 
+                                <a href="#" data-bs-toggle="modal"
+                                    data-bs-target="#deleteClientModal-{{ $client['id'] }}" class="btn btn-sm btn-danger">
+                                    <x-icon name="trash" class="me-0" />
+                                </a>
                             </td>
                         </tr>
                     @empty
@@ -117,6 +120,45 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Delete Modals --}}
+        @foreach ($clients as $client)
+            <div class="modal modal-blur fade" id="deleteClientModal-{{ $client['id'] }}" tabindex="-1"
+                aria-hidden="true">
+                <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                    <div class="modal-content">
+
+                        <div class="modal-body">
+                            <div class="modal-title">{{ __('modal.confirm_title') ?? 'Are you sure?' }}</div>
+                            <div>
+                                {!! __('modal.confirm_delete_client', [
+                                    'name' => '<span class="text-primary fw-bold">' . ($client['username'] ?? '-') . '</span>',
+                                ]) !!}
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">
+                                {{ __('modal.cancel') ?? 'Cancel' }}
+                            </button>
+
+                            {{-- ✅ Delete form --}}
+                            <form
+                                action="{{ route('clients.destroy', [$client['id'], $client['room']['location_id'] ?? $locationId]) }}"
+                                method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">
+                                    {{ __('common.button_delete') ?? 'Delete' }}
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        @endforeach
+
 
         <div class="card-footer d-flex justify-content-between align-items-center">
             <div class="text-muted">

@@ -10,4 +10,6 @@ return [
     'confirm_message_multi_delete' => 'តើអ្នកប្រាកដថាចង់លុប',
     'confirm_client_title' => 'ការបញ្ជាក់',
     'confirm_client_message' => 'តើអ្នកប្រាកដទេថាចង់ :action របស់អតិថិជនឈ្មោះ :name ?',
+    'confirm_delete_client' => 'លុបអតិថិជននេះ',
+    'confirm_end_lease' => 'បញ្ចប់ការជួលសម្រាប់អតិថិជននេះ',
 ];

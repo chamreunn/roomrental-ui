@@ -46,4 +46,5 @@ return [
     'search_placeholder' => 'Name / Email / Phone / Room',
     'total' => 'Total',
     'select' => 'Select',
+    'delete_success' => 'Client deleted successfully.',
 ];

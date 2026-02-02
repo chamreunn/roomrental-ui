@@ -208,6 +208,7 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
     Route::patch('/clients/update/{id}/{room_id}/{locationId}', [ClientController::class, 'update'])->name('clients.update');
     Route::post('/clients/store/{id}/{locationId}', [ClientController::class, 'store'])->name('client.store');
     Route::patch('/clients/update-status/{id}/{inactive}/{locationId}', [ClientController::class, 'updateClientStatus'])->name('clients.update-client-status');
+    Route::delete('/clients/{id}/{locationId}', [ClientController::class, 'destroy'])->name('clients.destroy');
     //settings
     Route::get('/settings', [SettingsController::class, 'settings'])->name('settings.index');
 

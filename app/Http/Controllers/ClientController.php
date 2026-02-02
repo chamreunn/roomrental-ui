@@ -399,4 +399,39 @@ class ClientController extends Controller
             return back()->withErrors(['api' => $e->getMessage()])->withInput();
         }
     }
+
+    public function destroy($clientId, $locationId)
+    {
+        try {
+            $response = $this->api()
+                ->withHeaders(['Location-Id' => $locationId])
+                ->delete("v1/clients/{$clientId}");
+
+            if (($response['status'] ?? null) === 'success') {
+                return back()->with('success', __('client.delete_success'));
+            }
+
+            return back()->withErrors(['api' => $response['message'] ?? __('client.delete_failed')]);
+        } catch (\Throwable $e) {
+
+            // Default fallback
+            $msg = __('client.delete_failed');
+
+            // Try to extract JSON from exception message
+            $raw = $e->getMessage();
+
+            // Find first "{" and parse JSON after it
+            $pos = strpos($raw, '{');
+            if ($pos !== false) {
+                $jsonPart = substr($raw, $pos);
+                $data = json_decode($jsonPart, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $msg = $data['message'] ?? $msg;
+                }
+            }
+
+            return back()->withErrors(['api' => $msg]);
+        }
+    }
 }
