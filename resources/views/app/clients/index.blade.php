@@ -19,7 +19,7 @@
                         <option value="">{{ __('client.select') ?? 'All' }}</option>
                         @foreach ($roomStatuses as $key => $st)
                             <option value="{{ $key }}" @selected((string) request('room_status') === (string) $key)
-                                data-custom-properties="<span class='{{ $st['class'] }} badge mx-0'>{{ __($st['name']) }}</span>">
+                                data-custom-properties="<span class='{{ $st['badge'] }} mx-0'>{{ __($st['name']) }}</span>">
                             </option>
                         @endforeach
                     </select>

@@ -124,7 +124,7 @@ class ClientController extends Controller
         }
 
         // ✅ send enum list to blade for dropdown
-        $roomStatuses = RoomStatus::all();
+        $roomStatuses = Active::all();
 
         return view('app.clients.index', compact('clients', 'roomStatuses', 'locationId'));
     }
