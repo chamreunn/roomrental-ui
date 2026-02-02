@@ -114,6 +114,8 @@ class ClientController extends Controller
                     'query' => $request->query(),
                 ]
             );
+
+            // dd($clients);
         } catch (\Throwable $e) {
             $clients = new LengthAwarePaginator([], 0, $perPage, $currentPage, [
                 'path'  => url()->current(),
@@ -164,6 +166,7 @@ class ClientController extends Controller
                 $currentPage,
                 ['path' => url()->current(), 'query' => $request->query()]
             );
+
         } catch (Exception $e) {
             $clients = new LengthAwarePaginator([], 0, 10);
         }

@@ -81,6 +81,7 @@ class RoomController extends Controller
                     'query' => $request->query(),
                 ]
             );
+
         } catch (Exception $e) {
             // Handle gracefully if API fails
             $rooms = new LengthAwarePaginator([], 0, 10);

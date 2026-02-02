@@ -82,7 +82,7 @@
                             <td>{{ $client['end_rental_date'] ?? '-' }}</td>
 
                             <td>
-                                @php($st = $client['room']['status_meta'] ?? null)
+                                @php($st = $client['status_badge'] ?? null)
                                 <span class="{{ $st['badge'] ?? 'badge bg-secondary-lt' }}">
                                     {{ __($st['name'] ?? 'status.unknown') }}
                                 </span>
@@ -102,10 +102,14 @@
                                     <x-icon name="edit" class="me-0" />
                                 </a>
 
-                                <a href="#" data-bs-toggle="modal"
-                                    data-bs-target="#deleteClientModal-{{ $client['id'] }}" class="btn btn-sm btn-danger">
-                                    <x-icon name="trash" class="me-0" />
-                                </a>
+                                @if (session('user.role') !== 'user')
+                                    <a href="#" data-bs-toggle="modal"
+                                        data-bs-target="#deleteClientModal-{{ $client['id'] }}"
+                                        class="btn btn-sm btn-danger">
+                                        <x-icon name="trash" class="me-0" />
+                                    </a>
+                                @endif
+
                             </td>
                         </tr>
                     @empty
