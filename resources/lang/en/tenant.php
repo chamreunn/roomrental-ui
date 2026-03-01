@@ -28,5 +28,7 @@ return [
     'information' => 'Tenant Information',
     'save' => 'Save',
     'cancel' => 'Cancel',
-    'click_here_to_upload_you_profile' => 'Click here to upload your profile.'
+    'click_here_to_upload_you_profile' => 'Click here to upload your profile.',
+    'document' => "Document",
+    'document_hint' => "Upload documents to attach them to this tenant."
 ];

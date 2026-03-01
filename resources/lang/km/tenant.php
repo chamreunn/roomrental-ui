@@ -28,5 +28,7 @@ return [
     'information' => 'ព័ត៌មានអ្នកជួល',
     'save' => 'រក្សាទុក',
     'cancel' => 'បោះបង់',
-    'click_here_to_upload_you_profile' => 'សូមចុចទីនេះដើម្បីបញ្ចូលរូបភាព។'
+    'click_here_to_upload_you_profile' => 'សូមចុចទីនេះដើម្បីបញ្ចូលរូបភាព។',
+    'document' => "ឯកសារភ្ជាប់",
+    'document_hint' => "អាប់ឡូដឯកសារ ដើម្បីភ្ជាប់ជាមួយអ្នកជួលនេះ។"
 ];
