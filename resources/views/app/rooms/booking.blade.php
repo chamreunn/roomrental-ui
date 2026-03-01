@@ -63,16 +63,21 @@
                         <form action="{{ route('client.store', ['id' => $room['id'], 'locationId' => $locationId]) }}"
                             method="POST" enctype="multipart/form-data">
                             @csrf
+
+                            {{-- API-level error --}}
+                            @error('api')
+                                <div class="alert alert-danger mx-3 mt-3">{{ $message }}</div>
+                            @enderror
+
+                            {{-- ===================== Avatar Upload ===================== --}}
                             <div class="card-body d-flex align-items-center justify-content-center">
                                 <div class="col-lg-4">
-                                    {{-- Avatar container --}}
                                     <div class="position-relative d-inline-block" style="width: 200px; height: 200px;"
                                         title="{{ __('tenant.click_here_to_upload_you_profile') }}">
                                         <img id="avatarPreview" src="{{ old('avatar', '/imgs/default-avatar.png') }}"
                                             alt="Profile Picture" class="rounded border"
                                             style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
 
-                                        {{-- Overlay icon --}}
                                         <div id="uploadOverlay"
                                             class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center rounded"
                                             style="background: rgba(0,0,0,0.4); color: #fff; opacity: 0; transition: opacity 0.3s; cursor: pointer;">
@@ -80,31 +85,31 @@
                                         </div>
                                     </div>
 
-                                    {{-- Hidden file input --}}
+                                    {{-- Hidden image input --}}
                                     <input type="file" name="image" id="avatarInput" class="d-none" accept="image/*">
                                     @error('image')
-                                        <div class="text-red mt-1">{{ $message }}</div>
+                                        <div class="text-danger mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
+
                             <div class="card-body">
                                 <fieldset class="form-fieldset">
                                     <div class="row g-3">
                                         <div class="col-lg-12">
                                             <div class="row g-3">
+
                                                 {{-- ===================== Tenant Information ===================== --}}
                                                 <div class="col-lg-12">
                                                     <div class="row g-3">
 
                                                         {{-- Full Name --}}
                                                         <div class="col-lg-4">
-                                                            <label class="form-label required">
-                                                                {{ __('tenant.full_name') }}
-                                                            </label>
+                                                            <label
+                                                                class="form-label required">{{ __('tenant.full_name') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="user" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="user" /></span>
                                                                 <input type="text" name="username" class="form-control"
                                                                     autocomplete="off"
                                                                     placeholder="{{ __('tenant.full_name_placeholder') }}"
@@ -117,13 +122,11 @@
 
                                                         {{-- Date of Birth --}}
                                                         <div class="col-lg-4">
-                                                            <label class="form-label required">
-                                                                {{ __('tenant.date_of_birth') }}
-                                                            </label>
+                                                            <label
+                                                                class="form-label required">{{ __('tenant.date_of_birth') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="calendar" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="calendar" /></span>
                                                                 <input type="text" name="dob" id="dob"
                                                                     class="form-control dobpicker"
                                                                     placeholder="{{ __('tenant.date_of_birth_placeholder') }}"
@@ -136,13 +139,11 @@
 
                                                         {{-- Gender --}}
                                                         <div class="col-lg-4">
-                                                            <label class="form-label required">
-                                                                {{ __('tenant.gender') }}
-                                                            </label>
+                                                            <label
+                                                                class="form-label required">{{ __('tenant.gender') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="users" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="users" /></span>
                                                                 <select name="gender" class="form-select tom-select">
                                                                     <option value="">{{ __('tenant.select_option') }}
                                                                     </option>
@@ -167,14 +168,14 @@
                                                 {{-- ===================== Contact Info ===================== --}}
                                                 <div class="col-12">
                                                     <div class="row g-3">
+
                                                         {{-- Phone Number --}}
                                                         <div class="col-lg-4">
                                                             <label
                                                                 class="form-label required">{{ __('tenant.phone_number') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="phone" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="phone" /></span>
                                                                 <input type="text" name="phone_number"
                                                                     class="form-control" autocomplete="off"
                                                                     placeholder="{{ __('tenant.phone_number_placeholder') }}"
@@ -190,9 +191,8 @@
                                                             <label
                                                                 class="form-label">{{ __('tenant.email_address') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="mail" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="mail" /></span>
                                                                 <input type="email" name="email" class="form-control"
                                                                     autocomplete="off"
                                                                     placeholder="{{ __('tenant.email_placeholder') }}"
@@ -208,9 +208,8 @@
                                                             <label
                                                                 class="form-label">{{ __('tenant.national_id') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="id" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="id" /></span>
                                                                 <input type="text" name="national_id"
                                                                     class="form-control" autocomplete="off"
                                                                     placeholder="{{ __('tenant.national_id_placeholder') }}"
@@ -220,19 +219,20 @@
                                                                 <div class="text-danger mt-1">{{ $message }}</div>
                                                             @enderror
                                                         </div>
+
                                                     </div>
                                                 </div>
 
                                                 {{-- ===================== Identity & Dates ===================== --}}
                                                 <div class="col-12">
                                                     <div class="row g-3">
+
                                                         {{-- Passport --}}
                                                         <div class="col-lg-6">
                                                             <label class="form-label">{{ __('tenant.passport') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="e-passport" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="e-passport" /></span>
                                                                 <input type="text" name="passport"
                                                                     class="form-control" autocomplete="off"
                                                                     placeholder="{{ __('tenant.passport_placeholder') }}"
@@ -248,9 +248,8 @@
                                                             <label
                                                                 class="form-label required">{{ __('tenant.start_date') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="calendar-plus" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="calendar-plus" /></span>
                                                                 <input type="text" name="start_rental_date"
                                                                     class="form-control datepicker"
                                                                     placeholder="{{ __('tenant.start_date_placeholder') }}"
@@ -265,26 +264,27 @@
                                                         <div class="col-lg-3">
                                                             <label class="form-label">{{ __('tenant.end_date') }}</label>
                                                             <div class="input-group">
-                                                                <span class="input-group-text">
-                                                                    <x-icon name="calendar-x" />
-                                                                </span>
+                                                                <span class="input-group-text"><x-icon
+                                                                        name="calendar-x" /></span>
                                                                 <input type="text" name="end_rental_date"
                                                                     class="form-control datepicker"
                                                                     placeholder="{{ __('tenant.end_date_placeholder') }}"
                                                                     value="{{ old('end_rental_date') }}">
                                                             </div>
+                                                            @error('end_rental_date')
+                                                                <div class="text-danger mt-1">{{ $message }}</div>
+                                                            @enderror
                                                         </div>
+
                                                     </div>
                                                 </div>
 
-                                                {{-- ===================== Address & Description ===================== --}}
+                                                {{-- ===================== Address ===================== --}}
                                                 <div class="col-lg-12">
                                                     <label
                                                         class="form-label required">{{ __('tenant.current_address') }}</label>
                                                     <div class="input-group">
-                                                        <span class="input-group-text">
-                                                            <x-icon name="map-pin" />
-                                                        </span>
+                                                        <span class="input-group-text"><x-icon name="map-pin" /></span>
                                                         <textarea name="address" class="form-control" placeholder="{{ __('tenant.address_placeholder') }}">{{ old('address') }}</textarea>
                                                     </div>
                                                     @error('address')
@@ -292,20 +292,39 @@
                                                     @enderror
                                                 </div>
 
+                                                {{-- ===================== Description ===================== --}}
                                                 <div class="col-lg-12">
                                                     <label class="form-label">{{ __('tenant.description') }}</label>
                                                     <div class="input-group">
-                                                        <span class="input-group-text">
-                                                            <x-icon name="file-text" />
-                                                        </span>
+                                                        <span class="input-group-text"><x-icon name="file-text" /></span>
                                                         <textarea name="description" class="form-control" placeholder="{{ __('tenant.description_placeholder') }}">{{ old('description') }}</textarea>
                                                     </div>
+                                                    @error('description')
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
+
+                                                {{-- ===================== Document Upload ===================== --}}
+                                                <div class="col-lg-12">
+                                                    <label class="form-label required">{{ __('tenant.document') }}</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><x-icon name="file" /></span>
+                                                        <input type="file" name="file" class="form-control"
+                                                            accept=".pdf,.doc,.docx">
+                                                    </div>
+                                                    <small
+                                                        class="text-muted">{{ __('tenant.document_hint', ['types' => 'PDF, DOC, DOCX', 'size' => '10MB']) }}</small>
+                                                    @error('file')
+                                                        <div class="text-danger mt-1">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </fieldset>
                             </div>
+
                             <div class="card-footer">
                                 <div class="row g-3">
                                     <div class="col">
@@ -314,7 +333,6 @@
                                             {{ __('tenant.save') }}
                                             <x-icon name="plus" class="icon-end" />
                                         </button>
-                                        {{-- <a href="{{ dashboardRoute() }}" class="btn">{{ __('tenant.cancel') }}</a> --}}
                                     </div>
                                 </div>
                             </div>

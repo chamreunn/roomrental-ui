@@ -38,11 +38,11 @@ if (!function_exists('apiBaseUrl')) {
 
         // Local environment (e.g., localhost or 127.0.0.1)
         if (in_array($host, ['127.0.0.1', 'localhost'])) {
-            return env('API_LOCAL', 'http://127.0.0.1:8000/api/');
+            return env('API_LOCAL', 'http://127.0.0.1:8000');
         }
 
         // Production or staging
-        return env('API_HOSTING', 'https://your-production-api.com/api/');
+        return env('API_HOSTING', 'https://roomioflex.com');
     }
 }
 

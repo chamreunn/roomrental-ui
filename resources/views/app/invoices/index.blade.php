@@ -87,7 +87,7 @@
                             </button>
                         </div>
                         <div class="col-6">
-                            <a href="{{ route('invoice.user_index', $locationId) }}" class="btn btn-secondary w-100">
+                            <a href="{{ route('invoice.index', $locationId) }}" class="btn btn-secondary w-100">
                                 {{ __('invoice.reset') ?? 'Reset' }}
                             </a>
                         </div>
@@ -98,237 +98,241 @@
         <div class="card-body">
             {{-- ===== Invoice Table ===== --}}
             @if (!empty($invoices) && count($invoices) > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered table-vcenter text-center">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>{{ __('invoice.invoice_no') ?? 'Invoice No' }}</th>
-                                <th>{{ __('invoice.room_detail') ?? 'Room' }}</th>
-                                <th>{{ __('invoice.month') ?? 'Invoice Date' }}</th>
-                                <th>{{ __('invoice.due_date') ?? 'Due Date' }}</th>
-                                <th>{{ __('invoice.room_rent') ?? 'Room Fee' }}</th>
-                                <th>{{ __('invoice.electric_total') ?? 'Electric' }}</th>
-                                <th>{{ __('invoice.water_total') ?? 'Water' }}</th>
-                                <th>{{ __('invoice.other_charge') ?? 'Other' }}</th>
-                                <th>{{ __('invoice.total_amount') ?? 'Total' }}</th>
-                                <th>{{ __('invoice.status') ?? 'Status' }}</th>
-                                <th>{{ __('invoice.actions') ?? 'Actions' }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($invoices as $index => $invoice)
-                                @php($collapseId = 'inv-details-' . ($invoice['id'] ?? $index))
+                <form method="POST" action="{{ route('invoice.export.multiple', $locationId) }}">
+                    @csrf
 
+                    <div class="mb-3">
+                        <button type="submit" id="exportBtn" class="btn btn-success" disabled>
+                            <x-icon name="download" class="me-1" />
+                            Export Selected
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered table-vcenter text-center">
+                            <thead>
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
-
-                                    <td class="fw-bold">{{ $invoice['invoice_no'] ?? '-' }}</td>
-
-                                    <td>
-                                        <div class="fw-semibold">{{ $invoice['room']['room_name'] ?? '-' }}</div>
-                                        <div class="text-muted small">
-                                            {{ $invoice['room']['building_name'] ?? '-' }} •
-                                            {{ $invoice['room']['floor_name'] ?? '-' }}
-                                        </div>
-                                    </td>
-
-                                    <td>{{ \Carbon\Carbon::parse($invoice['invoice_date'])->translatedFormat('d-M-Y') }}
-                                    </td>
-                                    <td>{{ \Carbon\Carbon::parse($invoice['due_date'])->translatedFormat('d-M-Y') }}</td>
-
-                                    <td>{{ number_format($invoice['calc']['room_fee'] ?? 0, 0, '.', ',') }}</td>
-                                    <td>{{ number_format($invoice['calc']['electric_total'] ?? 0, 0, '.', ',') }}</td>
-                                    <td>{{ number_format($invoice['calc']['water_total'] ?? 0, 0, '.', ',') }}</td>
-                                    <td>{{ number_format($invoice['calc']['other_charge'] ?? 0, 0, '.', ',') }}</td>
-
-                                    <td>
-                                        <span class="text-danger fw-bold">
-                                            {{ number_format($invoice['calc']['grand_total'] ?? ($invoice['total'] ?? 0), 0, '.', ',') }}
-                                        </span>
-                                    </td>
-
-                                    {{-- Status dropdown (same as yours) --}}
-                                    <td>
-                                        @php($st = \App\Enum\InvoiceStatus::getStatus($invoice['status']))
-                                        <form
-                                            action="{{ route('invoice.updateStatus', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
-                                            method="POST" class="d-inline">
-                                            @csrf
-                                            @method('PATCH')
-
-                                            <div class="dropdown d-inline-block mb-2">
-                                                <button class="btn {{ $st['badge'] }} btn-sm dropdown-toggle"
-                                                    type="button" data-bs-toggle="dropdown">
-                                                    <x-icon name="pencil" class="me-1" /> {{ __($st['name']) }}
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    @foreach ($statuses as $key => $status)
-                                                        <li>
-                                                            <button type="submit" name="status"
-                                                                value="{{ $key }}" class="dropdown-item">
-                                                                <span
-                                                                    class="{{ $status['text'] }}">{{ __($status['name']) }}</span>
-                                                            </button>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        </form>
-                                    </td>
-
-                                    <td>
-                                        <div class="d-flex justify-content-center gap-1 flex-wrap">
-                                            {{-- Details toggle --}}
-                                            <button type="button" class="btn btn-sm btn-outline-info"
-                                                data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}"
-                                                aria-expanded="false" aria-controls="{{ $collapseId }}"
-                                                title="Details">
-                                                <x-icon name="list-details" class="me-0" />
-                                            </button>
-
-                                            <a href="{{ route('invoice.show', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
-                                                class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
-                                                title="{{ __('invoice.view') ?? 'View' }}">
-                                                <x-icon name="eye" class="me-0" />
-                                            </a>
-
-                                            <a href="{{ route('invoice.edit', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
-                                                data-bs-toggle="tooltip" title="{{ __('invoice.edit') ?? 'Edit' }}"
-                                                class="btn btn-sm btn-warning">
-                                                <x-icon name="edit" class="me-0" />
-                                            </a>
-
-                                            <a href="#" data-bs-toggle="modal"
-                                                data-bs-target="#{{ $invoice['id'] }}" class="btn btn-sm btn-danger">
-                                                <x-icon name="trash" class="me-0" />
-                                            </a>
-                                        </div>
-                                    </td>
+                                    <th width="40">
+                                        <input class="form-check-input" type="checkbox" id="checkAll">
+                                    </th>
+                                    <th>#</th>
+                                    <th>{{ __('invoice.invoice_no') ?? 'Invoice No' }}</th>
+                                    <th>{{ __('invoice.room_detail') ?? 'Room' }}</th>
+                                    <th>{{ __('invoice.month') ?? 'Invoice Date' }}</th>
+                                    <th>{{ __('invoice.due_date') ?? 'Due Date' }}</th>
+                                    <th>{{ __('invoice.room_rent') ?? 'Room Fee' }}</th>
+                                    <th>{{ __('invoice.electric_total') ?? 'Electric' }}</th>
+                                    <th>{{ __('invoice.water_total') ?? 'Water' }}</th>
+                                    <th>{{ __('invoice.other_charge') ?? 'Other' }}</th>
+                                    <th>{{ __('invoice.total_amount') ?? 'Total' }}</th>
+                                    <th>{{ __('invoice.status') ?? 'Status' }}</th>
+                                    <th>{{ __('invoice.actions') ?? 'Actions' }}</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($invoices as $index => $invoice)
+                                    @php($collapseId = 'inv-details-' . ($invoice['id'] ?? $index))
 
-                                {{-- Details row --}}
-                                <tr class="bg-light">
-                                    <td colspan="12" class="p-0 border-top-0">
-                                        <div id="{{ $collapseId }}" class="collapse">
-                                            <div class="p-3">
-                                                <div class="row g-3">
+                                    <tr>
 
-                                                    {{-- Room / Meta --}}
-                                                    <div class="col-lg-4">
-                                                        <div class="fw-bold mb-2">{{ __('invoice.room_detail') }}</div>
-                                                        <div class="small">
-                                                            <div><strong>{{ __('room.building') }}:</strong>
-                                                                {{ $invoice['room']['building_name'] ?? '-' }}</div>
-                                                            <div><strong>{{ __('room.floor') }}:</strong>
-                                                                {{ $invoice['room']['floor_name'] ?? '-' }}</div>
-                                                            <div><strong>{{ __('room.name') }}:</strong>
-                                                                {{ $invoice['room']['room_name'] ?? '-' }}</div>
+                                        {{-- CHECKBOX --}}
+                                        <td>
+                                            <input type="checkbox" name="ids[]" value="{{ $invoice['id'] }}"
+                                                class="row-checkbox form-check-input">
+                                        </td>
+                                        <td>{{ $index + 1 }}</td>
 
-                                                            <div class="mt-2">
-                                                                <strong>Created:</strong>
-                                                                {{ isset($invoice['created_at']) ? \Carbon\Carbon::parse($invoice['created_at'])->translatedFormat('d-M-Y H:i') : '-' }}
+                                        <td class="fw-bold">{{ $invoice['invoice_no'] ?? '-' }}</td>
+
+                                        <td>
+                                            <div class="fw-semibold">{{ $invoice['room']['room_name'] ?? '-' }}</div>
+                                            <div class="text-muted small">
+                                                {{ $invoice['room']['building_name'] ?? '-' }} •
+                                                {{ $invoice['room']['floor_name'] ?? '-' }}
+                                            </div>
+                                        </td>
+
+                                        <td>{{ \Carbon\Carbon::parse($invoice['invoice_date'])->translatedFormat('d-M-Y') }}
+                                        </td>
+                                        <td>{{ \Carbon\Carbon::parse($invoice['due_date'])->translatedFormat('d-M-Y') }}
+                                        </td>
+
+                                        <td>{{ number_format($invoice['calc']['room_fee'] ?? 0, 0, '.', ',') }}</td>
+                                        <td>{{ number_format($invoice['calc']['electric_total'] ?? 0, 0, '.', ',') }}</td>
+                                        <td>{{ number_format($invoice['calc']['water_total'] ?? 0, 0, '.', ',') }}</td>
+                                        <td>{{ number_format($invoice['calc']['other_charge'] ?? 0, 0, '.', ',') }}</td>
+
+                                        <td>
+                                            <span class="text-danger fw-bold">
+                                                {{ number_format($invoice['calc']['grand_total'] ?? ($invoice['total'] ?? 0), 0, '.', ',') }}
+                                            </span>
+                                        </td>
+
+                                        {{-- Status dropdown (same as yours) --}}
+                                        <td>
+                                            @php($st = \App\Enum\InvoiceStatus::getStatus($invoice['status']))
+                                            <span class="badge {{ $st['badge'] }}">
+                                                {{ __($st['name']) }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                                {{-- Details toggle --}}
+                                                <button type="button" class="btn btn-sm btn-outline-info"
+                                                    data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}"
+                                                    aria-expanded="false" aria-controls="{{ $collapseId }}"
+                                                    title="Details">
+                                                    <x-icon name="list-details" class="me-0" />
+                                                </button>
+
+                                                <a href="{{ route('invoice.show', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
+                                                    class="btn btn-sm btn-primary" data-bs-toggle="tooltip"
+                                                    title="{{ __('invoice.view') ?? 'View' }}">
+                                                    <x-icon name="eye" class="me-0" />
+                                                </a>
+
+                                                <a href="{{ route('invoice.edit', ['id' => $invoice['id'], 'locationId' => $locationId]) }}"
+                                                    data-bs-toggle="tooltip" title="{{ __('invoice.edit') ?? 'Edit' }}"
+                                                    class="btn btn-sm btn-warning">
+                                                    <x-icon name="edit" class="me-0" />
+                                                </a>
+
+                                                <a href="#" data-bs-toggle="modal"
+                                                    data-bs-target="#{{ $invoice['id'] }}" class="btn btn-sm btn-danger">
+                                                    <x-icon name="trash" class="me-0" />
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    {{-- Details row --}}
+                                    <tr class="bg-light">
+                                        <td colspan="12" class="p-0 border-top-0">
+                                            <div id="{{ $collapseId }}" class="collapse">
+                                                <div class="p-3">
+                                                    <div class="row g-3">
+
+                                                        {{-- Room / Meta --}}
+                                                        <div class="col-lg-4">
+                                                            <div class="fw-bold mb-2">{{ __('invoice.room_detail') }}
                                                             </div>
-                                                            <div>
-                                                                <strong>Updated:</strong>
-                                                                {{ isset($invoice['updated_at']) ? \Carbon\Carbon::parse($invoice['updated_at'])->translatedFormat('d-M-Y H:i') : '-' }}
+                                                            <div class="small">
+                                                                <div><strong>{{ __('room.building') }}:</strong>
+                                                                    {{ $invoice['room']['building_name'] ?? '-' }}</div>
+                                                                <div><strong>{{ __('room.floor') }}:</strong>
+                                                                    {{ $invoice['room']['floor_name'] ?? '-' }}</div>
+                                                                <div><strong>{{ __('room.name') }}:</strong>
+                                                                    {{ $invoice['room']['room_name'] ?? '-' }}</div>
+
+                                                                <div class="mt-2">
+                                                                    <strong>Created:</strong>
+                                                                    {{ isset($invoice['created_at']) ? \Carbon\Carbon::parse($invoice['created_at'])->translatedFormat('d-M-Y H:i') : '-' }}
+                                                                </div>
+                                                                <div>
+                                                                    <strong>Updated:</strong>
+                                                                    {{ isset($invoice['updated_at']) ? \Carbon\Carbon::parse($invoice['updated_at'])->translatedFormat('d-M-Y H:i') : '-' }}
+                                                                </div>
                                                             </div>
                                                         </div>
+
+                                                        {{-- Electric --}}
+                                                        <div class="col-lg-4">
+                                                            <div class="fw-bold mb-2">
+                                                                {{ __('invoice.electric_total') ?? 'Electric' }}</div>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-bordered mb-0">
+                                                                    <tr>
+                                                                        <th>{{ __('invoice.old_electric') }}</th>
+                                                                        <td>{{ $invoice['calc']['old_electric'] ?? 0 }}
+                                                                        </td>
+                                                                        <th>{{ __('invoice.new_electric') }}</th>
+                                                                        <td>{{ $invoice['calc']['new_electric'] ?? 0 }}
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Used</th>
+                                                                        <td>{{ $invoice['calc']['electric_used'] ?? 0 }}
+                                                                        </td>
+                                                                        <th>{{ __('invoice.electric_rate') }}</th>
+                                                                        <td>{{ number_format($invoice['calc']['electric_rate'] ?? 0, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr class="table-light">
+                                                                        <th colspan="3" class="text-end">Total</th>
+                                                                        <td class="fw-bold">
+                                                                            {{ number_format($invoice['calc']['electric_total'] ?? 0, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- Water + Summary --}}
+                                                        <div class="col-lg-4">
+                                                            <div class="fw-bold mb-2">
+                                                                {{ __('invoice.water_total') ?? 'Water' }}</div>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-bordered mb-0">
+                                                                    <tr>
+                                                                        <th>{{ __('invoice.old_water') }}</th>
+                                                                        <td>{{ $invoice['calc']['old_water'] ?? 0 }}</td>
+                                                                        <th>{{ __('invoice.new_water') }}</th>
+                                                                        <td>{{ $invoice['calc']['new_water'] ?? 0 }}</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th>Used</th>
+                                                                        <td>{{ $invoice['calc']['water_used'] ?? 0 }}</td>
+                                                                        <th>{{ __('invoice.water_rate') }}</th>
+                                                                        <td>{{ number_format($invoice['calc']['water_rate'] ?? 0, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr class="table-light">
+                                                                        <th colspan="3" class="text-end">Total</th>
+                                                                        <td class="fw-bold">
+                                                                            {{ number_format($invoice['calc']['water_total'] ?? 0, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+
+                                                            <div class="mt-3 fw-bold">
+                                                                {{ __('invoice.total_amount') ?? 'Summary' }}</div>
+                                                            <div class="small">
+                                                                <div><strong>{{ __('invoice.room_rent') }}:</strong>
+                                                                    {{ number_format($invoice['calc']['room_fee'] ?? 0, 2) }}
+                                                                </div>
+                                                                <div><strong>{{ __('invoice.other_charge') }}:</strong>
+                                                                    {{ number_format($invoice['calc']['other_charge'] ?? 0, 2) }}
+                                                                </div>
+                                                                <div class="text-danger">
+                                                                    <strong>{{ __('invoice.total_amount') }}:</strong>
+                                                                    {{ number_format($invoice['calc']['grand_total'] ?? 0, 2) }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
-
-                                                    {{-- Electric --}}
-                                                    <div class="col-lg-4">
-                                                        <div class="fw-bold mb-2">
-                                                            {{ __('invoice.electric_total') ?? 'Electric' }}</div>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-bordered mb-0">
-                                                                <tr>
-                                                                    <th>{{ __('invoice.old_electric') }}</th>
-                                                                    <td>{{ $invoice['calc']['old_electric'] ?? 0 }}</td>
-                                                                    <th>{{ __('invoice.new_electric') }}</th>
-                                                                    <td>{{ $invoice['calc']['new_electric'] ?? 0 }}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>Used</th>
-                                                                    <td>{{ $invoice['calc']['electric_used'] ?? 0 }}</td>
-                                                                    <th>{{ __('invoice.electric_rate') }}</th>
-                                                                    <td>{{ number_format($invoice['calc']['electric_rate'] ?? 0, 2) }}
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="table-light">
-                                                                    <th colspan="3" class="text-end">Total</th>
-                                                                    <td class="fw-bold">
-                                                                        {{ number_format($invoice['calc']['electric_total'] ?? 0, 2) }}
-                                                                    </td>
-                                                                </tr>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Water + Summary --}}
-                                                    <div class="col-lg-4">
-                                                        <div class="fw-bold mb-2">
-                                                            {{ __('invoice.water_total') ?? 'Water' }}</div>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-bordered mb-0">
-                                                                <tr>
-                                                                    <th>{{ __('invoice.old_water') }}</th>
-                                                                    <td>{{ $invoice['calc']['old_water'] ?? 0 }}</td>
-                                                                    <th>{{ __('invoice.new_water') }}</th>
-                                                                    <td>{{ $invoice['calc']['new_water'] ?? 0 }}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>Used</th>
-                                                                    <td>{{ $invoice['calc']['water_used'] ?? 0 }}</td>
-                                                                    <th>{{ __('invoice.water_rate') }}</th>
-                                                                    <td>{{ number_format($invoice['calc']['water_rate'] ?? 0, 2) }}
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="table-light">
-                                                                    <th colspan="3" class="text-end">Total</th>
-                                                                    <td class="fw-bold">
-                                                                        {{ number_format($invoice['calc']['water_total'] ?? 0, 2) }}
-                                                                    </td>
-                                                                </tr>
-                                                            </table>
-                                                        </div>
-
-                                                        <div class="mt-3 fw-bold">
-                                                            {{ __('invoice.total_amount') ?? 'Summary' }}</div>
-                                                        <div class="small">
-                                                            <div><strong>{{ __('invoice.room_rent') }}:</strong>
-                                                                {{ number_format($invoice['calc']['room_fee'] ?? 0, 2) }}
-                                                            </div>
-                                                            <div><strong>{{ __('invoice.other_charge') }}:</strong>
-                                                                {{ number_format($invoice['calc']['other_charge'] ?? 0, 2) }}
-                                                            </div>
-                                                            <div class="text-danger">
-                                                                <strong>{{ __('invoice.total_amount') }}:</strong>
-                                                                {{ number_format($invoice['calc']['grand_total'] ?? 0, 2) }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="5" class="text-end">{{ __('invoice.totals') ?? 'Totals' }}</th>
+                                    <th>{{ number_format($totals['room_fee'], 0, '.', ',') }}</th>
+                                    <th>{{ number_format($totals['electric_charge'], 0, '.', ',') }}</th>
+                                    <th>{{ number_format($totals['water_charge'], 0, '.', ',') }}</th>
+                                    <th>-</th>
+                                    <th>-</th>
+                                    <th colspan="2"></th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <th colspan="5" class="text-end">{{ __('invoice.totals') ?? 'Totals' }}</th>
-                                <th>{{ number_format($totals['room_fee'], 0, '.', ',') }}</th>
-                                <th>{{ number_format($totals['electric_charge'], 0, '.', ',') }}</th>
-                                <th>{{ number_format($totals['water_charge'], 0, '.', ',') }}</th>
-                                <th>-</th>
-                                <th>-</th>
-                                <th colspan="2"></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
             @else
                 <x-empty-state title="{{ __('invoice.no_invoice_found') }}"
                     message="{{ __('invoice.no_invoices_message') }}" svg="svgs/no_result.svg" width="450px" />
@@ -343,3 +347,28 @@
     @endforeach
 
 @endsection
+
+@push('scripts')
+    <script>
+        const checkAll = document.getElementById('checkAll');
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        const exportBtn = document.getElementById('exportBtn');
+
+        function toggleButton() {
+            exportBtn.disabled = ![...checkboxes].some(cb => cb.checked);
+        }
+
+        checkAll?.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            toggleButton();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                if (!this.checked) checkAll.checked = false;
+                if ([...checkboxes].every(cb => cb.checked)) checkAll.checked = true;
+                toggleButton();
+            });
+        });
+    </script>
+@endpush

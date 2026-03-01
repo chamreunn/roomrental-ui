@@ -9,7 +9,7 @@ use Chanthorn\CarbonKh\ToKhmerDate;
 
 class Util
 {
-    protected static $instance  = null;
+    protected static $instance = null;
 
     public static function getInstance()
     {
@@ -24,75 +24,83 @@ class Util
         return Str::orderedUuid()->toString();
     }
 
-   public static function translateDateToKhmer($date, $format = 'd F, Y H:i')
-{
-    if (empty($date)) {
-        return '-';
+    public static function translateDateToKhmer($date, $format = 'd F, Y H:i')
+    {
+        if (empty($date)) {
+            return '-';
+        }
+
+        $days = [
+            'Mon' => 'ចន្ទ',
+            'Tue' => 'អង្គារ',
+            'Wed' => 'ពុធ',
+            'Thu' => 'ព្រហស្បតិ៍',
+            'Fri' => 'សុក្រ',
+            'Sat' => 'សៅរ៍',
+            'Sun' => 'អាទិត្យ',
+        ];
+
+        $months = [
+            'January' => 'មករា',
+            'February' => 'កុម្ភៈ',
+            'March' => 'មីនា',
+            'April' => 'មេសា',
+            'May' => 'ឧសភា',
+            'June' => 'មិថុនា',
+            'July' => 'កក្កដា',
+            'August' => 'សីហា',
+            'September' => 'កញ្ញា',
+            'October' => 'តុលា',
+            'November' => 'វិច្ឆិកា',
+            'December' => 'ធ្នូ',
+        ];
+
+        $numerals = [
+            '0' => '០',
+            '1' => '១',
+            '2' => '២',
+            '3' => '៣',
+            '4' => '៤',
+            '5' => '៥',
+            '6' => '៦',
+            '7' => '៧',
+            '8' => '៨',
+            '9' => '៩',
+        ];
+
+        // ✅ parse + force Cambodia timezone
+        $dt = Carbon::parse($date)->timezone('Asia/Phnom_Penh');
+
+        // ✅ Khmer period by 24-hour
+        $hour = (int) $dt->format('H');
+        if ($hour >= 6 && $hour <= 11) {
+            $periodKh = 'ព្រឹក';
+        } elseif ($hour === 12) {
+            $periodKh = 'ថ្ងៃត្រង់';
+        } elseif ($hour >= 13 && $hour <= 16) {
+            $periodKh = 'រសៀល';
+        } elseif ($hour >= 17 && $hour <= 18) {
+            $periodKh = 'ល្ងាច';
+        } else {
+            $periodKh = 'យប់';
+        }
+
+        // build formatted date in English first
+        $formatted = $dt->format($format);
+
+        // Replace day/month words inside formatted string
+        $englishDay = $dt->format('D'); // Mon
+        $englishMonth = $dt->format('F'); // January
+
+        $formatted = str_replace($englishDay, $days[$englishDay] ?? $englishDay, $formatted);
+        $formatted = str_replace($englishMonth, $months[$englishMonth] ?? $englishMonth, $formatted);
+
+        // Replace numerals
+        $formatted = strtr($formatted, $numerals);
+
+        // ✅ add period at the end (clear + consistent)
+        return $formatted . ' ' . $periodKh;
     }
-
-    $days = [
-        'Mon' => 'ចន្ទ',
-        'Tue' => 'អង្គារ',
-        'Wed' => 'ពុធ',
-        'Thu' => 'ព្រហស្បតិ៍',
-        'Fri' => 'សុក្រ',
-        'Sat' => 'សៅរ៍',
-        'Sun' => 'អាទិត្យ',
-    ];
-
-    $months = [
-        'January' => 'មករា',
-        'February' => 'កុម្ភៈ',
-        'March' => 'មីនា',
-        'April' => 'មេសា',
-        'May' => 'ឧសភា',
-        'June' => 'មិថុនា',
-        'July' => 'កក្កដា',
-        'August' => 'សីហា',
-        'September' => 'កញ្ញា',
-        'October' => 'តុលា',
-        'November' => 'វិច្ឆិកា',
-        'December' => 'ធ្នូ',
-    ];
-
-    $numerals = [
-        '0' => '០', '1' => '១', '2' => '២', '3' => '៣', '4' => '៤',
-        '5' => '៥', '6' => '៦', '7' => '៧', '8' => '៨', '9' => '៩',
-    ];
-
-    // ✅ parse + force Cambodia timezone
-    $dt = Carbon::parse($date)->timezone('Asia/Phnom_Penh');
-
-    // ✅ Khmer period by 24-hour
-    $hour = (int) $dt->format('H');
-    if ($hour >= 6 && $hour <= 11) {
-        $periodKh = 'ព្រឹក';
-    } elseif ($hour === 12) {
-        $periodKh = 'ថ្ងៃត្រង់';
-    } elseif ($hour >= 13 && $hour <= 16) {
-        $periodKh = 'រសៀល';
-    } elseif ($hour >= 17 && $hour <= 18) {
-        $periodKh = 'ល្ងាច';
-    } else {
-        $periodKh = 'យប់';
-    }
-
-    // build formatted date in English first
-    $formatted = $dt->format($format);
-
-    // Replace day/month words inside formatted string
-    $englishDay = $dt->format('D'); // Mon
-    $englishMonth = $dt->format('F'); // January
-
-    $formatted = str_replace($englishDay, $days[$englishDay] ?? $englishDay, $formatted);
-    $formatted = str_replace($englishMonth, $months[$englishMonth] ?? $englishMonth, $formatted);
-
-    // Replace numerals
-    $formatted = strtr($formatted, $numerals);
-
-    // ✅ add period at the end (clear + consistent)
-    return $formatted . ' ' . $periodKh;
-}
 
     function translateMonthToKhmer($monthNumber)
     {
@@ -235,15 +243,15 @@ class Util
                 $skipped[] = [
                     'user_id' => $unavailable['user_id'] ?? null,
                     'mission' => $unavailable['mission'] ?? null,
-                    'leave'   => $unavailable['leave'] ?? null,
+                    'leave' => $unavailable['leave'] ?? null,
                 ];
             }
         }
 
         return [
-            'status'       => $nextApprover ? 201 : 404, // dynamic based on result
+            'status' => $nextApprover ? 201 : 404, // dynamic based on result
             'nextApprover' => $nextApprover,
-            'skipped'      => $skipped
+            'skipped' => $skipped
         ];
     }
 

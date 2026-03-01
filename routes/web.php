@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CashTransactionController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\InvoiceController;
@@ -22,6 +23,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+
 
 
 // 🌐 Landing Page
@@ -137,6 +139,7 @@ Route::middleware(['auth.session', 'role:admin'])->group(function () {
     Route::post('/accounts/store', [AccountController::class, 'store'])->name('account.store');
     Route::get('/accounts/show/{id}', [AccountController::class, 'show'])->name('account.show');
     Route::patch('accounts/{id}', [AccountController::class, 'update'])->name('account.update');
+    Route::delete('accounts/destroy/{id}', [AccountController::class, 'destroy'])->name('account.destroy');
     // for locations
     Route::get('/locations', [LocationController::class, 'index'])->name('location.index');
     Route::get('/locations/create', [LocationController::class, 'create'])->name('location.create');
@@ -225,5 +228,11 @@ Route::middleware(['auth.session', 'role:user,admin,manager'])->group(function (
         Route::get('/user-create-invoice/{location}', [InvoiceController::class, 'userCreateInvoice'])->name('invoice.user_create_invoice');
         Route::post('/user-create-invoice/{location}/store-multiple', [InvoiceController::class, 'storeMultiple'])->name('invoices.storeMultiple');
         Route::get('/create-invoice/choose-locations', [InvoiceController::class, 'userChooseLocation'])->name('invoice.user_choose_location');
+        //export
+        Route::get('/{invoiceId}/export/{locationId}', [InvoiceController::class, 'export'])->name('invoice.export');
+        Route::post('/export-multiple/{locationId}', [InvoiceController::class, 'exportMultiple'])->name('invoice.export.multiple');
     });
+
+    // Document delete 
+    Route::delete('/documents/{id}', [DocumentController::class, 'destroy'])->name('document.delete');
 });

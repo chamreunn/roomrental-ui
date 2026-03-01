@@ -23,7 +23,7 @@ class ApiService
         $env = $overrideEnv ?? env('APP_ENV', 'local');
         $env = $env === 'local' ? 'local' : 'hosting';
 
-        $this->baseUrl  = rtrim(config("api.$env.api"), '/');
+        $this->baseUrl = rtrim(config("api.$env.api"), '/');
         $this->verifySsl = config("api.$env.ssl", false);
     }
 
@@ -73,7 +73,7 @@ class ApiService
      * ----------------------------------------------------------- */
     public function get(string $endpoint, array $query = [], $token = null, array $moreHeaders = [])
     {
-        $url   = $this->buildUrl($endpoint);
+        $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
 
         try {
@@ -108,15 +108,14 @@ class ApiService
         $token = null,
         bool $asForm = false,
         $files = [],
-        string $fileField = 'documents[]',
+        string|array $fileField = 'documents[]',  // ✅ accept both string and array
         array $moreHeaders = []
     ) {
-        $url   = $this->buildUrl($endpoint);
+        $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
 
         $http = $this->getHttpClient($token);
 
-        // merge: withHeaders() headers + direct headers
         $mergedHeaders = array_merge($this->extraHeaders, $moreHeaders);
 
         if (!empty($mergedHeaders)) {
@@ -124,10 +123,17 @@ class ApiService
         }
 
         $files = is_array($files) ? $files : [$files];
-        foreach ($files as $file) {
+
+        foreach ($files as $index => $file) {
             if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                // ✅ If $fileField is an array, pick the matching field name by index
+                // If it's a string, use it for all files (original behaviour)
+                $field = is_array($fileField)
+                    ? ($fileField[$index] ?? $fileField[0])
+                    : $fileField;
+
                 $http = $http->attach(
-                    $fileField,
+                    $field,
                     file_get_contents($file->getRealPath()),
                     $file->getClientOriginalName()
                 );
@@ -141,12 +147,50 @@ class ApiService
         return $this->handleAuthAndResponse('post', func_get_args(), $response);
     }
 
+    public function postMultipart(
+        string $endpoint,
+        array $data = [],
+        array $filesByField = [],
+        $token = null,
+        array $moreHeaders = []
+    ) {
+        $url = $this->buildUrl($endpoint);
+        $token = $token ?? $this->getApiToken();
+
+        $http = $this->getHttpClient($token);
+
+        if (!empty($moreHeaders)) {
+            $http = $http->withHeaders($moreHeaders);
+        }
+
+        $http = $http->asMultipart();
+
+        // Attach files by field name
+        foreach ($filesByField as $field => $fileList) {
+            foreach ((array) $fileList as $file) {
+                if (!$file)
+                    continue;
+
+                $http = $http->attach(
+                    $field,
+                    file_get_contents($file->getRealPath()),
+                    $file->getClientOriginalName()
+                );
+            }
+        }
+
+        // Use POST with _method already in $data (PATCH override)
+        $response = $http->post($url, $data);
+
+        return $this->handleAuthAndResponse('postMultipart', func_get_args(), $response);
+    }
+
     /* -----------------------------------------------------------
      * PATCH (fixed — real PATCH instead of PUT)
      * ----------------------------------------------------------- */
     public function patch(string $endpoint, array $data = [], $token = null, array $moreHeaders = [])
     {
-        $url   = $this->buildUrl($endpoint);
+        $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
 
         $http = $this->getHttpClient($token);
@@ -165,7 +209,7 @@ class ApiService
      * ----------------------------------------------------------- */
     public function delete(string $endpoint, array $data = [], $token = null, array $moreHeaders = [])
     {
-        $url   = $this->buildUrl($endpoint);
+        $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
 
         $http = $this->getHttpClient($token);
@@ -181,11 +225,11 @@ class ApiService
 
 
     /* -----------------------------------------------------------
- * DOWNLOAD / RAW RESPONSE (for export files)
- * ----------------------------------------------------------- */
+     * DOWNLOAD / RAW RESPONSE (for export files)
+     * ----------------------------------------------------------- */
     public function download(string $endpoint, array $query = [], $token = null, array $moreHeaders = [])
     {
-        $url   = $this->buildUrl($endpoint);
+        $url = $this->buildUrl($endpoint);
         $token = $token ?? $this->getApiToken();
 
         try {
@@ -237,10 +281,10 @@ class ApiService
         $json = $response->json();
 
         return [
-            'error'   => true,
-            'status'  => $response->status(),
+            'error' => true,
+            'status' => $response->status(),
             'message' => $json['message'] ?? 'Request failed',
-            'errors'  => $json['errors'] ?? null,
+            'errors' => $json['errors'] ?? null,
         ];
     }
 }

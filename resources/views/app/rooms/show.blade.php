@@ -250,8 +250,8 @@
                                                                 </div>
 
                                                                 <span
-                                                                    class="{{ $client['clientstatus']['badge'] ?? 'badge bg-secondary-lt' }}">
-                                                                    {{ __($client['clientstatus']['name'] ?? '-') }}
+                                                                    class="{{ $roomstatus['badge'] ?? 'badge bg-secondary-lt' }}">
+                                                                    {{ __($roomstatus['name'] ?? '-') }}
                                                                 </span>
                                                             </div>
 

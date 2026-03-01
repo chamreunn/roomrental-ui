@@ -60,7 +60,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="avatar avatar-sm"
-                                        style="background-image: url('{{ api_image($client['image'] ?? null) }}')">
+                                        style="background-image: url('{{ apiBaseUrl() . $client['client_image'] ?? null }}')">
                                     </span>
 
                                     <div class="mx-2">
@@ -82,7 +82,7 @@
                             <td>{{ $client['end_rental_date'] ?? '-' }}</td>
 
                             <td>
-                                @php($st = $client['status_badge'] ?? null)
+                                @php($st = $client['room']['status_meta'] ?? null)
                                 <span class="{{ $st['badge'] ?? 'badge bg-secondary-lt' }}">
                                     {{ __($st['name'] ?? 'status.unknown') }}
                                 </span>

@@ -1,0 +1,16 @@
+{
+    "Show": "មើល",
+    "Delete": "លុប",
+    "Cancel": "បោះបង់",
+    "Are you sure?": "តើអ្នកប្រាកដទេ?",
+    "Do you want to delete this user :name?": "តើអ្នកចង់លុបអ្នកប្រើប្រាស់ :name មែនទេ?",
+
+    "Back": "ត្រឡប់ក្រោយ",
+    "Export Invoice": "ទាញយកវិក្កយបត្រ",
+    "Export Invoices": "ទាញយកវិក្កយបត្រ",
+
+    "Documents" : "ឯកសារភ្ជាប់",
+    "Upload new to replaced or add more" : "បន្ថែម ឬបញ្ចូលដើម្បីជំនួសឯកសារភ្ជាប់ចាស់",
+    "No Documents" : "មិនមានឯកសារភ្ជាប់ទេ",
+    "Delete Document" : "លុបឯកសារភ្ជាប់នេះ"
+}

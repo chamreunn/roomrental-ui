@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 use App\Enum\AbilitiesStatus;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class AccountController extends Controller
@@ -82,8 +83,8 @@ class AccountController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'  => 'required|string|max:255',
-            'role'  => 'required|string',
+            'name' => 'required|string|max:255',
+            'role' => 'required|string',
             'email' => 'required|email|max:255', // add unique:users,email if saving locally
             'phone_number' => 'required|string|max:20',
             'dob' => 'required|date_format:d-m-Y',
@@ -153,9 +154,9 @@ class AccountController extends Controller
         ];
 
         $roles = [
-            AbilitiesStatus::ADMIN   => AbilitiesStatus::getStatus(AbilitiesStatus::ADMIN),
+            AbilitiesStatus::ADMIN => AbilitiesStatus::getStatus(AbilitiesStatus::ADMIN),
             AbilitiesStatus::MANAGER => AbilitiesStatus::getStatus(AbilitiesStatus::MANAGER),
-            AbilitiesStatus::USER    => AbilitiesStatus::getStatus(AbilitiesStatus::USER),
+            AbilitiesStatus::USER => AbilitiesStatus::getStatus(AbilitiesStatus::USER),
         ];
 
         $userResponse = $this->api()->get("v1/users/{$id}");
@@ -181,7 +182,6 @@ class AccountController extends Controller
         return view('app.accounts.show', compact('buttons', 'user', 'roles', 'locations'));
     }
 
-
     public function update(Request $request, $id)
     {
         try {
@@ -204,7 +204,7 @@ class AccountController extends Controller
             ]);
 
             // Convert DOB
-            $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
+            $dob = Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
 
             // Prepare payload
             $payload = [
@@ -263,7 +263,7 @@ class AccountController extends Controller
                         'user_id' => $id,
                         'location_id' => $location_id,
                     ]);
-                } catch (\Illuminate\Http\Client\RequestException $e) {
+                } catch (RequestException $e) {
                     $errorMessage = $this->mapApiErrorToTranslation($e);
                     return back()->withInput()->with('error', $errorMessage);
                 }
@@ -279,14 +279,14 @@ class AccountController extends Controller
 
                 try {
                     $this->api()->delete('v1/user-locations/' . $userLocation['id']);
-                } catch (\Illuminate\Http\Client\RequestException $e) {
+                } catch (RequestException $e) {
                     $errorMessage = $this->mapApiErrorToTranslation($e);
                     return back()->withInput()->with('error', $errorMessage);
                 }
             }
 
             return redirect()->back()->with('success', __('account.updated_successfully'));
-        } catch (\Illuminate\Http\Client\RequestException $e) {
+        } catch (RequestException $e) {
             $errorMessage = $this->mapApiErrorToTranslation($e);
             return back()->withInput()->with('error', $errorMessage);
         } catch (Exception $e) {
@@ -296,11 +296,29 @@ class AccountController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        try {
+            $apiResponse = $this->api()->delete("v1/users/{$id}");
 
+            // If API returned an error (error key exists)
+            if (!empty($apiResponse['error'])) {
+                $errorMessage = $apiResponse['message'] ?? __('account.delete_failed');
+                return back()->with('error', $errorMessage); // red alert
+            }
+
+            // Success — use 'message' from API if available
+            $successMessage = $apiResponse['message'] ?? __('account.deleted_successfully');
+            return back()->with('success', $successMessage); // green alert
+
+        } catch (Exception $e) {
+            return back()->with('error', 'Unexpected error: ' . $e->getMessage()); // red alert
+        }
+    }
     /**
      * Map API error messages to translation keys
      */
-    protected function mapApiErrorToTranslation(\Illuminate\Http\Client\RequestException $e)
+    protected function mapApiErrorToTranslation(RequestException $e)
     {
         $response = $e->response->json();
         $errorMessage = $response['message'] ?? null;

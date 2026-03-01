@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     {{-- Users grid --}}
     <div class="row row-cards mb-3">
         @forelse ($users as $user)
@@ -21,12 +20,14 @@
                     <div class="d-flex">
                         <a href="{{ route('account.show', $user['id']) }}" class="card-btn text-primary">
                             <x-icon name="edit" />
-                            <span class="mx-1"> {{ __('titles.show') . " / " . __('titles.edit') }}</span>
+                            <span class="mx-1">{{ __('titles.show') }}</span>
                         </a>
-                        {{-- <a href="#" class="card-btn text-red">
+
+                        <a href="#" class="card-btn text-red" data-bs-toggle="modal"
+                            data-bs-target="#delete-user-{{ $user['id'] }}">
                             <x-icon name="trash" />
                             <span class="mx-1">{{ __('titles.delete') }}</span>
-                        </a> --}}
+                        </a>
                     </div>
                 </div>
             </div>
@@ -34,11 +35,12 @@
             <div class="col-12 text-center py-5">
                 <x-empty-state title="{{ __('titles.no_users_found') }}"
                     message="{{ __('titles.try_adjust_search_or_create') }}" :action="[
-                    'text' => __('titles.create') . __('titles.account'),
-                    'url' => route('account.create'),
-                    'class' => 'btn btn-primary',
-                    'icon' => 'plus',
-                ]" svg="svgs/no_result.svg" width="450px" />
+                        'text' => __('titles.create') . __('titles.account'),
+                        'url' => route('account.create'),
+                        'class' => 'btn btn-primary',
+                        'icon' => 'plus',
+                    ]" svg="svgs/no_result.svg"
+                    width="450px" />
             </div>
         @endforelse
     </div>
@@ -49,4 +51,11 @@
         </div>
     @endif
 
+    @if ($users)
+        @forelse ($users as $user)
+            {{-- Modal --}}
+            <x-modal.delete id="delete-user-{{ $user['id'] }}" :route="route('account.destroy', $user['id'])" :message="__('Do you want to delete this user :name?', ['name' => $user['name']])" :bold-name="true" />
+        @empty
+        @endforelse
+    @endif
 @endsection

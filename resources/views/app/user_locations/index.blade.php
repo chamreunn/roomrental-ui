@@ -22,7 +22,7 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $userLocation['user']['name'] ?? '-' }}</td>
                                     <td>{{ $userLocation['location']['location_name'] ?? '-' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($userLocation['created_at'])->format('d-m-Y H:i') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($userLocation['created_at'])->format('d-m-Y') }}</td>
                                     <td>
                                         <a href="{{ route('account.show', $userLocation['user']['id']) }}"
                                             class="btn btn-sm btn-primary">

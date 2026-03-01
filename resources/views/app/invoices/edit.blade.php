@@ -4,9 +4,8 @@
     {{-- ===== Generate Invoice Form ===== --}}
     <div class="col-12 d-print-none">
         <div class="card">
-            <form id="invoiceForm"
-                  method="POST"
-                  action="{{ route('invoice.update', ['id' => $invoice['id'], 'locationId' => $locationId]) }}">
+            <form id="invoiceForm" method="POST"
+                action="{{ route('invoice.update', ['id' => $invoice['id'], 'locationId' => $locationId]) }}">
                 @csrf
                 @method('PATCH')
 
@@ -40,30 +39,20 @@
                                 </label>
 
                                 @if ($field === 'month')
-                                    <input type="text"
-                                           name="month"
-                                           class="form-control datepicker"
-                                           value="{{ $old['month'] ?? ($invoice['month'] ?? $currentMonth) }}"
-                                           placeholder="{{ __('invoice.select_month') }}"
-                                           autocomplete="off">
+                                    <input type="text" name="month" class="form-control datepicker"
+                                        value="{{ $old['month'] ?? ($invoice['month'] ?? $currentMonth) }}"
+                                        placeholder="{{ __('invoice.select_month') }}" autocomplete="off">
                                 @else
                                     @if (in_array($field, $commaFields))
                                         {{-- Use text to allow commas --}}
-                                        <input type="text"
-                                               inputmode="decimal"
-                                               name="{{ $field }}"
-                                               class="form-control js-riel"
-                                               value="{{ $old[$field] ?? ($invoice[$field] ?? '') }}"
-                                               placeholder="{{ __('invoice.' . $field) }}"
-                                               autocomplete="off">
+                                        <input type="text" inputmode="decimal" name="{{ $field }}"
+                                            class="form-control js-riel"
+                                            value="{{ $old[$field] ?? ($invoice[$field] ?? '') }}"
+                                            placeholder="{{ __('invoice.' . $field) }}" autocomplete="off">
                                     @else
-                                        <input type="number"
-                                               step="any"
-                                               name="{{ $field }}"
-                                               class="form-control"
-                                               value="{{ $old[$field] ?? ($invoice[$field] ?? '') }}"
-                                               placeholder="{{ __('invoice.' . $field) }}"
-                                               autocomplete="off">
+                                        <input type="number" step="any" name="{{ $field }}" class="form-control"
+                                            value="{{ $old[$field] ?? ($invoice[$field] ?? '') }}"
+                                            placeholder="{{ __('invoice.' . $field) }}" autocomplete="off">
                                     @endif
                                 @endif
 
@@ -72,6 +61,22 @@
                                 @enderror
                             </div>
                         @endforeach
+
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label required">{{ __('invoice.status') }}</label>
+
+                            <select name="status" class="form-select tom-select">
+                                @foreach ($statuses as $value => $meta)
+                                    <option value="{{ $value }}" @selected((string) old('status', $invoice['status'] ?? \App\Enum\InvoiceStatus::DRAFT) === (string) $value)
+                                        data-custom-properties="<span class='{{ $meta['badge'] }} mx-0'>{{ __($meta['name']) }}</span>">
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('status')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 
@@ -96,7 +101,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // -------- Month picker (Y-m) --------
             function initMonthPicker() {
                 document.querySelectorAll('.datepicker').forEach((el) => {
@@ -141,7 +146,9 @@
                     if (el.dataset.bound === '1') return;
                     el.dataset.bound = '1';
 
-                    const sync = () => { el.value = formatNumber(el.value); };
+                    const sync = () => {
+                        el.value = formatNumber(el.value);
+                    };
 
                     el.addEventListener('input', sync);
                     el.addEventListener('blur', sync);

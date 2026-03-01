@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Utils\Util;
 use App\Enum\Status;
+use App\Utils\Util;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Session;
 
 class LocationController extends Controller
 {
@@ -34,8 +35,13 @@ class LocationController extends Controller
             // Convert to collection and map 'is_active' to status badge
             $dataCollection = collect($paginatedData['data'] ?? [])->transform(function ($item) {
                 $item['status_badge'] = Status::getStatus($item['is_active']); // use 'is_active'
-                $item['create_date_kh'] = Util::translateDateToKhmer($item['created_at'], 'd F, Y h:i A');
-                $item['update_date_kh'] = Util::translateDateToKhmer($item['updated_at'], 'd F, Y h:i A');
+                $item['create_date_kh'] = Carbon::parse($item['created_at'])
+                    ->locale('km') // set Khmer locale
+                    ->isoFormat('D MMMM, YYYY'); // e.g., 1 មីនា, 2026
+
+                $item['update_date_kh'] = Carbon::parse($item['updated_at'])
+                    ->locale('km')
+                    ->isoFormat('D MMMM, YYYY');
                 return $item;
             });
 

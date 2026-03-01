@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Carbon\Carbon;
-use App\Utils\Util;
 use App\Enum\Active;
-use App\Enum\RoomStatus;
 use App\Enum\InvoiceStatus;
+use App\Enum\RoomStatus;
+use App\Utils\Util;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Client\RequestException;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\Rule;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
+use Mpdf\Mpdf;
 
 class InvoiceController extends Controller
 {
@@ -23,16 +27,16 @@ class InvoiceController extends Controller
     {
         try {
             // === 1. Get filter/search params ===
-            $statusFilter   = $request->query('status');
-            $search         = $request->query('search');
+            $statusFilter = $request->query('status');
+            $search = $request->query('search');
             $locationFilter = $request->query('location');
             $buildingFilter = $request->query('building_name');
-            $floorFilter    = $request->query('floor_name');
-            $roomFilter     = $request->query('room_name');
+            $floorFilter = $request->query('floor_name');
+            $roomFilter = $request->query('room_name');
             $roomTypeFilter = $request->query('room_type');
-            $monthFilter    = $request->query('month');
-            $fromDate       = $request->query('from_date');
-            $toDate         = $request->query('to_date');
+            $monthFilter = $request->query('month');
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
 
             // === 2. Fetch invoices from API (by selected locationId) ===
             $response = $this->api()
@@ -42,9 +46,9 @@ class InvoiceController extends Controller
             $invoices = $response['data'] ?? [];
 
             $totals = [
-                'room_fee'        => $response['total_room_fee'] ?? 0,
+                'room_fee' => $response['total_room_fee'] ?? 0,
                 'electric_charge' => $response['total_electric_charge'] ?? 0,
-                'water_charge'    => $response['total_water_charge'] ?? 0,
+                'water_charge' => $response['total_water_charge'] ?? 0,
             ];
 
             // === 3. Apply Filters (same as you have) ===
@@ -98,8 +102,8 @@ class InvoiceController extends Controller
                     $invoices,
                     fn($inv) =>
                     isset($inv['invoice_date']) &&
-                        Carbon::parse($inv['invoice_date'])->toDateString() >= $fromDate &&
-                        Carbon::parse($inv['invoice_date'])->toDateString() <= $toDate
+                    Carbon::parse($inv['invoice_date'])->toDateString() >= $fromDate &&
+                    Carbon::parse($inv['invoice_date'])->toDateString() <= $toDate
                 );
             }
 
@@ -109,7 +113,7 @@ class InvoiceController extends Controller
                     $invoices,
                     fn($inv) =>
                     str_contains(strtolower($inv['invoice_no'] ?? ''), $search) ||
-                        str_contains(strtolower($inv['room']['room_name'] ?? ''), $search)
+                    str_contains(strtolower($inv['room']['room_name'] ?? ''), $search)
                 );
             }
 
@@ -118,42 +122,42 @@ class InvoiceController extends Controller
 
             // === 4. Add computed fields like userIndex (NO Blade calculation) ===
             $invoices = array_map(function ($inv) {
-                $oldE  = (float) ($inv['old_electric'] ?? 0);
-                $newE  = (float) ($inv['new_electric'] ?? 0);
+                $oldE = (float) ($inv['old_electric'] ?? 0);
+                $newE = (float) ($inv['new_electric'] ?? 0);
                 $eRate = (float) ($inv['electric_rate'] ?? 0);
 
-                $oldW  = (float) ($inv['old_water'] ?? 0);
-                $newW  = (float) ($inv['new_water'] ?? 0);
+                $oldW = (float) ($inv['old_water'] ?? 0);
+                $newW = (float) ($inv['new_water'] ?? 0);
                 $wRate = (float) ($inv['water_rate'] ?? 0);
 
-                $eUsed  = max(0, $newE - $oldE);
-                $wUsed  = max(0, $newW - $oldW);
+                $eUsed = max(0, $newE - $oldE);
+                $wUsed = max(0, $newW - $oldW);
 
                 $eTotal = $eUsed * $eRate;
                 $wTotal = $wUsed * $wRate;
 
                 $roomFee = (float) ($inv['room_fee'] ?? 0);
-                $other   = (float) ($inv['other_charge'] ?? 0);
+                $other = (float) ($inv['other_charge'] ?? 0);
 
                 // If API gives "total" use it, else compute
-                $grand   = (float) ($inv['total'] ?? ($roomFee + $eTotal + $wTotal + $other));
+                $grand = (float) ($inv['total'] ?? ($roomFee + $eTotal + $wTotal + $other));
 
                 $inv['calc'] = [
-                    'old_electric'   => $oldE,
-                    'new_electric'   => $newE,
-                    'electric_rate'  => $eRate,
-                    'electric_used'  => $eUsed,
+                    'old_electric' => $oldE,
+                    'new_electric' => $newE,
+                    'electric_rate' => $eRate,
+                    'electric_used' => $eUsed,
                     'electric_total' => $eTotal,
 
-                    'old_water'      => $oldW,
-                    'new_water'      => $newW,
-                    'water_rate'     => $wRate,
-                    'water_used'     => $wUsed,
-                    'water_total'    => $wTotal,
+                    'old_water' => $oldW,
+                    'new_water' => $newW,
+                    'water_rate' => $wRate,
+                    'water_used' => $wUsed,
+                    'water_total' => $wTotal,
 
-                    'room_fee'       => $roomFee,
-                    'other_charge'   => $other,
-                    'grand_total'    => $grand,
+                    'room_fee' => $roomFee,
+                    'other_charge' => $other,
+                    'grand_total' => $grand,
                 ];
 
                 return $inv;
@@ -162,33 +166,33 @@ class InvoiceController extends Controller
             // === 5. Fetch dropdown data ===
             $locations = $this->api()->get('v1/locations')['locations']['data'] ?? [];
             $roomTypes = $this->api()->get('v1/room-types')['room_types']['data'] ?? [];
-            $statuses  = InvoiceStatus::all();
+            $statuses = InvoiceStatus::all();
 
             // === 6. Return view ===
             return view('app.invoices.index', [
-                'invoices'         => $invoices,
-                'totals'           => $totals,
-                'locationId'       => $locationId,
+                'invoices' => $invoices,
+                'totals' => $totals,
+                'locationId' => $locationId,
 
-                'filter_status'    => $statusFilter,
-                'filter_location'  => $locationFilter,
-                'filter_building'  => $buildingFilter,
-                'filter_floor'     => $floorFilter,
-                'filter_room'      => $roomFilter,
+                'filter_status' => $statusFilter,
+                'filter_location' => $locationFilter,
+                'filter_building' => $buildingFilter,
+                'filter_floor' => $floorFilter,
+                'filter_room' => $roomFilter,
                 'filter_room_type' => $roomTypeFilter,
-                'filter_month'     => $monthFilter,
-                'from_date'        => $fromDate,
-                'to_date'          => $toDate,
-                'search'           => $search,
+                'filter_month' => $monthFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+                'search' => $search,
 
-                'locations'        => $locations,
-                'roomTypes'        => $roomTypes,
-                'statuses'         => $statuses,
+                'locations' => $locations,
+                'roomTypes' => $roomTypes,
+                'statuses' => $statuses,
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to fetch invoices for location', [
                 'location_id' => $locationId,
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -200,7 +204,7 @@ class InvoiceController extends Controller
     public function showLocation(Request $request)
     {
         // === 4. Fetch dropdown data ===
-        $locations  = $this->api()->get('v1/locations')['locations']['data'] ?? [];
+        $locations = $this->api()->get('v1/locations')['locations']['data'] ?? [];
 
         return view('app.invoices.show_location', compact('locations'));
     }
@@ -311,23 +315,23 @@ class InvoiceController extends Controller
     {
         // === 1. Validate input ===
         $validator = Validator::make($request->all(), [
-            'month'          => 'required|string',
-            'old_electric'   => 'required|numeric|min:0',
-            'new_electric'   => 'required|numeric|min:0',
-            'electric_rate'  => 'required|numeric|min:0',
-            'old_water'      => 'required|numeric|min:0',
-            'new_water'      => 'required|numeric|min:0',
-            'water_rate'     => 'required|numeric|min:0',
-            'other_charge'   => 'nullable|numeric|min:0',
+            'month' => 'required|string',
+            'old_electric' => 'required|numeric|min:0',
+            'new_electric' => 'required|numeric|min:0',
+            'electric_rate' => 'required|numeric|min:0',
+            'old_water' => 'required|numeric|min:0',
+            'new_water' => 'required|numeric|min:0',
+            'water_rate' => 'required|numeric|min:0',
+            'other_charge' => 'nullable|numeric|min:0',
         ], [
             // === 3. Custom message translations ===
-            'month.required'         => __('validation.required_month'),
-            'old_electric.required'  => __('validation.required_old_electric'),
-            'new_electric.required'  => __('validation.required_new_electric'),
+            'month.required' => __('validation.required_month'),
+            'old_electric.required' => __('validation.required_old_electric'),
+            'new_electric.required' => __('validation.required_new_electric'),
             'electric_rate.required' => __('validation.required_electric_rate'),
-            'old_water.required'     => __('validation.required_old_water'),
-            'new_water.required'     => __('validation.required_new_water'),
-            'water_rate.required'    => __('validation.required_water_rate'),
+            'old_water.required' => __('validation.required_old_water'),
+            'new_water.required' => __('validation.required_new_water'),
+            'water_rate.required' => __('validation.required_water_rate'),
         ]);
 
         // === 2. Custom validation logic ===
@@ -360,22 +364,22 @@ class InvoiceController extends Controller
         });
 
         // === 4. Cast numeric values safely ===
-        $oldElectric   = (float) str_replace(',', '', $request->old_electric);
-        $newElectric   = (float) str_replace(',', '', $request->new_electric);
-        $electricRate  = (float) str_replace(',', '', $request->electric_rate);
-        $oldWater      = (float) str_replace(',', '', $request->old_water);
-        $newWater      = (float) str_replace(',', '', $request->new_water);
-        $waterRate     = (float) str_replace(',', '', $request->water_rate);
-        $otherCharge   = (float) str_replace(',', '', $request->other_charge ?? 0);
+        $oldElectric = (float) str_replace(',', '', $request->old_electric);
+        $newElectric = (float) str_replace(',', '', $request->new_electric);
+        $electricRate = (float) str_replace(',', '', $request->electric_rate);
+        $oldWater = (float) str_replace(',', '', $request->old_water);
+        $newWater = (float) str_replace(',', '', $request->new_water);
+        $waterRate = (float) str_replace(',', '', $request->water_rate);
+        $otherCharge = (float) str_replace(',', '', $request->other_charge ?? 0);
 
         // === 5. Calculate usage ===
         $electricUsed = max(0, $newElectric - $oldElectric);
-        $waterUsed    = max(0, $newWater - $oldWater);
+        $waterUsed = max(0, $newWater - $oldWater);
 
         // === 6. Calculate subtotals ===
         $electricTotal = $electricUsed * $electricRate;
-        $waterTotal    = $waterUsed * $waterRate;
-        $roomRent      = isset($room['room_type']['price']) ? (float) $room['room_type']['price'] : 0;
+        $waterTotal = $waterUsed * $waterRate;
+        $roomRent = isset($room['room_type']['price']) ? (float) $room['room_type']['price'] : 0;
 
         // === 7. Grand total (match your calculateTotal method) ===
         $grandTotal = $roomRent + $electricTotal + $waterTotal + $otherCharge;
@@ -385,20 +389,20 @@ class InvoiceController extends Controller
             'room' => $room,
             'clients' => $clients,
             'preview' => [
-                'month'            => $request->month,
-                'old_electric'     => $oldElectric,
-                'new_electric'     => $newElectric,
-                'electric_rate'    => $electricRate,
-                'electric_usage'   => $electricUsed,
-                'electric_total'   => $electricTotal,
-                'old_water'        => $oldWater,
-                'new_water'        => $newWater,
-                'water_rate'       => $waterRate,
-                'water_usage'      => $waterUsed,
-                'water_total'      => $waterTotal,
-                'room_rent'        => $roomRent,
-                'other_charge'     => $otherCharge,
-                'grand_total'      => $grandTotal,
+                'month' => $request->month,
+                'old_electric' => $oldElectric,
+                'new_electric' => $newElectric,
+                'electric_rate' => $electricRate,
+                'electric_usage' => $electricUsed,
+                'electric_total' => $electricTotal,
+                'old_water' => $oldWater,
+                'new_water' => $newWater,
+                'water_rate' => $waterRate,
+                'water_usage' => $waterUsed,
+                'water_total' => $waterTotal,
+                'room_rent' => $roomRent,
+                'other_charge' => $otherCharge,
+                'grand_total' => $grandTotal,
             ]
         ]);
     }
@@ -407,22 +411,22 @@ class InvoiceController extends Controller
     {
         // === 1. Validate input ===
         $validator = Validator::make($request->all(), [
-            'month'          => 'required|string',
-            'old_electric'   => 'required|numeric|min:0',
-            'new_electric'   => 'required|numeric|min:0',
-            'electric_rate'  => 'required|numeric|min:0',
-            'old_water'      => 'required|numeric|min:0',
-            'new_water'      => 'required|numeric|min:0',
-            'water_rate'     => 'required|numeric|min:0',
-            'other_charge'   => 'nullable|numeric|min:0',
+            'month' => 'required|string',
+            'old_electric' => 'required|numeric|min:0',
+            'new_electric' => 'required|numeric|min:0',
+            'electric_rate' => 'required|numeric|min:0',
+            'old_water' => 'required|numeric|min:0',
+            'new_water' => 'required|numeric|min:0',
+            'water_rate' => 'required|numeric|min:0',
+            'other_charge' => 'nullable|numeric|min:0',
         ], [
-            'month.required'         => __('validation.required_month'),
-            'old_electric.required'  => __('validation.required_old_electric'),
-            'new_electric.required'  => __('validation.required_new_electric'),
+            'month.required' => __('validation.required_month'),
+            'old_electric.required' => __('validation.required_old_electric'),
+            'new_electric.required' => __('validation.required_new_electric'),
             'electric_rate.required' => __('validation.required_electric_rate'),
-            'old_water.required'     => __('validation.required_old_water'),
-            'new_water.required'     => __('validation.required_new_water'),
-            'water_rate.required'    => __('validation.required_water_rate'),
+            'old_water.required' => __('validation.required_old_water'),
+            'new_water.required' => __('validation.required_new_water'),
+            'water_rate.required' => __('validation.required_water_rate'),
         ]);
 
         // === 2. Custom validation logic ===
@@ -441,15 +445,15 @@ class InvoiceController extends Controller
 
         // === 3. Build payload ===
         $payload = [
-            'room_id'       => $request->room_id,
-            'old_electric'  => (float) $request->old_electric,
-            'new_electric'  => (float) $request->new_electric,
+            'room_id' => $request->room_id,
+            'old_electric' => (float) $request->old_electric,
+            'new_electric' => (float) $request->new_electric,
             'electric_rate' => (float) $request->electric_rate,
-            'old_water'     => (float) $request->old_water,
-            'new_water'     => (float) $request->new_water,
-            'water_rate'    => (float) $request->water_rate,
-            'other_charge'  => (float) ($request->other_charge ?? 0),
-            'invoice_date'  => $request->month, // Y-m format
+            'old_water' => (float) $request->old_water,
+            'new_water' => (float) $request->new_water,
+            'water_rate' => (float) $request->water_rate,
+            'other_charge' => (float) ($request->other_charge ?? 0),
+            'invoice_date' => $request->month, // Y-m format
         ];
 
         // === 4. Call API ===
@@ -484,8 +488,8 @@ class InvoiceController extends Controller
 
             // === 3. Optional: compute useful totals (for view display) ===
             $invoice['electric_total'] = ($invoice['new_electric'] - $invoice['old_electric']) * $invoice['electric_rate'];
-            $invoice['water_total']    = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
-            $invoice['grand_total']    = $invoice['total']
+            $invoice['water_total'] = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
+            $invoice['grand_total'] = $invoice['total']
                 ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
 
             // === 4. Pass to view ===
@@ -506,28 +510,27 @@ class InvoiceController extends Controller
     public function edit(Request $request, $id, $locationId)
     {
         try {
-            // === 1. Fetch invoice details from API ===
-            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->get("v1/invoices/{$id}");
+            $response = $this->api()
+                ->withHeaders(['Location-Id' => $locationId])
+                ->get("v1/invoices/{$id}");
 
-            // === 2. Validate and extract invoice data ===
             $invoice = $response['invoice'] ?? null;
 
             if (!$invoice) {
                 return redirect()
-                    ->route('invoice.user_index')
+                    ->route('invoice.user_index', $locationId)
                     ->withErrors(['error' => __('invoice.not_found')]);
             }
 
-            // dd($invoice);
+            $statuses = InvoiceStatus::all(); // ✅ add this
 
-            // === 3. Pass to view ===
-            return view('app.invoices.edit', compact('invoice', 'locationId'));
+            return view('app.invoices.edit', compact('invoice', 'locationId', 'statuses'));
         } catch (\Throwable $e) {
-            // === 4. Handle unexpected errors gracefully ===
             Log::error('Failed to fetch invoice details for editing', [
                 'invoice_id' => $id,
                 'error' => $e->getMessage(),
             ]);
+
             return redirect()
                 ->route('invoice.user_index', $locationId)
                 ->withErrors(['error' => __('invoice.fetch_failed')]);
@@ -536,37 +539,25 @@ class InvoiceController extends Controller
 
     public function update(Request $request, $id, $locationId)
     {
-        // === 1. Validation rules for all fields ===
         $rules = [
-            'month'         => 'required|date_format:Y-m-d',
-            'old_electric'  => 'required|numeric|min:0',
-            'new_electric'  => 'required|numeric|min:0',
-            'electric_rate' => 'required|numeric|min:0',
-            'old_water'     => 'required|numeric|min:0',
-            'new_water'     => 'required|numeric|min:0',
-            'water_rate'    => 'required|numeric|min:0',
-            'other_charge'  => 'nullable|numeric|min:0',
+            'month' => ['required', 'date_format:Y-m-d'],
+            'old_electric' => ['required', 'numeric', 'min:0'],
+            'new_electric' => ['required', 'numeric', 'min:0'],
+            'electric_rate' => ['required', 'numeric', 'min:0'],
+            'old_water' => ['required', 'numeric', 'min:0'],
+            'new_water' => ['required', 'numeric', 'min:0'],
+            'water_rate' => ['required', 'numeric', 'min:0'],
+            'other_charge' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['required', Rule::in(array_keys(InvoiceStatus::all()))],
         ];
 
-        $messages = [
-            'month.required'         => __('validation.required', ['attribute' => __('invoice.month')]),
-            'month.date_format'      => __('validation.date_format', ['attribute' => __('invoice.month')]),
-            'old_electric.required'  => __('validation.required', ['attribute' => __('invoice.old_electric')]),
-            'new_electric.required'  => __('validation.required', ['attribute' => __('invoice.new_electric')]),
-            'electric_rate.required' => __('validation.required', ['attribute' => __('invoice.electric_rate')]),
-            'old_water.required'     => __('validation.required', ['attribute' => __('invoice.old_water')]),
-            'new_water.required'     => __('validation.required', ['attribute' => __('invoice.new_water')]),
-            'water_rate.required'    => __('validation.required', ['attribute' => __('invoice.water_rate')]),
-        ];
+        $validator = Validator::make($request->all(), $rules);
 
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        // Custom logic: new readings cannot be less than old readings
         $validator->after(function ($validator) use ($request) {
-            if ($request->new_electric < $request->old_electric) {
+            if ((float) $request->new_electric < (float) $request->old_electric) {
                 $validator->errors()->add('new_electric', __('validation.new_electric_must_be_greater'));
             }
-            if ($request->new_water < $request->old_water) {
+            if ((float) $request->new_water < (float) $request->old_water) {
                 $validator->errors()->add('new_water', __('validation.new_water_must_be_greater'));
             }
         });
@@ -575,32 +566,76 @@ class InvoiceController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // === 2. Build payload for API ===
         $payload = [
-            'invoice_date'  => $request->month,
-            'old_electric'  => (float) $request->old_electric,
-            'new_electric'  => (float) $request->new_electric,
+            'invoice_date' => $request->month,
+            'old_electric' => (float) $request->old_electric,
+            'new_electric' => (float) $request->new_electric,
             'electric_rate' => (float) $request->electric_rate,
-            'old_water'     => (float) $request->old_water,
-            'new_water'     => (float) $request->new_water,
-            'water_rate'    => (float) $request->water_rate,
-            'other_charge'  => (float) ($request->other_charge ?? 0),
+            'old_water' => (float) $request->old_water,
+            'new_water' => (float) $request->new_water,
+            'water_rate' => (float) $request->water_rate,
+            'other_charge' => (float) ($request->other_charge ?? 0),
+            'status' => (int) $request->status,
         ];
 
-        // === 3. Call API ===
-        $response = $this->api()->withHeaders(['Location-Id' => $locationId])->patch("v1/invoices/{$id}", $payload);
+        // ✅ Always log payload so you can confirm what is being sent
+        Log::info('Invoice PATCH payload', [
+            'invoice_id' => $id,
+            'location_id' => $locationId,
+            'payload' => $payload,
+        ]);
 
-        // === 4. Handle API response ===
+        try {
+            $response = $this->api()
+                ->withHeaders(['Location-Id' => $locationId])
+                ->patch("v1/invoices/{$id}", $payload);
+
+            // ✅ If your api() wrapper returns array, log it
+            Log::info('Invoice PATCH response', [
+                'invoice_id' => $id,
+                'response' => $response,
+            ]);
+
+            // Optional: show in session instead of dd()
+            // return redirect()->back()->with('debug', json_encode($response));
+
+        } catch (RequestException $e) {
+            // ✅ This catches Laravel HTTP client exceptions and includes response body
+            $res = $e->response;
+
+            Log::error('Invoice PATCH RequestException', [
+                'invoice_id' => $id,
+                'location_id' => $locationId,
+                'payload' => $payload,
+                'status' => $res?->status(),
+                'body' => $res?->body(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => $res?->json('message') ?? $res?->body() ?? 'API request failed']);
+        } catch (\Throwable $e) {
+            Log::error('Invoice PATCH Throwable', [
+                'invoice_id' => $id,
+                'location_id' => $locationId,
+                'payload' => $payload,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => __('invoice.update_failed')]);
+        }
+
         if (!empty($response['success']) && $response['success'] === true) {
-            return redirect()
-                ->back()
-                ->with('success', __('invoice.updated_successfully'));
+            return redirect()->back()->with('success', __('invoice.updated_successfully'));
         }
 
         return redirect()->back()
             ->withInput()
             ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.update_failed')]);
     }
+
 
     public function destroy(Request $request, $id, $locationId)
     {
@@ -642,7 +677,7 @@ class InvoiceController extends Controller
             ['status' => ['required', 'integer', 'in:' . implode(',', $allowedStatuses)]],
             [
                 'status.required' => __('validation.required', ['attribute' => __('invoice.status')]),
-                'status.in'       => __('validation.in', ['attribute' => __('invoice.status')]),
+                'status.in' => __('validation.in', ['attribute' => __('invoice.status')]),
             ]
         );
 
@@ -667,7 +702,7 @@ class InvoiceController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.update_failed')]);
-        } catch (\Illuminate\Http\Client\RequestException $e) {
+        } catch (RequestException $e) {
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => __('invoice.update_failed') . ' - ' . $e->getMessage()]);
@@ -705,13 +740,13 @@ class InvoiceController extends Controller
             }, $rooms);
 
             return view('app.invoices.user-create-invoice', [
-                'rooms'      => $rooms,
+                'rooms' => $rooms,
                 'locationId' => $location,
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to fetch rooms', [
                 'location_id' => $location,
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
@@ -727,7 +762,7 @@ class InvoiceController extends Controller
     {
         // ✅ If your Blade changed to invoice_date[] (Y-m-d), use invoice_date.* here (NOT month.*)
         $request->validate([
-            'room_id.*'      => 'required|uuid',
+            'room_id.*' => 'required|uuid',
 
             // ✅ date in Y-m-d
             'invoice_date.*' => 'required|date_format:Y-m-d',
@@ -736,11 +771,11 @@ class InvoiceController extends Controller
             'new_electric.*' => 'required|numeric|min:0',
 
             // ✅ global (fill once)
-            'electric_rate'  => 'required|numeric|min:0',
-            'water_rate'     => 'required|numeric|min:0',
+            'electric_rate' => 'required|numeric|min:0',
+            'water_rate' => 'required|numeric|min:0',
 
-            'old_water.*'    => 'required|numeric|min:0',
-            'new_water.*'    => 'required|numeric|min:0',
+            'old_water.*' => 'required|numeric|min:0',
+            'new_water.*' => 'required|numeric|min:0',
             'other_charge.*' => 'nullable|numeric|min:0',
         ]);
 
@@ -756,8 +791,8 @@ class InvoiceController extends Controller
             // ✅ avoid "undefined offset" if something missing
             $oldElectric = (float) ($request->old_electric[$i] ?? 0);
             $newElectric = (float) ($request->new_electric[$i] ?? 0);
-            $oldWater    = (float) ($request->old_water[$i] ?? 0);
-            $newWater    = (float) ($request->new_water[$i] ?? 0);
+            $oldWater = (float) ($request->old_water[$i] ?? 0);
+            $newWater = (float) ($request->new_water[$i] ?? 0);
 
             if ($newElectric < $oldElectric) {
                 $msg = __('validation.new_electric_must_be_greater');
@@ -774,23 +809,23 @@ class InvoiceController extends Controller
             }
 
             $payload = [
-                'room_id'       => $request->room_id[$i],
-                'old_electric'  => $oldElectric,
-                'new_electric'  => $newElectric,
+                'room_id' => $request->room_id[$i],
+                'old_electric' => $oldElectric,
+                'new_electric' => $newElectric,
 
                 // ✅ same for all rooms
                 'electric_rate' => (float) $request->electric_rate,
 
-                'old_water'     => $oldWater,
-                'new_water'     => $newWater,
+                'old_water' => $oldWater,
+                'new_water' => $newWater,
 
                 // ✅ same for all rooms
-                'water_rate'    => (float) $request->water_rate,
+                'water_rate' => (float) $request->water_rate,
 
-                'other_charge'  => (float) ($request->other_charge[$i] ?? 0),
+                'other_charge' => (float) ($request->other_charge[$i] ?? 0),
 
                 // ✅ match your UI field name
-                'invoice_date'  => $request->invoice_date[$i],
+                'invoice_date' => $request->invoice_date[$i],
             ];
 
             try {
@@ -818,7 +853,7 @@ class InvoiceController extends Controller
 
                 $errors["api.$i"] = [$msg];
                 $alertErrors[] = "$rowLabel: $msg";
-            } catch (\Illuminate\Http\Client\RequestException $e) {
+            } catch (RequestException $e) {
                 $data = $e->response?->json();
 
                 $msg = collect($data['errors'] ?? [])
@@ -874,19 +909,19 @@ class InvoiceController extends Controller
     {
         try {
             // === 1) Get filter/search params ===
-            $statusFilter    = $request->query('status');          // string/int
-            $search          = trim((string) $request->query('search', ''));
-            $buildingFilter  = trim((string) $request->query('building_name', ''));
-            $floorFilter     = trim((string) $request->query('floor_name', ''));
-            $roomFilter      = trim((string) $request->query('room_name', ''));
-            $roomTypeFilter  = $request->query('room_type');       // id
-            $monthFilter     = $request->query('month');           // "YYYY-MM" from <input type="month">
-            $fromDate        = $request->query('from_date');       // "YYYY-MM-DD"
-            $toDate          = $request->query('to_date');         // "YYYY-MM-DD"
+            $statusFilter = $request->query('status');          // string/int
+            $search = trim((string) $request->query('search', ''));
+            $buildingFilter = trim((string) $request->query('building_name', ''));
+            $floorFilter = trim((string) $request->query('floor_name', ''));
+            $roomFilter = trim((string) $request->query('room_name', ''));
+            $roomTypeFilter = $request->query('room_type');       // id
+            $monthFilter = $request->query('month');           // "YYYY-MM" from <input type="month">
+            $fromDate = $request->query('from_date');       // "YYYY-MM-DD"
+            $toDate = $request->query('to_date');         // "YYYY-MM-DD"
 
             // normalize dates (optional, but safer)
             $fromDate = $fromDate ? Carbon::parse($fromDate)->toDateString() : null;
-            $toDate   = $toDate   ? Carbon::parse($toDate)->toDateString()   : null;
+            $toDate = $toDate ? Carbon::parse($toDate)->toDateString() : null;
 
             // === 2) Fetch invoices for THIS location ===
             // ✅ IMPORTANT: your API uses "Location-Id" header (you used different header names before)
@@ -897,69 +932,69 @@ class InvoiceController extends Controller
             $invoices = $response['data'] ?? [];
 
             // === 3) Apply filters (client-side fallback) ===
-            $invoices = array_filter($invoices, function ($inv) use (
-                $statusFilter,
-                $buildingFilter,
-                $floorFilter,
-                $roomFilter,
-                $roomTypeFilter,
-                $monthFilter,
-                $fromDate,
-                $toDate,
-                $search
-            ) {
+            $invoices = array_filter($invoices, function ($inv) use ($statusFilter, $buildingFilter, $floorFilter, $roomFilter, $roomTypeFilter, $monthFilter, $fromDate, $toDate, $search) {
                 $room = $inv['room'] ?? [];
 
                 // status
                 if ($statusFilter !== null && $statusFilter !== '') {
-                    if ((string) ($inv['status'] ?? '') !== (string) $statusFilter) return false;
+                    if ((string) ($inv['status'] ?? '') !== (string) $statusFilter)
+                        return false;
                 }
 
                 // room type
                 if ($roomTypeFilter !== null && $roomTypeFilter !== '') {
-                    if ((string) ($room['room_type_id'] ?? '') !== (string) $roomTypeFilter) return false;
+                    if ((string) ($room['room_type_id'] ?? '') !== (string) $roomTypeFilter)
+                        return false;
                 }
 
                 // building
                 if ($buildingFilter !== '') {
-                    if (!str_contains(mb_strtolower($room['building_name'] ?? ''), mb_strtolower($buildingFilter))) return false;
+                    if (!str_contains(mb_strtolower($room['building_name'] ?? ''), mb_strtolower($buildingFilter)))
+                        return false;
                 }
 
                 // floor
                 if ($floorFilter !== '') {
-                    if (!str_contains(mb_strtolower($room['floor_name'] ?? ''), mb_strtolower($floorFilter))) return false;
+                    if (!str_contains(mb_strtolower($room['floor_name'] ?? ''), mb_strtolower($floorFilter)))
+                        return false;
                 }
 
                 // room name
                 if ($roomFilter !== '') {
-                    if (!str_contains(mb_strtolower($room['room_name'] ?? ''), mb_strtolower($roomFilter))) return false;
+                    if (!str_contains(mb_strtolower($room['room_name'] ?? ''), mb_strtolower($roomFilter)))
+                        return false;
                 }
 
                 // invoice_date exists?
                 $invoiceDate = $inv['invoice_date'] ?? null;
                 if (!$invoiceDate) {
                     // if date missing, it cannot match date filters
-                    if ($monthFilter || $fromDate || $toDate) return false;
+                    if ($monthFilter || $fromDate || $toDate)
+                        return false;
                 } else {
                     $invDate = Carbon::parse($invoiceDate)->toDateString(); // "Y-m-d"
 
                     // month filter (YYYY-MM)
                     if ($monthFilter) {
-                        if (Carbon::parse($invoiceDate)->format('Y-m') !== $monthFilter) return false;
+                        if (Carbon::parse($invoiceDate)->format('Y-m') !== $monthFilter)
+                            return false;
                     }
 
                     // from/to filters (support any combination)
-                    if ($fromDate && $invDate < $fromDate) return false;
-                    if ($toDate && $invDate > $toDate) return false;
+                    if ($fromDate && $invDate < $fromDate)
+                        return false;
+                    if ($toDate && $invDate > $toDate)
+                        return false;
                 }
 
                 // search (invoice_no OR room name)
                 if ($search !== '') {
                     $q = mb_strtolower($search);
                     $invoiceNo = mb_strtolower((string) ($inv['invoice_no'] ?? ''));
-                    $roomName  = mb_strtolower((string) ($room['room_name'] ?? ''));
+                    $roomName = mb_strtolower((string) ($room['room_name'] ?? ''));
 
-                    if (!str_contains($invoiceNo, $q) && !str_contains($roomName, $q)) return false;
+                    if (!str_contains($invoiceNo, $q) && !str_contains($roomName, $q))
+                        return false;
                 }
 
                 return true;
@@ -970,87 +1005,218 @@ class InvoiceController extends Controller
 
             // === 4) Add computed fields + totals based on FILTERED result ===
             $totals = [
-                'room_fee'        => 0,
+                'room_fee' => 0,
                 'electric_charge' => 0,
-                'water_charge'    => 0,
+                'water_charge' => 0,
             ];
 
             $invoices = array_map(function ($inv) use (&$totals) {
-                $oldE  = (float) ($inv['old_electric'] ?? 0);
-                $newE  = (float) ($inv['new_electric'] ?? 0);
+                $oldE = (float) ($inv['old_electric'] ?? 0);
+                $newE = (float) ($inv['new_electric'] ?? 0);
                 $eRate = (float) ($inv['electric_rate'] ?? 0);
 
-                $oldW  = (float) ($inv['old_water'] ?? 0);
-                $newW  = (float) ($inv['new_water'] ?? 0);
+                $oldW = (float) ($inv['old_water'] ?? 0);
+                $newW = (float) ($inv['new_water'] ?? 0);
                 $wRate = (float) ($inv['water_rate'] ?? 0);
 
-                $eUsed  = max(0, $newE - $oldE);
-                $wUsed  = max(0, $newW - $oldW);
+                $eUsed = max(0, $newE - $oldE);
+                $wUsed = max(0, $newW - $oldW);
 
                 $eTotal = $eUsed * $eRate;
                 $wTotal = $wUsed * $wRate;
 
                 $roomFee = (float) ($inv['room_fee'] ?? 0);
-                $other   = (float) ($inv['other_charge'] ?? 0);
-                $grand   = (float) ($inv['total'] ?? ($roomFee + $eTotal + $wTotal + $other));
+                $other = (float) ($inv['other_charge'] ?? 0);
+                $grand = (float) ($inv['total'] ?? ($roomFee + $eTotal + $wTotal + $other));
 
                 $inv['calc'] = [
-                    'old_electric'    => $oldE,
-                    'new_electric'    => $newE,
-                    'electric_rate'   => $eRate,
-                    'electric_used'   => $eUsed,
-                    'electric_total'  => $eTotal,
+                    'old_electric' => $oldE,
+                    'new_electric' => $newE,
+                    'electric_rate' => $eRate,
+                    'electric_used' => $eUsed,
+                    'electric_total' => $eTotal,
 
-                    'old_water'       => $oldW,
-                    'new_water'       => $newW,
-                    'water_rate'      => $wRate,
-                    'water_used'      => $wUsed,
-                    'water_total'     => $wTotal,
+                    'old_water' => $oldW,
+                    'new_water' => $newW,
+                    'water_rate' => $wRate,
+                    'water_used' => $wUsed,
+                    'water_total' => $wTotal,
 
-                    'room_fee'        => $roomFee,
-                    'other_charge'    => $other,
-                    'grand_total'     => $grand,
+                    'room_fee' => $roomFee,
+                    'other_charge' => $other,
+                    'grand_total' => $grand,
                 ];
 
                 // ✅ totals for current filtered list
-                $totals['room_fee']        += $roomFee;
+                $totals['room_fee'] += $roomFee;
                 $totals['electric_charge'] += $eTotal;
-                $totals['water_charge']    += $wTotal;
+                $totals['water_charge'] += $wTotal;
 
                 return $inv;
             }, $invoices);
 
             // === 5) Fetch dropdown data ===
             $roomTypes = $this->api()->get('v1/room-types')['room_types']['data'] ?? [];
-            $statuses  = InvoiceStatus::all();
+            $statuses = InvoiceStatus::all();
 
             return view('app.invoices.user-index', [
-                'invoices'         => $invoices,
-                'totals'           => $totals,
-                'locationId'       => $location,
+                'invoices' => $invoices,
+                'totals' => $totals,
+                'locationId' => $location,
 
-                'filter_status'    => $statusFilter,
-                'filter_building'  => $buildingFilter,
-                'filter_floor'     => $floorFilter,
-                'filter_room'      => $roomFilter,
+                'filter_status' => $statusFilter,
+                'filter_building' => $buildingFilter,
+                'filter_floor' => $floorFilter,
+                'filter_room' => $roomFilter,
                 'filter_room_type' => $roomTypeFilter,
-                'filter_month'     => $monthFilter,
-                'from_date'        => $fromDate,
-                'to_date'          => $toDate,
-                'search'           => $search,
+                'filter_month' => $monthFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+                'search' => $search,
 
-                'roomTypes'        => $roomTypes,
-                'statuses'         => $statuses,
+                'roomTypes' => $roomTypes,
+                'statuses' => $statuses,
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to fetch invoices for location', [
                 'location_id' => $location,
-                'error'       => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
                 ->route('invoice.user_chooselocation')
                 ->withErrors(['error' => __('invoice.fetch_failed')]);
         }
+    }
+
+    public function export(Request $request, $id, $locationId)
+    {
+        try {
+            $response = $this->api()->get(
+                "v1/invoices/{$id}",
+                [],
+                token: null,
+                moreHeaders: ['Location-Id' => $locationId]
+            );
+
+            $invoice = $response['invoice'] ?? null;
+
+            if (!$invoice) {
+                return redirect()
+                    ->route('invoice.index')
+                    ->withErrors(['error' => __('invoice.not_found')]);
+            }
+
+            $invoice['electric_total'] = ($invoice['new_electric'] - $invoice['old_electric']) * $invoice['electric_rate'];
+            $invoice['water_total'] = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
+            $invoice['grand_total'] = $invoice['total']
+                ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
+
+            $defaultConfig = (new ConfigVariables())->getDefaults();
+            $defaultFontConfig = (new FontVariables())->getDefaults();
+
+            $mpdf = new Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'orientation' => 'P',
+                'margin_top' => 15,   // ✅ more breathing room
+                'margin_bottom' => 15,
+                'margin_left' => 15,
+                'margin_right' => 15,
+                'fontDir' => array_merge(
+                    $defaultConfig['fontDir'],
+                    [public_path('fonts/')]
+                ),
+                'fontdata' => array_merge(
+                    $defaultFontConfig['fontdata'],
+                    [
+                        'siemreap' => [
+                            'R' => 'KhmerOS_battambang.ttf',  // normal → siemreap
+                            'B' => 'KhmerOS_battambang.ttf',  // bold   → siemreap (same font)
+                            'useOTL' => 0xFF,
+                            'useKashida' => 0,
+                        ],
+                    ]
+                ),
+                'default_font' => 'siemreap',
+            ]);
+
+            $html = view('app.invoices.export', compact('invoice', 'locationId'))->render();
+
+            $mpdf->WriteHTML($html);
+
+            return response()->streamDownload(
+                function () use ($mpdf) {
+                    echo $mpdf->Output('', 'S');
+                },
+                "invoice-{$invoice['invoice_no']}.pdf",
+                ['Content-Type' => 'application/pdf']
+            );
+
+        } catch (\Throwable $e) {
+            Log::error('Failed to export invoice', [
+                'invoice_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('invoice.index')
+                ->withErrors(['error' => __('invoice.fetch_failed')]);
+        }
+    }
+
+    public function exportMultiple(Request $request, $locationId)
+    {
+        $ids = $request->input('ids', []);
+
+        if (empty($ids)) {
+            return back()->withErrors(['error' => 'Please select at least one invoice.']);
+        }
+
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P',
+            'margin_top' => 15,
+            'margin_bottom' => 15,
+            'margin_left' => 18,
+            'margin_right' => 18,
+            'fontDir' => array_merge($defaultConfig['fontDir'], [public_path('fonts/')]),
+            'fontdata' => array_merge($defaultFontConfig['fontdata'], [
+                'siemreap' => [
+                    'R' => 'siemreap.ttf',
+                    'B' => 'siemreap.ttf',
+                    'useOTL' => 0xFF,
+                    'useKashida' => 0,
+                    'fakebold' => true,
+                ],
+            ]),
+            'default_font' => 'siemreap',
+        ]);
+
+        foreach ($ids as $index => $id) {
+            $response = $this->api()->get("v1/invoices/{$id}", [], token: null, moreHeaders: ['Location-Id' => $locationId]);
+            $invoice = $response['invoice'] ?? null;
+            if (!$invoice)
+                continue;
+
+            $invoice['electric_total'] = ($invoice['new_electric'] - $invoice['old_electric']) * $invoice['electric_rate'];
+            $invoice['water_total'] = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
+            $invoice['grand_total'] = $invoice['total'] ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
+
+            if ($index > 0)
+                $mpdf->AddPage();
+
+            $mpdf->WriteHTML(view('app.invoices.export', compact('invoice', 'locationId'))->render());
+        }
+
+        return response()->streamDownload(
+            fn() => print ($mpdf->Output('', 'S')),
+            'invoices-' . now()->format('d-M-Y') . '.pdf',
+            ['Content-Type' => 'application/pdf']
+        );
     }
 }
