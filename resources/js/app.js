@@ -1,27 +1,27 @@
+import "./settings";
+
+// ======================
+// CSS IMPORTS (REQUIRED)
+// ======================
+import "flatpickr/dist/flatpickr.css";
+import "aos/dist/aos.css";
+
+// ======================
+// JS LIBRARIES
+// ======================
 import AOS from "aos";
 import ApexCharts from "apexcharts";
-import "@tabler/core/dist/css/tabler-vendors.min.css";
-import TomSelect from "@tabler/core/dist/libs/tom-select/dist/js/tom-select.base.min.js";
-import Litepicker from "litepicker";
-import "litepicker/dist/css/litepicker.css";
-
-// Tabler Core
-import "@tabler/core/dist/js/tabler.min.js";
-import "@tabler/core/dist/js/tabler-theme.min.js";
-import "@tabler/core/js/tabler-theme.js";
-import "@tabler/core/dist/css/tabler-flags.min.css";
-import "@tabler/core/dist/css/demo.min.css";
+import TomSelect from "@tabler/core/dist/libs/tom-select/dist/js/tom-select.complete.js";
+import flatpickr from "flatpickr";
+import Litepicker from "@tabler/core/dist/libs/litepicker/dist/js/main.js";
 import "@tabler/core/dist/libs/litepicker/dist/css/litepicker.css";
 
-import flatpickr from "flatpickr";
-import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect/index.js";
+// Tabler Core
+import "@tabler/core/dist/js/tabler.js";
 
-import "flatpickr/dist/flatpickr.min.css";
-import "flatpickr/dist/plugins/monthSelect/style.css";
-import "flatpickr/dist/flatpickr.min.css";
-import "flatpickr/dist/plugins/monthSelect/style.css";
-// Optional: Khmer locale
-import { Khmer } from "flatpickr/dist/l10n/km.js";
+// Expose globals if needed
+window.AOS = AOS;
+window.ApexCharts = ApexCharts;
 
 // for flatpickr
 document.addEventListener("DOMContentLoaded", function () {
