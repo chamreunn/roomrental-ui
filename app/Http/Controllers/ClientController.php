@@ -17,8 +17,7 @@ class ClientController extends Controller
 {
     public function showLocation()
     {
-        // Get location detail
-        $locationResponse = $this->api()->get("v1/locations");
+        $locationResponse = $this->api()->get('v1/locations');
         $locations = $locationResponse['locations']['data'] ?? null;
 
         return view('app.clients.show-location', compact('locations'));
@@ -40,9 +39,8 @@ class ClientController extends Controller
         $currentPage = (int) $request->query('page', 1);
 
         $search = trim((string) $request->query('search', ''));
-        $roomStatus = $request->query('room_status'); // from filter dropdown
+        $roomStatus = $request->query('room_status');
 
-        // ✅ validate roomStatus using enum keys
         $allowedRoomStatuses = array_keys(RoomStatus::all());
         $roomStatus = ($roomStatus !== null && $roomStatus !== '' && in_array((int) $roomStatus, $allowedRoomStatuses, true))
             ? (int) $roomStatus
@@ -56,13 +54,9 @@ class ClientController extends Controller
             $data = $response['clients'] ?? [];
             $clientsArray = $data['data'] ?? [];
 
-            // ✅ Transform + safe room + badges
             $collection = collect($clientsArray)->map(function ($item) {
-
-                // client status badge
                 $item['status_badge'] = Active::getStatus($item['status'] ?? null);
 
-                // ensure room exists
                 $item['room'] = $item['room'] ?? [
                     'id' => null,
                     'location_id' => null,
@@ -71,35 +65,31 @@ class ClientController extends Controller
                     'status' => null,
                 ];
 
-                // room status meta (enum)
                 $item['room']['status_meta'] = RoomStatus::getStatus($item['room']['status'] ?? null);
 
                 return $item;
             });
 
-            // ✅ Filter by room status
             if ($roomStatus !== null) {
-                $collection = $collection->filter(fn($c) => (int) ($c['room']['status'] ?? -1) === $roomStatus);
+                $collection = $collection->filter(fn($client) => (int) ($client['room']['status'] ?? -1) === $roomStatus);
             }
 
-            // ✅ Search: username / email / phone / room name
             if ($search !== '') {
-                $q = mb_strtolower($search);
+                $query = mb_strtolower($search);
 
-                $collection = $collection->filter(function ($c) use ($q) {
-                    $username = mb_strtolower((string) ($c['username'] ?? ''));
-                    $email = mb_strtolower((string) ($c['email'] ?? ''));
-                    $phone = mb_strtolower((string) ($c['phone_number'] ?? ''));
-                    $roomName = mb_strtolower((string) ($c['room']['room_name'] ?? ''));
+                $collection = $collection->filter(function ($client) use ($query) {
+                    $username = mb_strtolower((string) ($client['username'] ?? ''));
+                    $email = mb_strtolower((string) ($client['email'] ?? ''));
+                    $phone = mb_strtolower((string) ($client['phone_number'] ?? ''));
+                    $roomName = mb_strtolower((string) ($client['room']['room_name'] ?? ''));
 
-                    return str_contains($username, $q)
-                        || str_contains($email, $q)
-                        || str_contains($phone, $q)
-                        || str_contains($roomName, $q);
+                    return str_contains($username, $query)
+                        || str_contains($email, $query)
+                        || str_contains($phone, $query)
+                        || str_contains($roomName, $query);
                 });
             }
 
-            // ✅ Pagination after filtering
             $total = $collection->count();
 
             $items = $collection->values()
@@ -116,16 +106,18 @@ class ClientController extends Controller
                     'query' => $request->query(),
                 ]
             );
-
-            // dd($clients);
         } catch (Throwable $e) {
+            Log::error('Client list failed', [
+                'location_id' => $locationId,
+                'error' => $e->getMessage(),
+            ]);
+
             $clients = new LengthAwarePaginator([], 0, $perPage, $currentPage, [
                 'path' => url()->current(),
                 'query' => $request->query(),
             ]);
         }
 
-        // ✅ send enum list to blade for dropdown
         $roomStatuses = RoomStatus::all();
 
         return view('app.clients.index', compact('clients', 'roomStatuses', 'locationId'));
@@ -134,22 +126,18 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->query('per_page', 10);
-            $currentPage = $request->query('page', 1);
+            $perPage = (int) $request->query('per_page', 10);
+            $currentPage = (int) $request->query('page', 1);
 
             $response = $this->api()->get('v1/clients');
             $data = $response['clients'] ?? [];
 
-            // Clients list
             $clientsArray = $data['data'] ?? [];
             $total = $data['total'] ?? count($clientsArray);
 
-            // Transform & make room safe
             $dataCollection = collect($clientsArray)->transform(function ($item) {
+                $item['status_badge'] = Active::getStatus($item['status'] ?? null);
 
-                $item['status_badge'] = Active::getStatus($item['status']);
-
-                // Ensure room always exists (avoid null errors)
                 $item['room'] = $item['room'] ?? [
                     'id' => null,
                     'location_id' => null,
@@ -160,20 +148,116 @@ class ClientController extends Controller
                 return $item;
             });
 
-            // Pagination
             $clients = new LengthAwarePaginator(
                 $dataCollection,
                 $total,
                 $perPage,
                 $currentPage,
-                ['path' => url()->current(), 'query' => $request->query()]
+                [
+                    'path' => url()->current(),
+                    'query' => $request->query(),
+                ]
             );
-
         } catch (Exception $e) {
+            Log::error('Client index failed', [
+                'error' => $e->getMessage(),
+            ]);
+
             $clients = new LengthAwarePaginator([], 0, 10);
         }
 
         return view('app.clients.index', compact('clients'));
+    }
+
+    public function store(Request $request, $roomId, $locationId)
+    {
+        $validated = $request->validate([
+            'username' => ['required', 'string', 'max:100'],
+            'gender' => ['required', 'in:m,f'],
+            'phone_number' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100'],
+            'dob' => ['required', 'date_format:d-m-Y'],
+            'national_id' => ['nullable', 'string', 'max:30'],
+            'passport' => ['nullable', 'string', 'max:30'],
+            'address' => ['required', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:10240'],
+            'documents' => ['required', 'array', 'min:1'],
+            'documents.*' => ['file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:10240'],
+            'start_rental_date' => ['required', 'date'],
+            'end_rental_date' => ['nullable', 'date', 'after_or_equal:start_rental_date'],
+            'description' => ['nullable', 'string', 'max:255'],
+
+            'subclients' => ['nullable', 'array'],
+            'subclients.*.username' => ['required_with:subclients', 'nullable', 'string', 'max:100'],
+            'subclients.*.date_of_birth' => ['required_with:subclients', 'nullable', 'date', 'before_or_equal:today'],
+            'subclients.*.gender' => ['required_with:subclients', 'nullable', 'in:m,f'],
+            'subclients.*.phone_number' => ['nullable', 'string', 'max:20'],
+            'subclients.*.email' => ['nullable', 'email', 'max:100'],
+            'subclients.*.national_id' => ['nullable', 'string', 'max:30'],
+            'subclients.*.passport' => ['nullable', 'string', 'max:30'],
+            'subclients.*.address' => ['required_with:subclients', 'nullable', 'string', 'max:255'],
+            'subclients.*.description' => ['nullable', 'string', 'max:255'],
+            'subclients.*.sub_client_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:10240'],
+        ]);
+
+        try {
+            $payload = [
+                'room_id' => $roomId,
+                'username' => $validated['username'],
+                'date_of_birth' => Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d'),
+                'gender' => $validated['gender'],
+                'phone_number' => $validated['phone_number'],
+                'email' => $validated['email'] ?? '',
+                'national_id' => $validated['national_id'] ?? '',
+                'passport' => $validated['passport'] ?? '',
+                'address' => $validated['address'],
+                'start_rental_date' => Carbon::parse($validated['start_rental_date'])->format('Y-m-d'),
+                'end_rental_date' => !empty($validated['end_rental_date'])
+                    ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d')
+                    : '',
+                'description' => $validated['description'] ?? '',
+                'subclients' => $this->normalizeSubclients($validated['subclients'] ?? []),
+            ];
+
+            $response = $this->sendClientRequest(
+                endpoint: 'v1/clients',
+                payload: $payload,
+                request: $request,
+                locationId: $locationId
+            );
+
+            if (($response['status'] ?? '') === 'success') {
+                return redirect()
+                    ->route('clients.clients', $locationId)
+                    ->with('success', $response['message'] ?? __('messages.rental_success'));
+            }
+
+            return back()
+                ->withErrors([
+                    'api' => $this->apiErrorMessage($response, __('messages.rental_failed')),
+                ])
+                ->withInput();
+        } catch (RequestException $e) {
+            $response = $e->response?->json() ?? [];
+
+            return back()
+                ->withErrors([
+                    'api' => $this->apiErrorMessage($response, $e->getMessage()),
+                ])
+                ->withInput();
+        } catch (Throwable $e) {
+            Log::error('Client store failed', [
+                'error' => $e->getMessage(),
+                'room_id' => $roomId,
+                'location_id' => $locationId,
+            ]);
+
+            return back()
+                ->withErrors([
+                    'api' => $this->stringError($e->getMessage()),
+                ])
+                ->withInput();
+        }
     }
 
     public function edit(Request $request, $clientId, $locationId)
@@ -183,12 +267,11 @@ class ClientController extends Controller
                 'text' => __('titles.back'),
                 'icon' => 'chevrons-left',
                 'class' => 'btn btn-outline-primary btn-5 d-none d-sm-inline-block',
-                'url' => route('clients.index'),
+                'url' => route('clients.clients', $locationId),
             ],
         ];
 
         try {
-            // Fetch client from API
             $response = $this->api()
                 ->withHeaders(['Location-Id' => $locationId])
                 ->get("v1/clients/{$clientId}");
@@ -197,46 +280,71 @@ class ClientController extends Controller
 
             if (!$clientRaw) {
                 return redirect()
-                    ->route('clients.index')
-                    ->withErrors(['error' => __('client.no_clients_found')]);
+                    ->route('clients.clients', $locationId)
+                    ->withErrors([
+                        'api' => __('client.no_clients_found'),
+                    ]);
             }
 
-            // Map Khmer gender to 'm'/'f' for the form select
             $genderMap = [
+                'm' => 'm',
+                'f' => 'f',
+                'M' => 'm',
+                'F' => 'f',
+                'male' => 'm',
+                'female' => 'f',
                 'ប្រុស' => 'm',
                 'ស្រី' => 'f',
             ];
 
-            // Build a clean "form-ready" client array
+            $room = is_array($clientRaw['room'] ?? null) ? $clientRaw['room'] : [];
+
+            $roomType = is_array($room['room_type'] ?? null)
+                ? $room['room_type']
+                : (is_array($room['roomType'] ?? null) ? $room['roomType'] : []);
+
+            $location = is_array($room['location'] ?? null) ? $room['location'] : [];
+
+            $clientGender = $this->stringValue($clientRaw['gender'] ?? null, '');
+            $clientImagePath = $this->stringValue($clientRaw['client_image'] ?? null, '');
+
             $client = [
-                'id' => $clientRaw['id'] ?? null,
-                'room_id' => $clientRaw['room_id'] ?? null,
-
-                'username' => $clientRaw['username'] ?? '',
-                'date_of_birth' => $clientRaw['date_of_birth'] ?? null,
-                'gender_mapped' => $genderMap[$clientRaw['gender'] ?? ''] ?? null,
-
-                'phone_number' => $clientRaw['phone_number'] ?? '',
-                'email' => $clientRaw['email'] ?? null,
-
-                'address' => $clientRaw['address'] ?? '',
-                'description' => $clientRaw['description'] ?? null,
-
-                'start_rental_date' => $clientRaw['start_rental_date'] ?? null,
-                'end_rental_date' => $clientRaw['end_rental_date'] ?? null,
-
-                'client_image' => $clientRaw['client_image'] ?? null,
+                'id' => $this->stringValue($clientRaw['id'] ?? null, ''),
+                'room_id' => $this->stringValue($clientRaw['room_id'] ?? ($room['id'] ?? null), ''),
+                'username' => $this->stringValue($clientRaw['username'] ?? null, ''),
+                'date_of_birth' => $this->dateValue($clientRaw['date_of_birth'] ?? null),
+                'gender' => $clientGender,
+                'gender_mapped' => $genderMap[$clientGender] ?? null,
+                'phone_number' => $this->stringValue($clientRaw['phone_number'] ?? null, ''),
+                'email' => $this->stringValue($clientRaw['email'] ?? null, ''),
+                'national_id' => $this->stringValue($clientRaw['national_id'] ?? null, ''),
+                'passport' => $this->stringValue($clientRaw['passport'] ?? null, ''),
+                'address' => $this->stringValue($clientRaw['address'] ?? null, ''),
+                'description' => $this->stringValue($clientRaw['description'] ?? null, ''),
+                'start_rental_date' => $this->dateValue($clientRaw['start_rental_date'] ?? null),
+                'end_rental_date' => $this->dateValue($clientRaw['end_rental_date'] ?? null),
+                'client_image' => $clientImagePath,
+                'client_image_url' => $clientImagePath !== ''
+                    ? apiBaseUrl() . $clientImagePath
+                    : asset('imgs/default-avatar.png'),
                 'status' => $clientRaw['status'] ?? null,
 
-                // keep full room object for readonly display
-                'room' => $clientRaw['room'] ?? [],
+                'room' => [
+                    'id' => $this->stringValue($room['id'] ?? null, ''),
+                    'room_name' => $this->stringValue($room['room_name'] ?? null),
+                    'building_name' => $this->stringValue($room['building_name'] ?? null),
+                    'floor_name' => $this->stringValue($room['floor_name'] ?? null),
+                    'type_name' => $this->stringValue($roomType['type_name'] ?? null),
+                    'price' => $this->numericValue($roomType['price'] ?? null),
+                    'price_text' => $this->moneyValue($roomType['price'] ?? null),
+                    'location_name' => $this->stringValue($location['location_name'] ?? null),
+                ],
 
-                // keep documents if you want to show/download them
-                'documents' => $clientRaw['documents'] ?? [],
+                'documents' => $this->documentList($clientRaw['documents'] ?? []),
+                'subclients' => $this->subclientList($clientRaw['subclients'] ?? []),
             ];
 
             return view('app.clients.edit', compact('client', 'buttons', 'locationId'));
-
         } catch (Throwable $e) {
             Log::error('Failed to fetch client for edit', [
                 'client_id' => $clientId,
@@ -245,147 +353,49 @@ class ClientController extends Controller
             ]);
 
             return redirect()
-                ->route('clients.index')
-                ->withErrors(['error' => __('client.no_clients_found')]);
-        }
-    }
-
-    public function store(Request $request, $roomId, $locationId)
-    {
-        // 1️⃣ Validate input
-        $validated = $request->validate([
-            'username' => 'required|string|max:100',
-            'gender' => 'required|in:m,f',
-            'phone_number' => 'required|string|max:20',
-            'email' => 'nullable|email|max:100',
-            'dob' => 'required|date_format:d-m-Y',
-            'national_id' => 'nullable|string|max:30',
-            'passport' => 'nullable|string|max:30',
-            'address' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
-            'file' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:10240',
-            'start_rental_date' => 'required|date',
-            'end_rental_date' => 'nullable|date|after_or_equal:start_rental_date',
-            'description' => 'nullable|string|max:255',
-        ]);
-
-        try {
-            // 2️⃣ Normalize dates
-            $dob = Carbon::createFromFormat('d-m-Y', $validated['dob'])->format('Y-m-d');
-            $startDate = Carbon::parse($validated['start_rental_date'])->format('Y-m-d');
-            $endDate = !empty($validated['end_rental_date'])
-                ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d')
-                : null;
-
-            // 3️⃣ Prepare payload
-            $payload = [
-                'created_by' => Session::get('user.id'),
-                'updated_by' => Session::get('user.id'),
-                'room_id' => $roomId,
-                'username' => $validated['username'],
-                'date_of_birth' => $dob,
-                'gender' => $validated['gender'],
-                'phone_number' => $validated['phone_number'],
-                'email' => $validated['email'] ?? null,
-                'national_id' => $validated['national_id'] ?? null,
-                'passport' => $validated['passport'] ?? null,
-                'address' => $validated['address'],
-                'start_rental_date' => $startDate,
-                'end_rental_date' => $endDate,
-                'description' => $validated['description'] ?? null,
-            ];
-
-            // 4️⃣ Handle files — image (client_image) + document (file)
-            $files = [];
-            $fileFields = [];
-
-            if ($request->hasFile('image')) {
-                $files[] = $request->file('image');
-                $fileFields[] = 'client_image';
-            }
-
-            if ($request->hasFile('file')) {
-                $files[] = $request->file('file');
-                $fileFields[] = 'file';
-            }
-
-            // 5️⃣ API call
-            try {
-                $response = $this->api()->post(
-                    'v1/clients',
-                    $payload,
-                    token: null,
-                    asForm: true,
-                    files: $files,
-                    fileField: $fileFields,  // ✅ use the array, not hardcoded 'client_image'
-                    moreHeaders: ['Location-Id' => $locationId]
-                );
-            } catch (RequestException $e) {
-                $body = $e->response->body();
-                $json = json_decode($body, true);
-
-                $errorMessage = 'Something went wrong';
-                if (!empty($json['errors'])) {
-                    foreach ($json['errors'] as $fieldErrors) {
-                        if (is_array($fieldErrors) && count($fieldErrors) > 0) {
-                            $errorMessage = $fieldErrors[0];
-                            break;
-                        }
-                    }
-                } elseif (!empty($json['message'])) {
-                    $errorMessage = $json['message'];
-                }
-
-                return back()->withErrors(['api' => $errorMessage])->withInput();
-            }
-
-            // 6️⃣ Handle API success
-            if (!empty($response['status']) && $response['status'] === 'success') {
-                return redirect()->route('clients.clients', $locationId)
-                    ->with('success', $response['message'] ?? __('messages.rental_success'));
-            }
-
-            // 7️⃣ Handle API failure
-            return back()->withErrors(['api' => $response['message'] ?? __('messages.rental_failed')])->withInput();
-
-        } catch (Throwable $e) {
-            Log::error('Client store failed', [
-                'error' => $e->getMessage(),
-                'room_id' => $roomId,
-                'location_id' => $locationId,
-            ]);
-
-            return back()->withErrors(['api' => $e->getMessage()])->withInput();
+                ->route('clients.clients', $locationId)
+                ->withErrors([
+                    'api' => $this->stringError(__('client.no_clients_found')),
+                ]);
         }
     }
 
     public function update(Request $request, $clientId, $roomId, $locationId)
     {
         $validated = $request->validate([
-            'username' => 'required|string|max:100',
-            'gender' => 'required|string|in:m,f',
-            'phone_number' => 'required|string|max:20',
-            'email' => 'nullable|email|max:100',
-            'date_of_birth' => 'required|date',
-            'national_id' => 'nullable|string|max:30',
-            'passport' => 'nullable|string|max:30',
-            'address' => 'required|string|max:255',
+            'room_id' => ['required', 'string'],
+            'username' => ['required', 'string', 'max:100'],
+            'gender' => ['required', 'string', 'in:m,f'],
+            'phone_number' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100'],
+            'date_of_birth' => ['required', 'date'],
+            'national_id' => ['nullable', 'string', 'max:30'],
+            'passport' => ['nullable', 'string', 'max:30'],
+            'address' => ['required', 'string', 'max:255'],
+            'image' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:10240'],
+            'start_rental_date' => ['required', 'date'],
+            'end_rental_date' => ['nullable', 'date', 'after_or_equal:start_rental_date'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'documents' => ['sometimes', 'array'],
+            'documents.*' => ['file', 'mimes:pdf,png,jpg,jpeg,doc,docx', 'max:10240'],
+            'delete_documents' => ['sometimes', 'array'],
+            'delete_documents.*' => ['string'],
 
-            // avatar (ONLY for client_image)
-            'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+            'subclients' => ['nullable', 'array'],
+            'subclients.*.id' => ['nullable', 'string'],
+            'subclients.*.username' => ['required_with:subclients', 'nullable', 'string', 'max:100'],
+            'subclients.*.date_of_birth' => ['required_with:subclients', 'nullable', 'date', 'before_or_equal:today'],
+            'subclients.*.gender' => ['required_with:subclients', 'nullable', 'in:m,f'],
+            'subclients.*.phone_number' => ['nullable', 'string', 'max:20'],
+            'subclients.*.email' => ['nullable', 'email', 'max:100'],
+            'subclients.*.national_id' => ['nullable', 'string', 'max:30'],
+            'subclients.*.passport' => ['nullable', 'string', 'max:30'],
+            'subclients.*.address' => ['required_with:subclients', 'nullable', 'string', 'max:255'],
+            'subclients.*.description' => ['nullable', 'string', 'max:255'],
+            'subclients.*.sub_client_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:10240'],
 
-            // rental
-            'start_rental_date' => 'nullable|date',
-            'end_rental_date' => 'nullable|date',
-            'description' => 'nullable|string|max:255',
-
-            // documents (ONLY for document table)
-            'documents' => 'sometimes|array',
-            'documents.*' => 'file|mimes:pdf,png,jpg,jpeg,doc,docx|max:10240',
-
-            // document ids to delete (checkbox)
-            'delete_documents' => 'sometimes|array',
-            'delete_documents.*' => 'string',
+            'delete_subclients' => ['nullable', 'array'],
+            'delete_subclients.*' => ['string'],
         ], [
             'username.required' => __('client.username_required'),
             'gender.required' => __('client.gender_required'),
@@ -393,99 +403,94 @@ class ClientController extends Controller
             'phone_number.required' => __('client.phone_required'),
             'date_of_birth.required' => __('client.date_of_birth_required'),
             'address.required' => __('client.address_required'),
+            'start_rental_date.required' => __('client.start_rental_date_required'),
         ]);
 
-        $deleteIds = $request->input('delete_documents', []); // ✅ doc ids
+        $deleteDocumentIds = $request->input('delete_documents', []);
+        $deleteSubclientIds = $request->input('delete_subclients', []);
 
         try {
-            // 1) Update client + upload avatar/docs
             $payload = [
                 '_method' => 'PATCH',
-                'created_by' => Session::get('user.id'),
-                'updated_by' => Session::get('user.id'),
-
+                'room_id' => $validated['room_id'],
                 'username' => $validated['username'],
-                'date_of_birth' => $validated['date_of_birth'],
+                'date_of_birth' => Carbon::parse($validated['date_of_birth'])->format('Y-m-d'),
                 'gender' => $validated['gender'],
                 'phone_number' => $validated['phone_number'],
-                'email' => $validated['email'] ?? null,
-                'national_id' => $validated['national_id'] ?? null,
-                'passport' => $validated['passport'] ?? null,
+                'email' => $validated['email'] ?? '',
+                'national_id' => $validated['national_id'] ?? '',
+                'passport' => $validated['passport'] ?? '',
                 'address' => $validated['address'],
-                'start_rental_date' => $validated['start_rental_date'] ?? null,
-                'end_rental_date' => $validated['end_rental_date'] ?? null,
-                'description' => $validated['description'] ?? null,
+                'start_rental_date' => Carbon::parse($validated['start_rental_date'])->format('Y-m-d'),
+                'end_rental_date' => !empty($validated['end_rental_date'])
+                    ? Carbon::parse($validated['end_rental_date'])->format('Y-m-d')
+                    : '',
+                'description' => $validated['description'] ?? '',
+                'subclients' => $this->normalizeSubclients($validated['subclients'] ?? []),
+                'delete_subclients' => $deleteSubclientIds,
             ];
 
-            $hasAvatar = $request->hasFile('image');
-            $hasDocs = $request->hasFile('documents');
+            $response = $this->sendClientRequest(
+                endpoint: 'v1/clients/' . $clientId,
+                payload: $payload,
+                request: $request,
+                locationId: $locationId
+            );
 
-            if ($hasAvatar || $hasDocs) {
-                $files = [];
-
-                if ($hasAvatar) {
-                    $files['client_image'] = [$request->file('image')]; // ✅ avatar only
-                }
-
-                if ($hasDocs) {
-                    $files['file'] = $request->file('documents'); // ✅ documents only
-                }
-
-                $response = $this->api()->postMultipart(
-                    'v1/clients/' . $clientId,
-                    $payload,
-                    $files,
-                    moreHeaders: ['Location-Id' => $locationId]
-                );
-            } else {
-                $response = $this->api()->post(
-                    'v1/clients/' . $clientId,
-                    $payload,
-                    null,
-                    false,
-                    [],
-                    '',
-                    moreHeaders: ['Location-Id' => $locationId]
-                );
-            }
-
-            // If client update failed, stop here
             if (($response['status'] ?? '') !== 'success') {
                 return back()
-                    ->withErrors(['api' => $response['message'] ?? __('client.update_failed')])
+                    ->withErrors([
+                        'api' => $this->apiErrorMessage($response, __('client.update_failed')),
+                    ])
                     ->withInput();
             }
 
-            // 2) Delete selected documents via separate API route
             $deleteErrors = [];
 
-            foreach ($deleteIds as $docId) {
-                if (!$docId)
+            foreach ($deleteDocumentIds as $docId) {
+                if (!$docId) {
                     continue;
+                }
 
                 try {
-                    // if your ApiService has delete()
-                    $delRes = $this->api()->withHeaders(['Location-Id' => $locationId])
+                    $deleteResponse = $this->api()
+                        ->withHeaders(['Location-Id' => $locationId])
                         ->delete('v1/documents/' . $docId);
 
-                    // Optional: check result format
-                    if (($delRes['status'] ?? 'success') !== 'success' && ($delRes['success'] ?? true) !== true) {
-                        $deleteErrors[] = $delRes['message'] ?? "Failed to delete document {$docId}";
+                    if (($deleteResponse['status'] ?? 'success') !== 'success' && ($deleteResponse['success'] ?? true) !== true) {
+                        $deleteErrors[] = $deleteResponse['message'] ?? "Failed to delete document {$docId}";
                     }
                 } catch (Throwable $e) {
                     $deleteErrors[] = "Failed to delete document {$docId}: " . $e->getMessage();
                 }
             }
 
-            // 3) Return
             if (!empty($deleteErrors)) {
-                return redirect()->back()
+                return redirect()
+                    ->route('clients.edit', [
+                        'id' => $clientId,
+                        'locationId' => $locationId,
+                    ])
                     ->with('success', __('client.update_success'))
-                    ->withErrors(['documents' => $deleteErrors]);
+                    ->withErrors([
+                        'documents' => $this->stringError($deleteErrors),
+                    ]);
             }
 
-            return redirect()->back()->with('success', __('client.update_success'));
+            return redirect()
+                ->route('clients.edit', [
+                    'id' => $clientId,
+                    'locationId' => $locationId,
+                ])
+                ->with('success', __('client.update_success'));
+        } catch (RequestException $e) {
+            $response = $e->response?->json() ?? [];
 
+            return back()
+                ->withErrors([
+                    'api' => $this->apiErrorMessage($response, $e->getMessage()),
+                ])
+                ->withInput();
         } catch (Throwable $e) {
             Log::error('Client update failed', [
                 'client_id' => $clientId,
@@ -494,28 +499,39 @@ class ClientController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors(['api' => $e->getMessage()])->withInput();
+            return back()
+                ->withErrors([
+                    'api' => $this->stringError($e->getMessage()),
+                ])
+                ->withInput();
         }
     }
 
     public function updateClientStatus($clientId, $status, $locationId)
     {
         try {
-            // Send PATCH request to update client status
-            $response = $this->api()->withHeaders(['Location-Id' => $locationId])->patch("v1/clients/{$clientId}/status", [
-                '_method' => 'PATCH',
-                'updated_by' => session('user.id'),
-                'status' => $status,
-            ]);
+            $response = $this->api()
+                ->withHeaders(['Location-Id' => $locationId])
+                ->patch("v1/clients/{$clientId}/status", [
+                    '_method' => 'PATCH',
+                    'status' => $status,
+                ]);
 
-            // Optional: check if API returns success
-            if (isset($response['status']) && $response['status'] === "success") {
+            if (($response['status'] ?? '') === 'success') {
                 return back()->with('success', __('client.status_updated_successfully'));
             }
 
-            return back()->withErrors(['api' => __('client.status_update_failed')])->withInput();
-        } catch (\Throwable $e) {
-            return back()->withErrors(['api' => $e->getMessage()])->withInput();
+            return back()
+                ->withErrors([
+                    'api' => $this->apiErrorMessage($response, __('client.status_update_failed')),
+                ])
+                ->withInput();
+        } catch (Throwable $e) {
+            return back()
+                ->withErrors([
+                    'api' => $this->stringError($e->getMessage()),
+                ])
+                ->withInput();
         }
     }
 
@@ -530,27 +546,270 @@ class ClientController extends Controller
                 return back()->with('success', __('client.delete_success'));
             }
 
-            return back()->withErrors(['api' => $response['message'] ?? __('client.delete_failed')]);
+            return back()
+                ->withErrors([
+                    'api' => $this->apiErrorMessage($response, __('client.delete_failed')),
+                ]);
         } catch (Throwable $e) {
+            return back()
+                ->withErrors([
+                    'api' => $this->stringError($e->getMessage()),
+                ]);
+        }
+    }
 
-            // Default fallback
-            $msg = __('client.delete_failed');
+    private function sendClientRequest(string $endpoint, array $payload, Request $request, string $locationId): array
+    {
+        [$files, $fileFields] = $this->clientMultipartFiles($request);
 
-            // Try to extract JSON from exception message
-            $raw = $e->getMessage();
+        return $this->api()->post(
+            $endpoint,
+            $this->flattenForMultipart($payload),
+            token: null,
+            asForm: true,
+            files: $files,
+            fileField: empty($fileFields) ? '' : $fileFields,
+            moreHeaders: ['Location-Id' => $locationId]
+        );
+    }
 
-            // Find first "{" and parse JSON after it
-            $pos = strpos($raw, '{');
-            if ($pos !== false) {
-                $jsonPart = substr($raw, $pos);
-                $data = json_decode($jsonPart, true);
+    private function clientMultipartFiles(Request $request): array
+    {
+        $files = [];
+        $fileFields = [];
 
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $msg = $data['message'] ?? $msg;
+        if ($request->hasFile('image')) {
+            $files[] = $request->file('image');
+            $fileFields[] = 'client_image';
+        }
+
+        if ($request->hasFile('documents')) {
+            foreach ((array) $request->file('documents') as $document) {
+                if ($document) {
+                    $files[] = $document;
+                    $fileFields[] = 'files[]';
+                }
+            }
+        }
+
+        foreach ((array) $request->file('subclients', []) as $index => $subFiles) {
+            if (is_array($subFiles) && !empty($subFiles['sub_client_image'])) {
+                $files[] = $subFiles['sub_client_image'];
+                $fileFields[] = "subclients[{$index}][sub_client_image]";
+            }
+        }
+
+        return [$files, $fileFields];
+    }
+
+    private function normalizeSubclients(array $subclients): array
+    {
+        $normalized = [];
+
+        foreach ($subclients as $index => $subclient) {
+            if (blank($subclient['username'] ?? null)) {
+                continue;
+            }
+
+            $normalized[$index] = [
+                'id' => $subclient['id'] ?? '',
+                'username' => $subclient['username'],
+                'date_of_birth' => Carbon::parse($subclient['date_of_birth'])->format('Y-m-d'),
+                'gender' => $subclient['gender'],
+                'phone_number' => $subclient['phone_number'] ?? '',
+                'email' => $subclient['email'] ?? '',
+                'national_id' => $subclient['national_id'] ?? '',
+                'passport' => $subclient['passport'] ?? '',
+                'address' => $subclient['address'],
+                'description' => $subclient['description'] ?? '',
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function flattenForMultipart(array $data, string $prefix = ''): array
+    {
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            $field = $prefix === ''
+                ? (string) $key
+                : "{$prefix}[{$key}]";
+
+            if (is_array($value)) {
+                $result = array_merge($result, $this->flattenForMultipart($value, $field));
+                continue;
+            }
+
+            if ($value !== null) {
+                $result[$field] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    private function documentList(mixed $documents): array
+    {
+        if (!is_array($documents)) {
+            return [];
+        }
+
+        return collect($documents)
+            ->filter(fn($document) => is_array($document))
+            ->map(function (array $document) {
+                $fileUrl = $this->stringValue($document['file_url'] ?? null, '');
+
+                return [
+                    'id' => $this->stringValue($document['id'] ?? null, ''),
+                    'file_name' => $this->stringValue($document['file_name'] ?? null, __('Document')),
+                    'file_url' => $fileUrl,
+                    'view_url' => $fileUrl !== '' ? apiBaseUrl() . $fileUrl : null,
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
+
+    private function subclientList(mixed $subclients): array
+    {
+        if (!is_array($subclients)) {
+            return [];
+        }
+
+        return collect($subclients)
+            ->filter(fn($subclient) => is_array($subclient))
+            ->map(function (array $subclient) {
+                $imagePath = $this->stringValue($subclient['sub_client_image'] ?? null, '');
+                $gender = $this->stringValue($subclient['gender'] ?? null, '');
+
+                return [
+                    'id' => $this->stringValue($subclient['id'] ?? null, ''),
+                    'username' => $this->stringValue($subclient['username'] ?? null, ''),
+                    'date_of_birth' => $this->dateValue($subclient['date_of_birth'] ?? null),
+                    'gender' => $gender,
+                    'gender_mapped' => match ($gender) {
+                        'm', 'M', 'male', 'ប្រុស' => 'm',
+                        'f', 'F', 'female', 'ស្រី' => 'f',
+                        default => '',
+                    },
+                    'phone_number' => $this->stringValue($subclient['phone_number'] ?? null, ''),
+                    'email' => $this->stringValue($subclient['email'] ?? null, ''),
+                    'national_id' => $this->stringValue($subclient['national_id'] ?? null, ''),
+                    'passport' => $this->stringValue($subclient['passport'] ?? null, ''),
+                    'address' => $this->stringValue($subclient['address'] ?? null, ''),
+                    'description' => $this->stringValue($subclient['description'] ?? null, ''),
+                    'sub_client_image' => $imagePath,
+                    'sub_client_image_url' => $imagePath !== ''
+                        ? apiBaseUrl() . $imagePath
+                        : asset('imgs/default-avatar.png'),
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
+
+    private function stringValue(mixed $value, string $default = '-'): string
+    {
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        if (is_string($value) || is_numeric($value)) {
+            return (string) $value;
+        }
+
+        if (is_array($value)) {
+            foreach (['name', 'title', 'label', 'value', 'en', 'km', 'room_name', 'type_name', 'location_name'] as $key) {
+                if (array_key_exists($key, $value)) {
+                    return $this->stringValue($value[$key], $default);
                 }
             }
 
-            return back()->withErrors(['api' => $msg]);
+            $flattened = collect($value)
+                ->flatten()
+                ->filter(fn($item) => is_string($item) || is_numeric($item))
+                ->first();
+
+            return $flattened !== null ? (string) $flattened : $default;
         }
+
+        if (is_object($value)) {
+            return method_exists($value, '__toString') ? (string) $value : $default;
+        }
+
+        return $default;
+    }
+
+    private function dateValue(mixed $value): string
+    {
+        if (blank($value)) {
+            return '';
+        }
+
+        try {
+            return Carbon::parse($this->stringValue($value, ''))->format('Y-m-d');
+        } catch (Throwable) {
+            return $this->stringValue($value, '');
+        }
+    }
+
+    private function numericValue(mixed $value): ?float
+    {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    private function moneyValue(mixed $value): string
+    {
+        if (!is_numeric($value)) {
+            return '-';
+        }
+
+        return number_format((float) $value, 2) . '៛';
+    }
+
+    private function apiErrorMessage(array $response, string $fallback): string
+    {
+        if (!empty($response['errors']) && is_array($response['errors'])) {
+            $messages = [];
+
+            foreach ($response['errors'] as $fieldErrors) {
+                if (is_array($fieldErrors)) {
+                    foreach ($fieldErrors as $fieldError) {
+                        $messages[] = $this->stringError($fieldError);
+                    }
+                } else {
+                    $messages[] = $this->stringError($fieldErrors);
+                }
+            }
+
+            if (!empty($messages)) {
+                return implode(' ', $messages);
+            }
+        }
+
+        if (!empty($response['message'])) {
+            return $this->stringError($response['message']);
+        }
+
+        return $this->stringError($fallback);
+    }
+
+    private function stringError(mixed $message): string
+    {
+        if (is_array($message)) {
+            return implode(' ', array_map(fn($item) => $this->stringError($item), $message));
+        }
+
+        if (is_object($message)) {
+            return json_encode($message, JSON_UNESCAPED_UNICODE) ?: 'Unknown error';
+        }
+
+        return (string) $message;
     }
 }

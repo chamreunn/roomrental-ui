@@ -1,22 +1,17 @@
 import "./settings";
 
-// ======================
-// CSS IMPORTS (REQUIRED)
-// ======================
 import "flatpickr/dist/flatpickr.css";
+import "flatpickr/dist/plugins/monthSelect/style.css";
 import "aos/dist/aos.css";
 
-// ======================
-// JS LIBRARIES
-// ======================
 import AOS from "aos";
 import ApexCharts from "apexcharts";
 import TomSelect from "@tabler/core/dist/libs/tom-select/dist/js/tom-select.complete.js";
 import flatpickr from "flatpickr";
+import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect/index.js";
 import Litepicker from "@tabler/core/dist/libs/litepicker/dist/js/main.js";
 import "@tabler/core/dist/libs/litepicker/dist/css/litepicker.css";
 
-// Tabler Core
 import "@tabler/core/dist/js/tabler.js";
 
 // Expose globals if needed

@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Carbon\Carbon;
-use App\Utils\Util;
 use App\Enum\Active;
-use App\Enum\Status;
+use App\Enum\InvoiceStatus;
 use App\Enum\RoomStatus;
+use App\Enum\Status;
+use App\Utils\Util;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class RoomController extends Controller
 {
@@ -123,21 +124,21 @@ class RoomController extends Controller
         // ✅ Validate request
         $validated = $request->validate([
             'building_name' => 'required|string|max:255',
-            'floor_name'    => 'required|string|max:255',
-            'room_name'     => 'required|string|max:255',
-            'room_type_id'  => 'required|uuid',
-            'description'   => 'nullable|string|max:1000',
+            'floor_name' => 'required|string|max:255',
+            'room_name' => 'required|string|max:255',
+            'room_type_id' => 'required|uuid',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         // ✅ Prepare payload
         $payload = [
             'building_name' => $validated['building_name'],
-            'floor_name'    => $validated['floor_name'],
-            'room_name'     => $validated['room_name'],
-            'room_type_id'  => $validated['room_type_id'],
-            'description'   => $validated['description'] ?? null,
-            'created_by'    => Session::get('user')['id'] ?? null,
-            'updated_by'    => Session::get('user')['id'] ?? null,
+            'floor_name' => $validated['floor_name'],
+            'room_name' => $validated['room_name'],
+            'room_type_id' => $validated['room_type_id'],
+            'description' => $validated['description'] ?? null,
+            'created_by' => Session::get('user')['id'] ?? null,
+            'updated_by' => Session::get('user')['id'] ?? null,
         ];
 
         // ✅ Send API request with locationId in header
@@ -192,39 +193,39 @@ class RoomController extends Controller
         // ✅ Validate request
         $validated = $request->validate([
             'building_name' => 'required|string|max:255',
-            'floor_name'    => 'required|string|max:100',
-            'room_name'     => 'required|string|max:100',
-            'room_type_id'  => 'required|uuid',
-            'description'   => 'nullable|string|max:500',
+            'floor_name' => 'required|string|max:100',
+            'room_name' => 'required|string|max:100',
+            'room_type_id' => 'required|uuid',
+            'description' => 'nullable|string|max:500',
         ], [
             'building_name.required' => __('room.building_name_required'),
-            'building_name.string'   => __('room.building_name_string'),
-            'building_name.max'      => __('room.building_name_max'),
+            'building_name.string' => __('room.building_name_string'),
+            'building_name.max' => __('room.building_name_max'),
 
-            'floor_name.required'    => __('room.floor_name_required'),
-            'floor_name.string'      => __('room.floor_name_string'),
-            'floor_name.max'         => __('room.floor_name_max'),
+            'floor_name.required' => __('room.floor_name_required'),
+            'floor_name.string' => __('room.floor_name_string'),
+            'floor_name.max' => __('room.floor_name_max'),
 
-            'room_name.required'     => __('room.name_required'),
-            'room_name.string'       => __('room.name_string'),
-            'room_name.max'          => __('room.name_max'),
+            'room_name.required' => __('room.name_required'),
+            'room_name.string' => __('room.name_string'),
+            'room_name.max' => __('room.name_max'),
 
-            'room_type_id.required'  => __('roomtype.select_required'),
-            'room_type_id.uuid'      => __('roomtype.select_invalid'),
+            'room_type_id.required' => __('roomtype.select_required'),
+            'room_type_id.uuid' => __('roomtype.select_invalid'),
 
-            'description.string'     => __('room.description_string'),
-            'description.max'        => __('room.description_max'),
+            'description.string' => __('room.description_string'),
+            'description.max' => __('room.description_max'),
         ]);
 
         // ✅ Prepare payload for API
         $payload = [
-            '_method'       => 'PATCH', // If your API expects PATCH
+            '_method' => 'PATCH', // If your API expects PATCH
             'building_name' => $validated['building_name'],
-            'floor_name'    => $validated['floor_name'],
-            'room_name'     => $validated['room_name'],
-            'room_type_id'  => $validated['room_type_id'],
-            'description'   => $validated['description'] ?? null,
-            'updated_by'    => Session::get('user')['id'] ?? null,
+            'floor_name' => $validated['floor_name'],
+            'room_name' => $validated['room_name'],
+            'room_type_id' => $validated['room_type_id'],
+            'description' => $validated['description'] ?? null,
+            'updated_by' => Session::get('user')['id'] ?? null,
         ];
 
         try {
@@ -275,81 +276,37 @@ class RoomController extends Controller
 
         $room = $roomResponse['room'] ?? null;
 
-        if (! $room) {
+        if (!$room) {
             abort(404, __('room.not_found'));
         }
 
-        $roomstatus = RoomStatus::getStatus($room['status']);
-        $statuses   = RoomStatus::all();
-        $inactive   = Active::INACTIVE;
+        $roomstatus = RoomStatus::getStatus($room['status'] ?? null);
+        $statuses = RoomStatus::all();
+        $inactive = Active::INACTIVE;
 
-        // ---------- Clients ----------
-        $clients = collect($room['clients'] ?? [])->map(function ($client) {
-            $client['clientstatus'] = Active::getStatus($client['status']);
+        $clients = collect($room['clients'] ?? [])
+            ->map(fn($client) => $this->formatRoomClient($client, $locationId))
+            ->values();
 
-            // ✅ FIX: correct image URL creation
-            $client['client_image_url'] = !empty($client['client_image'])
-                ? apiBaseUrl() . $client['client_image']
-                : asset('images/default-avatar.png');
-
-            // raw dates
-            $dobRaw   = $client['date_of_birth'] ?? null;
-            $startRaw = $client['start_rental_date'] ?? null;
-            $endRaw   = $client['end_rental_date'] ?? null;
-
-            // days left
-            $daysLeft = null;
-            if (!empty($endRaw)) {
-                try {
-                    $endDate  = Carbon::parse($endRaw)->startOfDay();
-                    $daysLeft = now()->startOfDay()->diffInDays($endDate, false);
-                } catch (Exception $e) {
-                    $daysLeft = null;
-                }
-            }
-
-            // formatted dates for display
-            $client['dob_text'] = $dobRaw ? Carbon::parse($dobRaw)->translatedFormat('d F Y') : __('N/A');
-            $client['start_text'] = $startRaw ? Carbon::parse($startRaw)->translatedFormat('d F Y') : __('N/A');
-            $client['end_text'] = $endRaw ? Carbon::parse($endRaw)->translatedFormat('d F Y') : __('N/A');
-
-            // rental status indicator
-            $client['days_left']  = $daysLeft;
-            $client['nearly_end'] = false;
-            $client['dot_color']  = 'bg-success';
-            $client['alert_message'] = __('room.rental_ongoing');
-
-            if (!is_null($daysLeft)) {
-                if ($daysLeft < 0) {
-                    $client['nearly_end'] = true;
-                    $client['dot_color'] = 'bg-danger';
-                    $client['alert_message'] = __('room.rental_expired');
-                } elseif ($daysLeft <= 7) {
-                    $client['nearly_end'] = true;
-                    $client['dot_color'] = 'bg-warning';
-                    $client['alert_message'] = trans_choice('room.rental_ending', $daysLeft, ['days' => $daysLeft]);
-                } else {
-                    $client['alert_message'] = __('room.rental_active');
-                }
-            }
-
-            return $client;
-        })->values();
-
-        // ---------- Latest invoice (from clients invoices) ----------
         $allInvoices = $clients
-            ->flatMap(fn($c) => $c['invoices'] ?? [])
+            ->flatMap(fn($client) => $client['invoices_formatted'] ?? [])
             ->filter()
             ->values();
 
         $latestInvoice = $allInvoices
-            ->sortByDesc(fn($inv) => $inv['invoice_date'] ?? null)
+            ->sortByDesc(fn($invoice) => $invoice['invoice_date_raw'] ?? null)
             ->first();
 
-        $latestInvoiceStatus = null;
-        if ($latestInvoice) {
-            $latestInvoiceStatus = \App\Enum\InvoiceStatus::getStatus($latestInvoice['status']);
-        }
+        $latestInvoiceStatus = $latestInvoice['status_meta'] ?? null;
+
+        $clientStats = [
+            'total' => $clients->count(),
+            'nearly_end' => $clients->where('nearly_end', true)->count(),
+            'expired' => $clients->where('is_expired', true)->count(),
+            'subclients' => $clients->sum(fn($client) => count($client['subclients_formatted'] ?? [])),
+            'documents' => $clients->sum(fn($client) => count($client['documents_formatted'] ?? [])),
+            'invoices' => $clients->sum(fn($client) => count($client['invoices_formatted'] ?? [])),
+        ];
 
         return view('app.rooms.show', compact(
             'room',
@@ -360,8 +317,199 @@ class RoomController extends Controller
             'inactive',
             'locationId',
             'latestInvoice',
-            'latestInvoiceStatus'
+            'latestInvoiceStatus',
+            'clientStats'
         ));
+    }
+
+    private function formatRoomClient(array $client, string $locationId): array
+    {
+        $client['clientstatus'] = Active::getStatus($client['status'] ?? null);
+
+        $client['client_image_url'] = $this->apiImageUrl(
+            $client['client_image'] ?? null,
+            'images/default-avatar.png'
+        );
+
+        $client['gender_text'] = $this->genderText($client['gender'] ?? null);
+
+        $client['dob_text'] = $this->dateText($client['date_of_birth'] ?? null);
+        $client['start_text'] = $this->dateText($client['start_rental_date'] ?? null);
+        $client['end_text'] = $this->dateText($client['end_rental_date'] ?? null);
+
+        $daysLeft = $this->daysLeft($client['end_rental_date'] ?? null);
+
+        $client['days_left'] = $daysLeft;
+        $client['nearly_end'] = false;
+        $client['is_expired'] = false;
+        $client['dot_color'] = 'bg-success';
+        $client['alert_text_class'] = 'text-success';
+        $client['alert_message'] = __('room.rental_active');
+
+        if (!is_null($daysLeft)) {
+            if ($daysLeft < 0) {
+                $client['nearly_end'] = true;
+                $client['is_expired'] = true;
+                $client['dot_color'] = 'bg-danger';
+                $client['alert_text_class'] = 'text-danger';
+                $client['alert_message'] = __('room.rental_expired');
+            } elseif ($daysLeft <= 7) {
+                $client['nearly_end'] = true;
+                $client['dot_color'] = 'bg-warning';
+                $client['alert_text_class'] = 'text-warning';
+                $client['alert_message'] = trans_choice('room.rental_ending', $daysLeft, [
+                    'days' => $daysLeft,
+                ]);
+            }
+        }
+
+        $client['edit_url'] = !empty($client['id'])
+            ? route('clients.edit', [
+                'id' => $client['id'],
+                'locationId' => $locationId,
+            ])
+            : null;
+
+        $client['documents_formatted'] = collect($client['documents'] ?? [])
+            ->map(fn($document) => $this->formatClientDocument($document))
+            ->values()
+            ->toArray();
+
+        $client['subclients_formatted'] = collect($client['subclients'] ?? [])
+            ->map(fn($subclient) => $this->formatSubclient($subclient))
+            ->values()
+            ->toArray();
+
+        $client['invoices_formatted'] = collect($client['invoices'] ?? [])
+            ->map(fn($invoice) => $this->formatInvoice($invoice, $locationId))
+            ->sortByDesc('invoice_date_raw')
+            ->values()
+            ->toArray();
+
+        return $client;
+    }
+
+    private function formatClientDocument(array $document): array
+    {
+        $fileUrl = $document['file_url'] ?? null;
+
+        return [
+            'id' => $document['id'] ?? null,
+            'file_name' => $document['file_name'] ?? __('Document'),
+            'file_url' => $fileUrl,
+            'view_url' => !empty($fileUrl) ? apiBaseUrl() . $fileUrl : null,
+            'status' => $document['status'] ?? null,
+        ];
+    }
+
+    private function formatSubclient(array $subclient): array
+    {
+        return [
+            'id' => $subclient['id'] ?? null,
+            'username' => $subclient['username'] ?? '-',
+            'gender' => $subclient['gender'] ?? null,
+            'gender_text' => $this->genderText($subclient['gender'] ?? null),
+            'phone_number' => $subclient['phone_number'] ?? '-',
+            'email' => $subclient['email'] ?? '-',
+            'national_id' => $subclient['national_id'] ?? '-',
+            'passport' => $subclient['passport'] ?? '-',
+            'address' => $subclient['address'] ?? '-',
+            'description' => $subclient['description'] ?? '-',
+            'date_of_birth' => $subclient['date_of_birth'] ?? null,
+            'dob_text' => $this->dateText($subclient['date_of_birth'] ?? null),
+            'sub_client_image' => $subclient['sub_client_image'] ?? null,
+            'sub_client_image_url' => $this->apiImageUrl(
+                $subclient['sub_client_image'] ?? null,
+                'images/default-avatar.png'
+            ),
+        ];
+    }
+
+    private function formatInvoice(array $invoice, string $locationId): array
+    {
+        $oldElectric = (float) ($invoice['old_electric'] ?? 0);
+        $newElectric = (float) ($invoice['new_electric'] ?? 0);
+        $electricRate = (float) ($invoice['electric_rate'] ?? 0);
+
+        $oldWater = (float) ($invoice['old_water'] ?? 0);
+        $newWater = (float) ($invoice['new_water'] ?? 0);
+        $waterRate = (float) ($invoice['water_rate'] ?? 0);
+
+        $electricTotal = max(0, $newElectric - $oldElectric) * $electricRate;
+        $waterTotal = max(0, $newWater - $oldWater) * $waterRate;
+
+        $invoice['invoice_date_raw'] = $invoice['invoice_date'] ?? null;
+        $invoice['invoice_date_text'] = $this->dateText($invoice['invoice_date'] ?? null);
+        $invoice['due_date_text'] = $this->dateText($invoice['due_date'] ?? null);
+
+        $invoice['room_fee_text'] = $this->moneyText($invoice['room_fee'] ?? 0);
+        $invoice['electric_total'] = $electricTotal;
+        $invoice['electric_total_text'] = $this->moneyText($electricTotal);
+        $invoice['water_total'] = $waterTotal;
+        $invoice['water_total_text'] = $this->moneyText($waterTotal);
+        $invoice['other_charge_text'] = $this->moneyText($invoice['other_charge'] ?? 0);
+        $invoice['total_text'] = $this->moneyText($invoice['total'] ?? 0);
+
+        $invoice['status_meta'] = InvoiceStatus::getStatus($invoice['status'] ?? null);
+
+        $invoice['show_url'] = !empty($invoice['id'])
+            ? route('invoice.show', [
+                'id' => $invoice['id'],
+                'locationId' => $locationId,
+            ])
+            : null;
+
+        return $invoice;
+    }
+
+    private function dateText(mixed $date): string
+    {
+        if (blank($date)) {
+            return __('N/A');
+        }
+
+        try {
+            return Carbon::parse($date)->translatedFormat('d F Y');
+        } catch (Exception) {
+            return (string) $date;
+        }
+    }
+
+    private function daysLeft(mixed $endDate): ?int
+    {
+        if (blank($endDate)) {
+            return null;
+        }
+
+        try {
+            return now()->startOfDay()->diffInDays(
+                Carbon::parse($endDate)->startOfDay(),
+                false
+            );
+        } catch (Exception) {
+            return null;
+        }
+    }
+
+    private function moneyText(mixed $amount): string
+    {
+        return number_format((float) ($amount ?? 0), 2) . '(៛)';
+    }
+
+    private function genderText(mixed $gender): string
+    {
+        return match ((string) $gender) {
+            'm', 'M', 'male', 'ប្រុស' => __('client.male'),
+            'f', 'F', 'female', 'ស្រី' => __('client.female'),
+            default => __('N/A'),
+        };
+    }
+
+    private function apiImageUrl(?string $path, string $fallback): string
+    {
+        return !empty($path)
+            ? apiBaseUrl() . $path
+            : asset($fallback);
     }
 
     public function destroy($id, $locationId)
@@ -435,9 +583,9 @@ class RoomController extends Controller
 
         // ✅ Prepare payload for API
         $payload = [
-            '_method'    => 'PATCH',
+            '_method' => 'PATCH',
             'updated_by' => session('user.id') ?? null,
-            'status'     => $validated['status'],
+            'status' => $validated['status'],
         ];
 
         try {

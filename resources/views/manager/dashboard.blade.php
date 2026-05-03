@@ -1,294 +1,490 @@
 @extends('layouts.app')
 
 @section('content')
-    <form method="GET" class="card mb-4 p-3 shadow-sm">
-        <div class="row g-3 align-items-end">
-
-            {{-- Location --}}
-            <div class="col-md-3">
-                <label class="form-label">{{ __('location.name') }}</label>
-                <select name="location_id" class="form-select tom-select">
-                    <option value="">{{ __('common.choose') }}</option>
-                    @foreach ($locations as $loc)
-                        <option value="{{ $loc['location_id'] }}"
-                            {{ request('location_id') == $loc['location_id'] ? 'selected' : '' }}>
-                            {{ $loc['location_name'] }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Room Type --}}
-            <div class="col-md-3">
-                <label class="form-label">{{ __('roomtype.name') }}</label>
-                <select name="room_type_id" class="form-select tom-select">
-                    <option value="">{{ __('common.choose') }}</option>
-                    @foreach ($roomTypes as $type)
-                        <option value="{{ $type['id'] }}" {{ request('room_type_id') == $type['id'] ? 'selected' : '' }}>
-                            {{ $type['type_name'] }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Status --}}
-            <div class="col-md-2">
-                <label class="form-label">{{ __('room.status') }}</label>
-                <select name="status" class="form-select tom-select">
-                    <option value="">{{ __('common.choose') }}</option>
-                    @foreach ($roomStatuses as $key => $status)
-                        <option value="{{ $key }}" {{ request('status') === (string) $key ? 'selected' : '' }}
-                            data-custom-properties="<span class='{{ $status['class'] }} badge mx-0'></span>">
-                            {{ __($status['name']) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Buttons --}}
-            <div class="col-md-4">
-                <div class="row g-3">
-                    <div class="col-6">
-                        <button type="submit" class="btn btn-primary w-100">
-                            {{ __('common.search') }}
-                        </button>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        {{ __('Rental Management') }}
                     </div>
-                    <div class="col-6">
-                        {{-- CLEAR --}}
-                        <a href="{{ route('dashboard.user') }}" class="btn btn-outline-secondary w-100">
-                            {{ __('common.clear') }}
-                        </a>
+                    <h2 class="page-title">
+                        {{ __('Manager Dashboard') }}
+                    </h2>
+                    <div class="text-secondary mt-1">
+                        {{ __('Review assigned locations, rent alerts, invoice reminders and room availability.') }}
+                    </div>
+                </div>
+
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <span class="badge bg-danger-lt text-danger">
+                            <x-icon name="alert-triangle" />
+                            {{ $endingSoonTenants->count() }}
+                            {{ __('rent ending') }}
+                        </span>
+
+                        <span class="badge bg-warning-lt text-warning">
+                            <x-icon name="receipt-2" />
+                            {{ $upcomingInvoiceTenants->count() }}
+                            {{ __('invoice reminders') }}
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 
-    <div class="row row-cards g-3">
-        <div class="col-12">
-            @foreach ($groupedRooms as $locationName => $roomTypes)
-                <div class="mb-4">
-                    <h3 class="mb-3 text-primary">{{ $locationName }}</h3>
+    <div class="page-body">
+        <div class="container-xl">
 
-                    @foreach ($roomTypes as $roomTypeName => $statuses)
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h4 class="card-title mb-0">{{ $roomTypeName }}</h4>
-                            <span class="text-muted small">
-                                {{ collect($statuses)->flatten(1)->count() }} {{ __('room.room') }}
-                            </span>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('dashboard.manager') }}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-12 col-md-4 col-xl-3">
+                                <label class="form-label">{{ __('Search') }}</label>
+                                <div class="input-icon">
+                                    <span class="input-icon-addon">
+                                        <x-icon name="search" />
+                                    </span>
+                                    <input type="text" name="search" value="{{ $filters['search'] }}"
+                                        class="form-control" placeholder="{{ __('Search room or tenant') }}">
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-3 col-xl-2">
+                                <label class="form-label">{{ __('location.name') }}</label>
+                                <select name="location_id" class="form-select tom-select">
+                                    <option value="">{{ __('All locations') }}</option>
+                                    @foreach ($locations as $location)
+                                        <option value="{{ $location['location_id'] }}" @selected((string) $filters['location_id'] === (string) $location['location_id'])>
+                                            {{ $location['location_name'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-md-3 col-xl-2">
+                                <label class="form-label">{{ __('Room Type') }}</label>
+                                <select name="room_type_id" class="form-select tom-select">
+                                    <option value="">{{ __('All room types') }}</option>
+                                    @foreach ($roomTypes as $roomType)
+                                        <option value="{{ $roomType['id'] }}" @selected((string) $filters['room_type_id'] === (string) $roomType['id'])>
+                                            {{ $roomType['type_name'] ?? __('Unknown Type') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-md-3 col-xl-2">
+                                <label class="form-label">{{ __('Room Status') }}</label>
+                                <select name="status" class="form-select tom-select">
+                                    <option value="">{{ __('All statuses') }}</option>
+                                    @foreach ($roomStatuses as $statusKey => $status)
+                                        <option value="{{ $statusKey }}" @selected((string) $filters['status'] === (string) $statusKey)>
+                                            {{ __($status['name']) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-md-2 col-xl-1">
+                                <label class="form-label">{{ __('Rent Alert') }}</label>
+                                <select name="rent_alert_days" class="form-select">
+                                    @foreach ([7, 14, 30, 60] as $days)
+                                        <option value="{{ $days }}" @selected((int) $rentAlertDays === $days)>
+                                            {{ $days }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-6 col-md-auto">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <x-icon name="filter" />
+                                    {{ __('Filter') }}
+                                </button>
+                            </div>
+
+                            <div class="col-6 col-md-auto">
+                                <a href="{{ $filters['reset_url'] }}" class="btn btn-outline-secondary w-100">
+                                    <x-icon name="rotate-clockwise" />
+                                    {{ __('Reset') }}
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row row-cards mb-3">
+                @foreach ($dashboardCards as $card)
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="card card-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="avatar {{ $card['class'] }}">
+                                            <x-icon :name="$card['icon']" />
+                                        </span>
+                                    </div>
+
+                                    <div class="col">
+                                        <div class="text-secondary text-truncate">
+                                            {{ $card['label'] }}
+                                        </div>
+                                        <div class="h2 mb-0">
+                                            {{ $card['value'] }}
+                                        </div>
+                                        <div class="text-secondary small text-truncate">
+                                            {{ $card['subtext'] }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="row row-cards mb-3">
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-status-top bg-danger"></div>
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">
+                                    <x-icon name="alert-circle" />
+                                    {{ __('Rent Ending Soon') }}
+                                </h3>
+                                <div class="text-secondary small">
+                                    {{ __('Within') }} {{ $rentAlertDays }} {{ __('days') }}
+                                </div>
+                            </div>
+
+                            <div class="card-actions">
+                                <span class="badge bg-danger-lt text-danger">
+                                    {{ $endingSoonTenants->count() }}
+                                </span>
+                            </div>
                         </div>
 
-                        <!-- Horizontal Scroll Wrapper -->
-                        <div class="room-scroll-wrapper position-relative">
-                            <div class="room-scroll d-flex gap-3 pb-2" style="overflow-x: auto; scroll-behavior: smooth;">
-                                @foreach ($statuses as $statusKey => $rooms)
-                                    @foreach ($rooms as $room)
-                                        <div class="card room-card text-center flex-shrink-0 shadow-sm border-0"
-                                            style="width: 170px; min-width: 160px;">
-                                            <div class="card-body p-2">
-                                                <h5
-                                                    class="fw-bold text-truncate mb-1 d-flex align-items-center justify-content-center">
-                                                    {{ $room['room_name'] }}
-                                                    @if (!empty($room['is_ending_soon']) && $room['is_ending_soon'])
-                                                        <span class="status-dot status-dot-animated bg-red d-block ms-2"
-                                                            style="width: 8px; height: 8px;"
-                                                            title="Rental ending soon"></span>
-                                                    @endif
-                                                </h5>
+                        @if ($endingSoonTenants->isEmpty())
+                            <div class="card-body text-center py-5">
+                                <span class="avatar avatar-xl bg-success-lt text-success mb-3">
+                                    <x-icon name="circle-check" />
+                                </span>
+                                <h3>{{ __('No rent ending soon') }}</h3>
+                                <div class="text-secondary">
+                                    {{ __('No active tenants are close to the rental end date.') }}
+                                </div>
+                            </div>
+                        @else
+                            <div class="list-group list-group-flush">
+                                @foreach ($endingSoonTenants->take(6) as $tenant)
+                                    <a href="{{ $tenant['client_detail_url'] ?? ($tenant['room_show_url'] ?? '#') }}"
+                                        class="list-group-item list-group-item-action">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                @if ($tenant['has_image'])
+                                                    <span class="avatar avatar-rounded">
+                                                        <img src="{{ $tenant['image'] }}" alt="{{ $tenant['username'] }}">
+                                                    </span>
+                                                @else
+                                                    <span class="avatar avatar-rounded bg-danger-lt text-danger">
+                                                        {{ $tenant['initial'] }}
+                                                    </span>
+                                                @endif
+                                            </div>
 
-                                                <div class="text-muted small mb-2">
-                                                    {{ $room['building_name'] }} • {{ $room['floor_name'] }}
+                                            <div class="col text-truncate">
+                                                <div class="fw-semibold text-truncate">
+                                                    {{ $tenant['username'] }}
                                                 </div>
-
-                                                <span class="badge {{ $room['status_class'] }} mb-2">
-                                                    {{ __($room['status_name']) }}
-                                                </span>
-
-                                                <div class="small text-secondary mb-2">
-                                                    {{ $room['room_type']['room_size'] ?? '' }}
-                                                </div>
-
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    <a href="{{ route('room.show', ['room_id' => $room['id'], 'location_id' => $room['location']['id']]) }}"
-                                                        class="btn btn-sm btn-outline-primary px-3 w-100">
-                                                        {{ __('room.view') }}
-                                                    </a>
-                                                    @if ($room['status'] == '0')
-                                                        <a href="{{ route('room.booking', ['room_id' => $room['id'], 'location_id' => $room['location']['id']]) }}"
-                                                            class="btn btn-sm btn-primary px-3 w-100">
-                                                            {{ __('room.book') }}
-                                                        </a>
-                                                    @endif
+                                                <div class="text-secondary small text-truncate">
+                                                    {{ $tenant['room_name'] }} · {{ $tenant['location_name'] }}
                                                 </div>
                                             </div>
+
+                                            <div class="col-auto text-end">
+                                                <span class="badge bg-danger-lt text-danger">
+                                                    {{ $tenant['rent_days_left_text'] }}
+                                                </span>
+                                                <div class="text-secondary small mt-1">
+                                                    {{ $tenant['rent_ends_at_text'] }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-auto">
+                                                <x-icon name="chevron-right" class="text-secondary" />
+                                            </div>
                                         </div>
-                                    @endforeach
+                                    </a>
                                 @endforeach
                             </div>
 
-                            <!-- Scroll buttons -->
-                            <button
-                                class="scroll-btn scroll-left btn btn-icon position-absolute top-50 start-0 translate-middle-y shadow-sm">
-                                <x-icon name="arrow-left" />
-                            </button>
-                            <button
-                                class="scroll-btn scroll-right btn btn-icon position-absolute top-50 end-0 translate-middle-y shadow-sm">
-                                <x-icon name="arrow-right" />
-                            </button>
-                        </div>
-                    @endforeach
+                            <div class="card-footer">
+                                <span class="text-secondary small">
+                                    {{ __('Click a tenant to open their detail page.') }}
+                                </span>
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            @endforeach
+
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-status-top bg-warning"></div>
+
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">
+                                    <x-icon name="receipt" />
+                                    {{ __('Invoice Queue') }}
+                                </h3>
+                                <div class="text-secondary small">
+                                    {{ __('Invoice date') }}: {{ $nextInvoiceDateText }}
+                                </div>
+                            </div>
+
+                            <div class="card-actions">
+                                <span class="badge bg-warning-lt text-warning">
+                                    {{ $monthlyInvoiceTotalText }}
+                                </span>
+                            </div>
+                        </div>
+
+                        @if (!$isInvoiceWindow)
+                            <div class="card-body text-center py-5">
+                                <span class="avatar avatar-xl bg-warning-lt text-warning mb-3">
+                                    <x-icon name="calendar-time" />
+                                </span>
+                                <h3>{{ __('Not in reminder window') }}</h3>
+                                <div class="text-secondary">
+                                    {{ __('Reminder starts on') }} {{ $invoiceWindowStartText }}.
+                                </div>
+                            </div>
+                        @elseif ($upcomingInvoiceTenants->isEmpty())
+                            <div class="card-body text-center py-5">
+                                <span class="avatar avatar-xl bg-success-lt text-success mb-3">
+                                    <x-icon name="circle-check" />
+                                </span>
+                                <h3>{{ __('No invoice reminders') }}</h3>
+                                <div class="text-secondary">
+                                    {{ __('No active tenants match the next invoice period.') }}
+                                </div>
+                            </div>
+                        @else
+                            <div class="list-group list-group-flush">
+                                @foreach ($upcomingInvoiceTenants->take(6) as $tenant)
+                                    <a href="{{ $tenant['client_detail_url'] ?? ($tenant['room_show_url'] ?? '#') }}"
+                                        class="list-group-item list-group-item-action">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                @if ($tenant['has_image'])
+                                                    <span class="avatar avatar-rounded">
+                                                        <img src="{{ $tenant['image'] }}"
+                                                            alt="{{ $tenant['username'] }}">
+                                                    </span>
+                                                @else
+                                                    <span class="avatar avatar-rounded bg-warning-lt text-warning">
+                                                        {{ $tenant['initial'] }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <div class="col text-truncate">
+                                                <div class="fw-semibold text-truncate">
+                                                    {{ $tenant['username'] }}
+                                                </div>
+                                                <div class="text-secondary small text-truncate">
+                                                    {{ $tenant['room_name'] }} · {{ $tenant['room_type_name'] }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-auto text-end">
+                                                <span class="badge bg-warning-lt text-warning">
+                                                    {{ $tenant['invoice_price_text'] }}
+                                                </span>
+                                                <div class="text-secondary small mt-1">
+                                                    {{ $tenant['invoice_days_left_text'] }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-auto">
+                                                <x-icon name="chevron-right" class="text-secondary" />
+                                            </div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-status-top bg-primary"></div>
+
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">
+                                    <x-icon name="users" />
+                                    {{ __('Recent Tenants') }}
+                                </h3>
+                                <div class="text-secondary small">
+                                    {{ __('Latest rental check-ins') }}
+                                </div>
+                            </div>
+                        </div>
+
+                        @if ($recentClients->isEmpty())
+                            <div class="card-body text-center py-5">
+                                <span class="avatar avatar-xl bg-secondary-lt text-secondary mb-3">
+                                    <x-icon name="user-off" />
+                                </span>
+                                <h3>{{ __('No clients') }}</h3>
+                                <div class="text-secondary">
+                                    {{ __('No recent clients found.') }}
+                                </div>
+                            </div>
+                        @else
+                            <div class="list-group list-group-flush">
+                                @foreach ($recentClients->take(6) as $client)
+                                    <a href="{{ $client['client_detail_url'] ?? ($client['room_show_url'] ?? '#') }}"
+                                        class="list-group-item list-group-item-action">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                @if ($client['has_image'])
+                                                    <span class="avatar avatar-rounded">
+                                                        <img src="{{ $client['image'] }}"
+                                                            alt="{{ $client['username'] }}">
+                                                    </span>
+                                                @else
+                                                    <span class="avatar avatar-rounded bg-primary-lt text-primary">
+                                                        {{ $client['initial'] }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <div class="col text-truncate">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="fw-semibold text-truncate">
+                                                        {{ $client['username'] }}
+                                                    </div>
+                                                    <span class="{{ $client['status_badge'] }}">
+                                                        {{ __($client['status_name']) }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-secondary small text-truncate">
+                                                    {{ $client['room_name'] }} · {{ $client['location_name'] }}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-auto text-end text-secondary small">
+                                                {{ $client['start_rental_date_text'] }}
+                                            </div>
+
+                                            <div class="col-auto">
+                                                <x-icon name="chevron-right" class="text-secondary" />
+                                            </div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+
+                            <div class="card-footer">
+                                <a href="{{ route('clients.show_location') }}" class="btn btn-sm w-100">
+                                    {{ __('View all clients') }}
+                                    <x-icon name="arrow-right" />
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">
+                            <x-icon name="chart-area-line" />
+                            {{ __('Booking Activity') }}
+                        </h3>
+                        <div class="text-secondary small">
+                            {{ __('Recent bookings grouped by rental start date.') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div id="booking-stats-chart"></div>
+                </div>
+            </div>
+
+            @include('manager.partials.room-directory')
         </div>
     </div>
 @endsection
 
-<style>
-    .room-scroll.dragging {
-        cursor: grabbing;
-        cursor: -webkit-grabbing;
-    }
-
-    .room-scroll {
-        cursor: grab;
-        cursor: -webkit-grab;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-    }
-
-    .scroll-btn {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .room-scroll-wrapper:hover .scroll-btn {
-        opacity: 1;
-    }
-</style>
-
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            document.querySelectorAll(".room-scroll-wrapper").forEach(wrapper => {
-                const scrollContainer = wrapper.querySelector(".room-scroll");
-                const btnLeft = wrapper.querySelector(".scroll-left");
-                const btnRight = wrapper.querySelector(".scroll-right");
-                const SCROLL_AMOUNT = 300;
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartElement = document.querySelector('#booking-stats-chart');
 
-                let isDown = false;
-                let startX;
-                let scrollLeft;
-                let velocity = 0;
-                let momentumID;
+            if (!chartElement || typeof ApexCharts === 'undefined') {
+                return;
+            }
 
-                function updateButtons() {
-                    const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+            const chartData = @json($bookingChart);
 
-                    if (maxScrollLeft <= 0) {
-                        btnLeft.style.opacity = 0;
-                        btnRight.style.opacity = 0;
-                        btnLeft.style.pointerEvents = "none";
-                        btnRight.style.pointerEvents = "none";
-                        return;
+            const chart = new ApexCharts(chartElement, {
+                chart: {
+                    type: 'bar',
+                    height: 300,
+                    toolbar: {
+                        show: false
                     }
-
-                    btnLeft.style.opacity = scrollContainer.scrollLeft > 5 ? "1" : "0";
-                    btnLeft.style.pointerEvents = scrollContainer.scrollLeft > 5 ? "auto" : "none";
-
-                    btnRight.style.opacity = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "1" : "0";
-                    btnRight.style.pointerEvents = scrollContainer.scrollLeft < maxScrollLeft - 5 ? "auto" :
-                        "none";
-                }
-
-                // Button click scrolling
-                btnLeft.addEventListener("click", () => {
-                    scrollContainer.scrollBy({
-                        left: -SCROLL_AMOUNT,
-                        behavior: "smooth"
-                    });
-                });
-                btnRight.addEventListener("click", () => {
-                    scrollContainer.scrollBy({
-                        left: SCROLL_AMOUNT,
-                        behavior: "smooth"
-                    });
-                });
-
-                // Stop momentum on user interaction
-                function stopMomentum() {
-                    cancelAnimationFrame(momentumID);
-                    velocity = 0;
-                }
-
-                // Drag / swipe support with momentum
-                scrollContainer.addEventListener("mousedown", (e) => {
-                    isDown = true;
-                    scrollContainer.classList.add("dragging");
-                    startX = e.pageX - scrollContainer.offsetLeft;
-                    scrollLeft = scrollContainer.scrollLeft;
-                    stopMomentum();
-                });
-
-                scrollContainer.addEventListener("mouseleave", () => {
-                    isDown = false;
-                    scrollContainer.classList.remove("dragging");
-                    applyMomentum();
-                });
-
-                scrollContainer.addEventListener("mouseup", () => {
-                    isDown = false;
-                    scrollContainer.classList.remove("dragging");
-                    applyMomentum();
-                });
-
-                scrollContainer.addEventListener("mousemove", (e) => {
-                    if (!isDown) return;
-                    e.preventDefault();
-                    const x = e.pageX - scrollContainer.offsetLeft;
-                    const walk = (x - startX);
-                    velocity = walk; // track last move for momentum
-                    scrollContainer.scrollLeft = scrollLeft - walk;
-                });
-
-                // Touch support
-                scrollContainer.addEventListener("touchstart", (e) => {
-                    startX = e.touches[0].pageX - scrollContainer.offsetLeft;
-                    scrollLeft = scrollContainer.scrollLeft;
-                    stopMomentum();
-                });
-
-                scrollContainer.addEventListener("touchmove", (e) => {
-                    const x = e.touches[0].pageX - scrollContainer.offsetLeft;
-                    const walk = (x - startX);
-                    velocity = walk;
-                    scrollContainer.scrollLeft = scrollLeft - walk;
-                });
-
-                scrollContainer.addEventListener("touchend", applyMomentum);
-
-                // Momentum scrolling function
-                function applyMomentum() {
-                    const decay = 0.95;
-                    const minVelocity = 0.5;
-
-                    function step() {
-                        scrollContainer.scrollLeft -= velocity;
-                        velocity *= decay;
-
-                        if (Math.abs(velocity) > minVelocity) {
-                            momentumID = requestAnimationFrame(step);
-                        } else {
-                            cancelAnimationFrame(momentumID);
+                },
+                series: [{
+                    name: "{{ __('Bookings') }}",
+                    data: chartData.data
+                }],
+                xaxis: {
+                    categories: chartData.categories
+                },
+                yaxis: {
+                    min: 0,
+                    forceNiceScale: true
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 6,
+                        columnWidth: '38%'
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                grid: {
+                    strokeDashArray: 4
+                },
+                noData: {
+                    text: "{{ __('No booking data') }}"
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(value) {
+                            return value + " {{ __('bookings') }}";
                         }
                     }
-                    momentumID = requestAnimationFrame(step);
                 }
-
-                scrollContainer.addEventListener("scroll", updateButtons);
-                window.addEventListener("resize", updateButtons);
-
-                updateButtons();
             });
+
+            chart.render();
         });
     </script>
 @endpush

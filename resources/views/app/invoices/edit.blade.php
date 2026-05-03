@@ -39,8 +39,8 @@
                                 </label>
 
                                 @if ($field === 'month')
-                                    <input type="text" name="month" class="form-control datepicker"
-                                        value="{{ $old['month'] ?? ($invoice['month'] ?? $currentMonth) }}"
+                                    <input type="text" name="month" class="form-control monthpicker"
+                                        value="{{ old('month', !empty($invoice['invoice_date']) ? \Carbon\Carbon::parse($invoice['invoice_date'])->format('Y-m') : now()->format('Y-m')) }}"
                                         placeholder="{{ __('invoice.select_month') }}" autocomplete="off">
                                 @else
                                     @if (in_array($field, $commaFields))

@@ -219,7 +219,8 @@
                         <tr>
                             <td class="label" style="padding:3px 0;">ភេទ៖</td>
                             <td class="value" style="padding:3px 0;">
-                                {{ $client['gender'] === 'm' ? 'ប្រុស' : 'ស្រី' }}</td>
+                                {{ $invoice['client_gender_text'] ?? data_get($invoice, 'client.gender_text', 'N/A') }}
+                            </td>
                         </tr>
                         <tr>
                             <td class="label" style="padding:3px 0;">អាសយដ្ឋាន៖</td>

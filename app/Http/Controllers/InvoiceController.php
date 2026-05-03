@@ -540,7 +540,7 @@ class InvoiceController extends Controller
     public function update(Request $request, $id, $locationId)
     {
         $rules = [
-            'month' => ['required', 'date_format:Y-m-d'],
+            'month' => ['required', 'string'],
             'old_electric' => ['required', 'numeric', 'min:0'],
             'new_electric' => ['required', 'numeric', 'min:0'],
             'electric_rate' => ['required', 'numeric', 'min:0'],
@@ -554,20 +554,28 @@ class InvoiceController extends Controller
         $validator = Validator::make($request->all(), $rules);
 
         $validator->after(function ($validator) use ($request) {
+            if (!$this->normalizeInvoiceMonth($request->month)) {
+                $validator->errors()->add('month', __('month មិនត្រូវតាមទ្រង់ទ្រាយ Y-m'));
+            }
+
             if ((float) $request->new_electric < (float) $request->old_electric) {
                 $validator->errors()->add('new_electric', __('validation.new_electric_must_be_greater'));
             }
+
             if ((float) $request->new_water < (float) $request->old_water) {
                 $validator->errors()->add('new_water', __('validation.new_water_must_be_greater'));
             }
         });
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $payload = [
-            'invoice_date' => $request->month,
+            'invoice_date' => $this->normalizeInvoiceMonth($request->month),
             'old_electric' => (float) $request->old_electric,
             'new_electric' => (float) $request->new_electric,
             'electric_rate' => (float) $request->electric_rate,
@@ -578,29 +586,11 @@ class InvoiceController extends Controller
             'status' => (int) $request->status,
         ];
 
-        // ✅ Always log payload so you can confirm what is being sent
-        Log::info('Invoice PATCH payload', [
-            'invoice_id' => $id,
-            'location_id' => $locationId,
-            'payload' => $payload,
-        ]);
-
         try {
             $response = $this->api()
                 ->withHeaders(['Location-Id' => $locationId])
                 ->patch("v1/invoices/{$id}", $payload);
-
-            // ✅ If your api() wrapper returns array, log it
-            Log::info('Invoice PATCH response', [
-                'invoice_id' => $id,
-                'response' => $response,
-            ]);
-
-            // Optional: show in session instead of dd()
-            // return redirect()->back()->with('debug', json_encode($response));
-
         } catch (RequestException $e) {
-            // ✅ This catches Laravel HTTP client exceptions and includes response body
             $res = $e->response;
 
             Log::error('Invoice PATCH RequestException', [
@@ -611,9 +601,14 @@ class InvoiceController extends Controller
                 'body' => $res?->body(),
             ]);
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->withErrors(['error' => $res?->json('message') ?? $res?->body() ?? 'API request failed']);
+                ->withErrors([
+                    'error' => $res?->json('message')
+                        ?? $res?->body()
+                        ?? __('invoice.update_failed'),
+                ]);
         } catch (\Throwable $e) {
             Log::error('Invoice PATCH Throwable', [
                 'invoice_id' => $id,
@@ -622,20 +617,55 @@ class InvoiceController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->withErrors(['error' => __('invoice.update_failed')]);
+                ->withErrors([
+                    'error' => __('invoice.update_failed'),
+                ]);
         }
 
-        if (!empty($response['success']) && $response['success'] === true) {
-            return redirect()->back()->with('success', __('invoice.updated_successfully'));
+        if (($response['success'] ?? false) === true || ($response['status'] ?? null) === 'success') {
+            return redirect()
+                ->back()
+                ->with('success', __('invoice.updated_successfully'));
         }
 
-        return redirect()->back()
+        return redirect()
+            ->back()
             ->withInput()
-            ->withErrors($response['errors'] ?? ['error' => $response['message'] ?? __('invoice.update_failed')]);
+            ->withErrors(
+                $response['errors']
+                ?? ['error' => $response['message'] ?? __('invoice.update_failed')]
+            );
     }
 
+    private function normalizeInvoiceMonth(?string $month): ?string
+    {
+        if (blank($month)) {
+            return null;
+        }
+
+        $month = trim($month);
+
+        foreach (['Y-m', 'Y-m-d'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $month)
+                    ->startOfMonth()
+                    ->format('Y-m-d');
+            } catch (\Throwable) {
+                //
+            }
+        }
+
+        try {
+            return Carbon::parse($month)
+                ->startOfMonth()
+                ->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 
     public function destroy(Request $request, $id, $locationId)
     {
@@ -908,160 +938,154 @@ class InvoiceController extends Controller
     public function userIndex(Request $request, string $location)
     {
         try {
-            // === 1) Get filter/search params ===
-            $statusFilter = $request->query('status');          // string/int
+            $statusFilter = $request->query('status');
             $search = trim((string) $request->query('search', ''));
             $buildingFilter = trim((string) $request->query('building_name', ''));
             $floorFilter = trim((string) $request->query('floor_name', ''));
             $roomFilter = trim((string) $request->query('room_name', ''));
-            $roomTypeFilter = $request->query('room_type');       // id
-            $monthFilter = $request->query('month');           // "YYYY-MM" from <input type="month">
-            $fromDate = $request->query('from_date');       // "YYYY-MM-DD"
-            $toDate = $request->query('to_date');         // "YYYY-MM-DD"
+            $roomTypeFilter = $request->query('room_type');
+            $monthFilter = $request->query('month');
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
 
-            // normalize dates (optional, but safer)
             $fromDate = $fromDate ? Carbon::parse($fromDate)->toDateString() : null;
             $toDate = $toDate ? Carbon::parse($toDate)->toDateString() : null;
 
-            // === 2) Fetch invoices for THIS location ===
-            // ✅ IMPORTANT: your API uses "Location-Id" header (you used different header names before)
             $response = $this->api()
                 ->withHeaders(['Location-Id' => $location])
                 ->get('v1/invoices');
 
             $invoices = $response['data'] ?? [];
 
-            // === 3) Apply filters (client-side fallback) ===
-            $invoices = array_filter($invoices, function ($inv) use ($statusFilter, $buildingFilter, $floorFilter, $roomFilter, $roomTypeFilter, $monthFilter, $fromDate, $toDate, $search) {
-                $room = $inv['room'] ?? [];
+            $invoices = array_filter($invoices, function ($invoice) use ($statusFilter, $buildingFilter, $floorFilter, $roomFilter, $roomTypeFilter, $monthFilter, $fromDate, $toDate, $search) {
+                $room = $invoice['room'] ?? [];
 
-                // status
                 if ($statusFilter !== null && $statusFilter !== '') {
-                    if ((string) ($inv['status'] ?? '') !== (string) $statusFilter)
+                    if ((string) ($invoice['status'] ?? '') !== (string) $statusFilter) {
                         return false;
+                    }
                 }
 
-                // room type
                 if ($roomTypeFilter !== null && $roomTypeFilter !== '') {
-                    if ((string) ($room['room_type_id'] ?? '') !== (string) $roomTypeFilter)
+                    if ((string) ($room['room_type_id'] ?? '') !== (string) $roomTypeFilter) {
                         return false;
+                    }
                 }
 
-                // building
                 if ($buildingFilter !== '') {
-                    if (!str_contains(mb_strtolower($room['building_name'] ?? ''), mb_strtolower($buildingFilter)))
+                    if (!str_contains(mb_strtolower($room['building_name'] ?? ''), mb_strtolower($buildingFilter))) {
                         return false;
+                    }
                 }
 
-                // floor
                 if ($floorFilter !== '') {
-                    if (!str_contains(mb_strtolower($room['floor_name'] ?? ''), mb_strtolower($floorFilter)))
+                    if (!str_contains(mb_strtolower($room['floor_name'] ?? ''), mb_strtolower($floorFilter))) {
                         return false;
+                    }
                 }
 
-                // room name
                 if ($roomFilter !== '') {
-                    if (!str_contains(mb_strtolower($room['room_name'] ?? ''), mb_strtolower($roomFilter)))
+                    if (!str_contains(mb_strtolower($room['room_name'] ?? ''), mb_strtolower($roomFilter))) {
                         return false;
+                    }
                 }
 
-                // invoice_date exists?
-                $invoiceDate = $inv['invoice_date'] ?? null;
-                if (!$invoiceDate) {
-                    // if date missing, it cannot match date filters
-                    if ($monthFilter || $fromDate || $toDate)
-                        return false;
-                } else {
-                    $invDate = Carbon::parse($invoiceDate)->toDateString(); // "Y-m-d"
+                $invoiceDate = $invoice['invoice_date'] ?? null;
 
-                    // month filter (YYYY-MM)
-                    if ($monthFilter) {
-                        if (Carbon::parse($invoiceDate)->format('Y-m') !== $monthFilter)
-                            return false;
+                if (!$invoiceDate) {
+                    if ($monthFilter || $fromDate || $toDate) {
+                        return false;
+                    }
+                } else {
+                    $parsedInvoiceDate = Carbon::parse($invoiceDate);
+                    $invoiceDateString = $parsedInvoiceDate->toDateString();
+
+                    if ($monthFilter && $parsedInvoiceDate->format('Y-m') !== $monthFilter) {
+                        return false;
                     }
 
-                    // from/to filters (support any combination)
-                    if ($fromDate && $invDate < $fromDate)
+                    if ($fromDate && $invoiceDateString < $fromDate) {
                         return false;
-                    if ($toDate && $invDate > $toDate)
+                    }
+
+                    if ($toDate && $invoiceDateString > $toDate) {
                         return false;
+                    }
                 }
 
-                // search (invoice_no OR room name)
                 if ($search !== '') {
-                    $q = mb_strtolower($search);
-                    $invoiceNo = mb_strtolower((string) ($inv['invoice_no'] ?? ''));
+                    $query = mb_strtolower($search);
+                    $invoiceNo = mb_strtolower((string) ($invoice['invoice_no'] ?? ''));
                     $roomName = mb_strtolower((string) ($room['room_name'] ?? ''));
 
-                    if (!str_contains($invoiceNo, $q) && !str_contains($roomName, $q))
+                    if (!str_contains($invoiceNo, $query) && !str_contains($roomName, $query)) {
                         return false;
+                    }
                 }
 
                 return true;
             });
 
-            // re-index
-            $invoices = array_values($invoices);
-
-            // === 4) Add computed fields + totals based on FILTERED result ===
             $totals = [
                 'room_fee' => 0,
                 'electric_charge' => 0,
                 'water_charge' => 0,
+                'other_charge' => 0,
+                'grand_total' => 0,
             ];
 
-            $invoices = array_map(function ($inv) use (&$totals) {
-                $oldE = (float) ($inv['old_electric'] ?? 0);
-                $newE = (float) ($inv['new_electric'] ?? 0);
-                $eRate = (float) ($inv['electric_rate'] ?? 0);
+            $invoices = collect(array_values($invoices))
+                ->map(function ($invoice, $index) use (&$totals) {
+                    return $this->decorateInvoiceForIndex($invoice, $index, $totals);
+                })
+                ->values()
+                ->toArray();
 
-                $oldW = (float) ($inv['old_water'] ?? 0);
-                $newW = (float) ($inv['new_water'] ?? 0);
-                $wRate = (float) ($inv['water_rate'] ?? 0);
-
-                $eUsed = max(0, $newE - $oldE);
-                $wUsed = max(0, $newW - $oldW);
-
-                $eTotal = $eUsed * $eRate;
-                $wTotal = $wUsed * $wRate;
-
-                $roomFee = (float) ($inv['room_fee'] ?? 0);
-                $other = (float) ($inv['other_charge'] ?? 0);
-                $grand = (float) ($inv['total'] ?? ($roomFee + $eTotal + $wTotal + $other));
-
-                $inv['calc'] = [
-                    'old_electric' => $oldE,
-                    'new_electric' => $newE,
-                    'electric_rate' => $eRate,
-                    'electric_used' => $eUsed,
-                    'electric_total' => $eTotal,
-
-                    'old_water' => $oldW,
-                    'new_water' => $newW,
-                    'water_rate' => $wRate,
-                    'water_used' => $wUsed,
-                    'water_total' => $wTotal,
-
-                    'room_fee' => $roomFee,
-                    'other_charge' => $other,
-                    'grand_total' => $grand,
-                ];
-
-                // ✅ totals for current filtered list
-                $totals['room_fee'] += $roomFee;
-                $totals['electric_charge'] += $eTotal;
-                $totals['water_charge'] += $wTotal;
-
-                return $inv;
-            }, $invoices);
-
-            // === 5) Fetch dropdown data ===
             $roomTypes = $this->api()->get('v1/room-types')['room_types']['data'] ?? [];
-            $statuses = InvoiceStatus::all();
+            $statuses = $this->invoiceStatuses();
+
+            $summaryCards = [
+                [
+                    'label' => __('Invoices'),
+                    'value' => count($invoices),
+                    'icon' => 'receipt-2',
+                    'class' => 'bg-primary text-primary-fg',
+                    'subtext' => __('Filtered result'),
+                ],
+                [
+                    'label' => __('invoice.room_rent'),
+                    'value' => $this->moneyText($totals['room_fee'], 0),
+                    'icon' => 'home-dollar',
+                    'class' => 'bg-success-lt text-success',
+                    'subtext' => __('invoice.totals'),
+                ],
+                [
+                    'label' => __('invoice.electric_total'),
+                    'value' => $this->moneyText($totals['electric_charge'], 0),
+                    'icon' => 'bolt',
+                    'class' => 'bg-warning-lt text-warning',
+                    'subtext' => __('invoice.totals'),
+                ],
+                [
+                    'label' => __('invoice.water_total'),
+                    'value' => $this->moneyText($totals['water_charge'], 0),
+                    'icon' => 'droplet',
+                    'class' => 'bg-cyan-lt text-cyan',
+                    'subtext' => __('invoice.totals'),
+                ],
+                [
+                    'label' => __('invoice.total_amount'),
+                    'value' => $this->moneyText($totals['grand_total'], 0),
+                    'icon' => 'cash-banknote',
+                    'class' => 'bg-danger-lt text-danger',
+                    'subtext' => __('Grand total'),
+                ],
+            ];
 
             return view('app.invoices.user-index', [
                 'invoices' => $invoices,
                 'totals' => $totals,
+                'summaryCards' => $summaryCards,
                 'locationId' => $location,
 
                 'filter_status' => $statusFilter,
@@ -1076,6 +1100,15 @@ class InvoiceController extends Controller
 
                 'roomTypes' => $roomTypes,
                 'statuses' => $statuses,
+                'hasFilters' => filled($statusFilter)
+                    || filled($buildingFilter)
+                    || filled($floorFilter)
+                    || filled($roomFilter)
+                    || filled($roomTypeFilter)
+                    || filled($monthFilter)
+                    || filled($fromDate)
+                    || filled($toDate)
+                    || filled($search),
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to fetch invoices for location', [
@@ -1087,6 +1120,140 @@ class InvoiceController extends Controller
                 ->route('invoice.user_chooselocation')
                 ->withErrors(['error' => __('invoice.fetch_failed')]);
         }
+    }
+
+    private function decorateInvoiceForIndex(array $invoice, int $index, array &$totals): array
+    {
+        $oldElectric = (float) ($invoice['old_electric'] ?? 0);
+        $newElectric = (float) ($invoice['new_electric'] ?? 0);
+        $electricRate = (float) ($invoice['electric_rate'] ?? 0);
+
+        $oldWater = (float) ($invoice['old_water'] ?? 0);
+        $newWater = (float) ($invoice['new_water'] ?? 0);
+        $waterRate = (float) ($invoice['water_rate'] ?? 0);
+
+        $electricUsed = max(0, $newElectric - $oldElectric);
+        $waterUsed = max(0, $newWater - $oldWater);
+
+        $electricTotal = $electricUsed * $electricRate;
+        $waterTotal = $waterUsed * $waterRate;
+
+        $roomFee = (float) ($invoice['room_fee'] ?? 0);
+        $otherCharge = (float) ($invoice['other_charge'] ?? 0);
+        $grandTotal = (float) ($invoice['total'] ?? ($roomFee + $electricTotal + $waterTotal + $otherCharge));
+
+        $totals['room_fee'] += $roomFee;
+        $totals['electric_charge'] += $electricTotal;
+        $totals['water_charge'] += $waterTotal;
+        $totals['other_charge'] += $otherCharge;
+        $totals['grand_total'] += $grandTotal;
+
+        $statusMeta = InvoiceStatus::getStatus($invoice['status'] ?? null);
+
+        $invoice['row_no'] = $index + 1;
+        $invoice['collapse_id'] = 'invoice-detail-' . ($invoice['id'] ?? $index);
+        $invoice['status_meta'] = $statusMeta;
+        $invoice['invoice_date_text'] = $this->dateText($invoice['invoice_date'] ?? null);
+        $invoice['due_date_text'] = $this->dateText($invoice['due_date'] ?? null);
+        $invoice['created_at_text'] = $this->dateTimeText($invoice['created_at'] ?? null);
+        $invoice['updated_at_text'] = $this->dateTimeText($invoice['updated_at'] ?? null);
+
+        $invoice['room_name_text'] = data_get($invoice, 'room.room_name', '-');
+        $invoice['building_text'] = data_get($invoice, 'room.building_name', '-');
+        $invoice['floor_text'] = data_get($invoice, 'room.floor_name', '-');
+
+        $invoice['calc'] = [
+            'old_electric' => $oldElectric,
+            'new_electric' => $newElectric,
+            'electric_rate' => $electricRate,
+            'electric_used' => $electricUsed,
+            'electric_total' => $electricTotal,
+
+            'old_water' => $oldWater,
+            'new_water' => $newWater,
+            'water_rate' => $waterRate,
+            'water_used' => $waterUsed,
+            'water_total' => $waterTotal,
+
+            'room_fee' => $roomFee,
+            'other_charge' => $otherCharge,
+            'grand_total' => $grandTotal,
+        ];
+
+        $invoice['money'] = [
+            'room_fee' => $this->moneyText($roomFee, 0),
+            'electric_total' => $this->moneyText($electricTotal, 0),
+            'water_total' => $this->moneyText($waterTotal, 0),
+            'other_charge' => $this->moneyText($otherCharge, 0),
+            'grand_total' => $this->moneyText($grandTotal, 0),
+            'electric_rate' => $this->moneyText($electricRate, 2),
+            'water_rate' => $this->moneyText($waterRate, 2),
+        ];
+
+        $invoice['urls'] = [
+            'show' => !empty($invoice['id'])
+                ? route('invoice.show', ['id' => $invoice['id'], 'locationId' => request()->route('location')])
+                : null,
+            'edit' => !empty($invoice['id'])
+                ? route('invoice.edit', ['id' => $invoice['id'], 'locationId' => request()->route('location')])
+                : null,
+            'destroy' => !empty($invoice['id'])
+                ? route('invoice.destroy', ['id' => $invoice['id'], 'locationId' => request()->route('location')])
+                : null,
+        ];
+
+        return $invoice;
+    }
+
+    private function invoiceStatuses(): array
+    {
+        if (method_exists(InvoiceStatus::class, 'all')) {
+            $values = array_keys(InvoiceStatus::all());
+        } elseif (method_exists(InvoiceStatus::class, 'getAll')) {
+            $values = array_keys(InvoiceStatus::getAll());
+        } elseif (method_exists(InvoiceStatus::class, 'cases')) {
+            $values = array_map(fn($case) => $case->value, InvoiceStatus::cases());
+        } else {
+            $values = collect((new \ReflectionClass(InvoiceStatus::class))->getConstants())
+                ->filter(fn($value) => is_int($value) || is_string($value))
+                ->values()
+                ->toArray();
+        }
+
+        return collect($values)
+            ->mapWithKeys(fn($value) => [$value => InvoiceStatus::getStatus($value)])
+            ->toArray();
+    }
+
+    private function dateText(mixed $date): string
+    {
+        if (blank($date)) {
+            return '-';
+        }
+
+        try {
+            return Carbon::parse($date)->translatedFormat('d M Y');
+        } catch (\Throwable) {
+            return (string) $date;
+        }
+    }
+
+    private function dateTimeText(mixed $date): string
+    {
+        if (blank($date)) {
+            return '-';
+        }
+
+        try {
+            return Carbon::parse($date)->translatedFormat('d M Y H:i');
+        } catch (\Throwable) {
+            return (string) $date;
+        }
+    }
+
+    private function moneyText(mixed $amount, int $decimals = 0): string
+    {
+        return number_format((float) ($amount ?? 0), $decimals, '.', ',') . '៛';
     }
 
     public function export(Request $request, $id, $locationId)
@@ -1107,10 +1274,7 @@ class InvoiceController extends Controller
                     ->withErrors(['error' => __('invoice.not_found')]);
             }
 
-            $invoice['electric_total'] = ($invoice['new_electric'] - $invoice['old_electric']) * $invoice['electric_rate'];
-            $invoice['water_total'] = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
-            $invoice['grand_total'] = $invoice['total']
-                ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
+            $invoice = $this->prepareInvoiceForExport($invoice);
 
             $defaultConfig = (new ConfigVariables())->getDefaults();
             $defaultFontConfig = (new FontVariables())->getDefaults();
@@ -1119,7 +1283,7 @@ class InvoiceController extends Controller
                 'mode' => 'utf-8',
                 'format' => 'A4',
                 'orientation' => 'P',
-                'margin_top' => 15,   // ✅ more breathing room
+                'margin_top' => 15,
                 'margin_bottom' => 15,
                 'margin_left' => 15,
                 'margin_right' => 15,
@@ -1131,8 +1295,8 @@ class InvoiceController extends Controller
                     $defaultFontConfig['fontdata'],
                     [
                         'siemreap' => [
-                            'R' => 'KhmerOS_battambang.ttf',  // normal → siemreap
-                            'B' => 'KhmerOS_battambang.ttf',  // bold   → siemreap (same font)
+                            'R' => 'KhmerOS_battambang.ttf',
+                            'B' => 'KhmerOS_battambang.ttf',
                             'useOTL' => 0xFF,
                             'useKashida' => 0,
                         ],
@@ -1152,7 +1316,6 @@ class InvoiceController extends Controller
                 "invoice-{$invoice['invoice_no']}.pdf",
                 ['Content-Type' => 'application/pdf']
             );
-
         } catch (\Throwable $e) {
             Log::error('Failed to export invoice', [
                 'invoice_id' => $id,
@@ -1170,7 +1333,9 @@ class InvoiceController extends Controller
         $ids = $request->input('ids', []);
 
         if (empty($ids)) {
-            return back()->withErrors(['error' => 'Please select at least one invoice.']);
+            return back()->withErrors([
+                'error' => __('Please select at least one invoice.'),
+            ]);
         }
 
         $defaultConfig = (new ConfigVariables())->getDefaults();
@@ -1184,33 +1349,57 @@ class InvoiceController extends Controller
             'margin_bottom' => 15,
             'margin_left' => 18,
             'margin_right' => 18,
-            'fontDir' => array_merge($defaultConfig['fontDir'], [public_path('fonts/')]),
-            'fontdata' => array_merge($defaultFontConfig['fontdata'], [
-                'siemreap' => [
-                    'R' => 'siemreap.ttf',
-                    'B' => 'siemreap.ttf',
-                    'useOTL' => 0xFF,
-                    'useKashida' => 0,
-                    'fakebold' => true,
-                ],
-            ]),
+            'fontDir' => array_merge(
+                $defaultConfig['fontDir'],
+                [public_path('fonts/')]
+            ),
+            'fontdata' => array_merge(
+                $defaultFontConfig['fontdata'],
+                [
+                    'siemreap' => [
+                        'R' => 'KhmerOS_battambang.ttf',
+                        'B' => 'KhmerOS_battambang.ttf',
+                        'useOTL' => 0xFF,
+                        'useKashida' => 0,
+                    ],
+                ]
+            ),
             'default_font' => 'siemreap',
         ]);
 
-        foreach ($ids as $index => $id) {
-            $response = $this->api()->get("v1/invoices/{$id}", [], token: null, moreHeaders: ['Location-Id' => $locationId]);
+        $written = 0;
+
+        foreach ($ids as $id) {
+            $response = $this->api()->get(
+                "v1/invoices/{$id}",
+                [],
+                token: null,
+                moreHeaders: ['Location-Id' => $locationId]
+            );
+
             $invoice = $response['invoice'] ?? null;
-            if (!$invoice)
+
+            if (!$invoice) {
                 continue;
+            }
 
-            $invoice['electric_total'] = ($invoice['new_electric'] - $invoice['old_electric']) * $invoice['electric_rate'];
-            $invoice['water_total'] = ($invoice['new_water'] - $invoice['old_water']) * $invoice['water_rate'];
-            $invoice['grand_total'] = $invoice['total'] ?? ($invoice['electric_total'] + $invoice['water_total'] + $invoice['room_fee'] + $invoice['other_charge']);
+            $invoice = $this->prepareInvoiceForExport($invoice);
 
-            if ($index > 0)
+            if ($written > 0) {
                 $mpdf->AddPage();
+            }
 
-            $mpdf->WriteHTML(view('app.invoices.export', compact('invoice', 'locationId'))->render());
+            $mpdf->WriteHTML(
+                view('app.invoices.export', compact('invoice', 'locationId'))->render()
+            );
+
+            $written++;
+        }
+
+        if ($written === 0) {
+            return back()->withErrors([
+                'error' => __('invoice.not_found'),
+            ]);
         }
 
         return response()->streamDownload(
@@ -1218,5 +1407,101 @@ class InvoiceController extends Controller
             'invoices-' . now()->format('d-M-Y') . '.pdf',
             ['Content-Type' => 'application/pdf']
         );
+    }
+
+    private function prepareInvoiceForExport(array $invoice): array
+    {
+        $oldElectric = (float) ($invoice['old_electric'] ?? 0);
+        $newElectric = (float) ($invoice['new_electric'] ?? 0);
+        $electricRate = (float) ($invoice['electric_rate'] ?? 0);
+
+        $oldWater = (float) ($invoice['old_water'] ?? 0);
+        $newWater = (float) ($invoice['new_water'] ?? 0);
+        $waterRate = (float) ($invoice['water_rate'] ?? 0);
+
+        $roomFee = (float) ($invoice['room_fee'] ?? 0);
+        $otherCharge = (float) ($invoice['other_charge'] ?? 0);
+
+        $invoice['electric_total'] = max(0, $newElectric - $oldElectric) * $electricRate;
+        $invoice['water_total'] = max(0, $newWater - $oldWater) * $waterRate;
+
+        $invoice['grand_total'] = $invoice['total']
+            ?? ($invoice['electric_total'] + $invoice['water_total'] + $roomFee + $otherCharge);
+
+        $client = $this->invoiceClient($invoice);
+
+        $gender = $this->normalizeGender($client['gender'] ?? null);
+        $genderText = $this->genderText($gender);
+
+        $client['gender_mapped'] = $gender;
+        $client['gender_text'] = $genderText;
+
+        $invoice['client'] = $client;
+        $invoice['client_gender'] = $gender;
+        $invoice['client_gender_text'] = $genderText;
+        $invoice['customer_gender_text'] = $genderText;
+
+        if (isset($invoice['room']['clients']) && is_array($invoice['room']['clients'])) {
+            foreach ($invoice['room']['clients'] as $index => $roomClient) {
+                if (!is_array($roomClient)) {
+                    continue;
+                }
+
+                if ((string) ($roomClient['id'] ?? '') === (string) ($invoice['client_id'] ?? '')) {
+                    $invoice['room']['clients'][$index]['gender_mapped'] = $gender;
+                    $invoice['room']['clients'][$index]['gender_text'] = $genderText;
+                }
+            }
+        }
+
+        return $invoice;
+    }
+
+    private function invoiceClient(array $invoice): array
+    {
+        if (!empty($invoice['client']) && is_array($invoice['client'])) {
+            return $invoice['client'];
+        }
+
+        $clients = data_get($invoice, 'room.clients', []);
+
+        if (!is_array($clients)) {
+            return [];
+        }
+
+        $clientId = $invoice['client_id'] ?? null;
+
+        if ($clientId) {
+            $matchedClient = collect($clients)->first(function ($client) use ($clientId) {
+                return is_array($client)
+                    && (string) ($client['id'] ?? '') === (string) $clientId;
+            });
+
+            if ($matchedClient) {
+                return $matchedClient;
+            }
+        }
+
+        return collect($clients)->first(fn($client) => is_array($client)) ?: [];
+    }
+
+    private function normalizeGender(mixed $gender): ?string
+    {
+        $value = mb_strtolower(trim((string) $gender));
+
+        return match ($value) {
+            'm', 'male', 'ប្រុស', '1' => 'm',
+            'f', 'female', 'ស្រី', '2' => 'f',
+            default => null,
+        };
+    }
+
+    private function genderText(?string $gender): string
+    {
+        return match ($gender) {
+            'm' => 'ប្រុស',
+            'f' => 'ស្រី',
+            default => 'N/A',
+        };
     }
 }
